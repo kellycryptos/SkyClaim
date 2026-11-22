@@ -1,84 +1,58 @@
-# Telegraph Sentinel · Developer Tutorial & Technical Guide
+# SkyClaim · Technical Tutorial & Architecture Guide
 
-> **Learn how to build an autonomous machine-to-machine AI agent that buys intelligence over the x402 protocol with Base Sepolia settlement.**
-
----
-
-## 1. What is Telegraph Protocol?
-
-In traditional software, querying machine learning models requires centralized API keys, monthly subscriptions, and credit cards.
-
-**Telegraph Protocol** changes this by treating machine intelligence as an on-chain graded commodity:
-1. **Intents**: Standardized tasks (e.g. `SMART_CONTRACT_AUDIT`, `SANCTIONS_SCREENING_MATCH`).
-2. **Miners**: Competing models, APIs, and algorithms that supply intelligence.
-3. **Evaluators**: Measurement frameworks that score and rank miners by real accuracy and latency.
-4. **x402 Micropayments**: HTTP-native payments where an API returns `402 Payment Required`, the client signs an EIP-712 payment authorization, and the response is delivered in under 1 second.
+> **Learn how to build an autonomous Telegram bot that verifies real-world flight disruptions using Telegraph Protocol's x402 micropayments on Base Sepolia.**
 
 ---
 
-## 2. Anatomy of the Autonomous Due Diligence Loop
+## 1. The Real-World Disruption Problem
 
-When a token is evaluated for exchange listing, **Telegraph Sentinel** executes this 4-step sequence:
+Under European Regulation (EC) No 261/2004 and UK Air Passenger Rights:
+- Flights delayed $> 3$ hours on arrival entitle passengers to **€250, €400, or €600** (depending on flight distance).
+- **The Airline Defense:** Under Article 5(3), airlines are exempt from paying if they prove the delay was caused by *"extraordinary circumstances which could not have been avoided"*, most commonly claiming weather or air traffic control.
 
-```
-[Agent Input: 0x1f984...]
-          │
-          ▼
-1. Dispatch 5 Parallel HTTP Queries
-   ├── POST /engine/v1/ask {"intent": "SMART_CONTRACT_AUDIT"}
-   ├── POST /engine/v1/ask {"intent": "SANCTIONS_SCREENING_MATCH"}
-   ├── POST /engine/v1/ask {"intent": "ONCHAIN_METRIC_VERIFY"}
-   ├── POST /engine/v1/ask {"intent": "SOCIAL_BOT_DETECTION"}
-   └── POST /engine/v1/ask {"intent": "SECURITY_REVIEW"}
-          │
-          ▼
-2. Handle HTTP 402 Challenge & Sign EIP-712 Auth
-   - Payer signs TransferWithAuthorization for $0.01 Circle USDC on Base Sepolia
-   - Retries request with PAYMENT-SIGNATURE header
-          │
-          ▼
-3. Autonomous Routing & Execution
-   - Telegraph routes each query to the highest-ranked miner for that intent
-   - Node facilitator settles payment against Base Sepolia Diamond contract
-          │
-          ▼
-4. Synthesis & Signed Risk Memo
-   - Collects 5 cryptographic receipts (hashes, ranks, confidence scores)
-   - Computes weighted Risk Index (0-100)
-   - Emits definitive listing verdict: APPROVED / CONDITIONAL / REJECTED
-```
+**SkyClaim** solves this using **Consensus Before Action**:
+Instead of trusting the passenger or the airline, an autonomous agent queries two independent Telegraph miners:
+1. A **Transit Telemetry Miner** to verify the exact gate arrival delay.
+2. A **Meteorological Hazard Miner** to check active storm locks at departure and arrival hubs.
+
+Only when both miners agree that the delay occurred **and** no severe weather conditions existed is the claim green-lit.
 
 ---
 
-## 3. How to Use the Multi-Surface Interfaces
+## 2. The x402 Micropayment Protocol on Base Sepolia
+
+Every intelligence check on SkyClaim is an on-chain paid API request:
+1. The bot makes an HTTP call to the Telegraph node (`POST /engine/v1/ask`).
+2. The node challenges with `HTTP 402 Payment Required` with a base64 challenge containing the price (`10000` micro-USDC = $0.01) and asset address.
+3. The agent signs an EIP-712 typed data payload: `TransferWithAuthorization` (EIP-3009) for Circle USDC (`0x036CbD53842c5426634e7929541eC2318f3dCF7e`) on Base Sepolia (`84532`).
+4. The signed authorization is sent in the `PAYMENT-SIGNATURE` header.
+5. The facilitator submits the settlement on-chain, and the node returns the miner's verified response and cryptographic receipt.
+
+Total cost for 2 independent miner queries: **$0.02 USDC**.
+
+---
+
+## 3. How to Run & Test
 
 ### Surface A: Web Terminal
 ```bash
 npm run build && npm start
 # Open http://localhost:3000
 ```
-- Select 1-click presets for immediate demonstration.
-- Click "The Receipt Box" in top navigation to inspect on-chain contract permalinks.
+- 1-Click presets for BA178, DL401, AF112.
+- Inspect the BaseScan receipts and download the generated claim letter.
 
-### Surface B: Autonomous Agent CLI
+### Surface B: Telegram Bot & Evaluator Simulator
 ```bash
-# Evaluate Uniswap V3 (Bluechip)
-npm run agent -- 0x1f9840a85d5af5bf1d1762f925bdaddc4201f984 UNI
+# Run terminal simulator for instant evaluator testing
+npm run bot:sim
 
-# Evaluate Malicious Drainer (Failure Case)
-npm run agent -- 0xdead78a48b598fa20f6be8dc07386820ff5690b2 PEPE-DRAIN
+# Run live Telegram bot (set TELEGRAM_BOT_TOKEN in .env)
+npm run bot
 ```
 
-### Surface C: Track 02 Evaluator Benchmark Harness
+### Surface C: Automated CI/CD Suite
 ```bash
-# Benchmark competing miners on ground-truth intent vectors
-npm run benchmark
+npm test
 ```
-
----
-
-## 4. Key Contracts & Permalinks (Base Sepolia Chain ID 84532)
-
-- **Telegraph Diamond:** `0x5a2324aA18613FAD4e44bDF0d6c73Ec1f6D87ff8`
-- **Circle USDC:** `0x036CbD53842c5426634e7929541eC2318f3dCF7e`
-- **Node Engine:** `http://13.237.89.59:7044`
+Verifies all 3 consensus scenarios deterministically with zero environment variables needed.

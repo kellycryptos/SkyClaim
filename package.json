@@ -1,20 +1,21 @@
 {
-  "name": "telegraph-sentinel",
+  "name": "skyclaim",
   "version": "1.0.0",
-  "description": "Autonomous Token Listing & DeFi Risk Due Diligence Desk powered by Telegraph Protocol (H2 Hackathon Mission 01 & 14)",
+  "description": "Autonomous Flight Claim & Disruption Verifier powered by Telegraph Protocol (H2 Hackathon Mission 15)",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start -p 3000",
-    "test": "node scripts/test-audit.js",
-    "agent": "node scripts/cli-agent.js",
-    "benchmark": "node evaluator/benchmark-audit.js",
+    "test": "npx tsx scripts/test-skyclaim.ts",
+    "bot": "npx tsx scripts/telegram-bot.ts",
+    "bot:sim": "npx tsx scripts/telegram-bot.ts",
     "lint": "next lint"
   },
   "dependencies": {
     "clsx": "^2.1.1",
     "ethers": "^6.13.5",
+    "grammy": "^1.35.0",
     "lucide-react": "^0.460.0",
     "next": "^16.4.6",
     "react": "^18.3.1",
@@ -28,6 +29,7 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
+    "tsx": "^4.19.2",
     "typescript": "^5.6.3"
   }
 }
