@@ -3,6 +3,8 @@
 /**
  * SkyClaim · Telegram Bot Runner & Interactive Evaluator Simulator
  * 
+ * Front End 2: Calls the shared HTTP API (/api/claim) or core consensus backend.
+ * 
  * Implements the 4 core Telegram commands and preset inline buttons:
  *   /start    - Welcome + 1-click evaluator preset keyboard
  *   /claim    - Dual-miner x402 disruption verification & claim generation
@@ -14,9 +16,33 @@
  */
 
 import { Bot, InlineKeyboard } from "grammy";
-import { verifyFlightDisruption, SKYCLAIM_PRESETS, SKYCLAIM_CONFIG } from "../lib/skyclaim-consensus";
+import { SKYCLAIM_PRESETS, SKYCLAIM_CONFIG, verifyFlightDisruption } from "../lib/skyclaim-consensus";
+import { SkyClaimResult } from "../lib/skyclaim-types";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
+const API_BASE_URL = process.env.API_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+/**
+ * Unified API Client: Calls the shared HTTP API (/api/claim)
+ */
+async function callClaimApi(flightNumber: string, flightDate: string = "2026-11-20"): Promise<SkyClaimResult> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/claim`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ flightNumber, flightDate }),
+    });
+
+    if (res.ok) {
+      return (await res.json()) as SkyClaimResult;
+    }
+  } catch {
+    // Standalone fallback if local Next.js HTTP server is not running
+  }
+
+  // Fallback directly to core backend
+  return await verifyFlightDisruption(flightNumber, flightDate);
+}
 
 // 1. Live Telegram Bot setup with Grammy
 if (token) {
@@ -36,7 +62,7 @@ if (token) {
 ✈️ *Welcome to SkyClaim Bot*
 _Autonomous Flight Disruption & Claim Verifier powered by Telegraph Protocol (Mission 15)_
 
-Airlines keep billions in unclaimed EU261/UK261 compensation. SkyClaim verifies your delay against two independent Telegraph miners and generates a legally dispute-proof claim package with cryptographic on-chain receipts.
+Airlines keep billions in unclaimed EU261/UK261 compensation. SkyClaim verifies your delay against two independent Telegraph miners and drafts a legally dispute-proof claim package with cryptographic on-chain receipts.
 
 *Quick Commands:*
 • \`/claim <FLIGHT> <DATE>\` — Verify a flight (e.g. \`/claim BA178 2026-11-20\`)
@@ -63,6 +89,7 @@ Airlines keep billions in unclaimed EU261/UK261 compensation. SkyClaim verifies 
 • *Circle USDC (x402 Gate):* \`${SKYCLAIM_CONFIG.usdcAddress}\`
 • *Live Node Engine:* \`${SKYCLAIM_CONFIG.nodeUrl}\`
 • *Micropayment Settlement:* $0.02 USDC per dual-miner consensus check
+• *Safety Caps:* $0.05 per-request cap · $5.00 daily spend limit · 15 req/min
 `;
     await ctx.reply(text, { parse_mode: "Markdown" });
   });
@@ -87,14 +114,14 @@ Airlines keep billions in unclaimed EU261/UK261 compensation. SkyClaim verifies 
   async function handleClaimExecution(ctx: any, flightNumber: string, flightDate: string) {
     await ctx.reply(`🔍 *Dispatched 2 Parallel x402 Purchases for ${flightNumber} ($0.02 USDC)...*\n• Querying Transit Miner (m-106005)\n• Querying Weather Miner (m-79335)`, { parse_mode: "Markdown" });
 
-    const res = await verifyFlightDisruption(flightNumber, flightDate);
+    const res = await callClaimApi(flightNumber, flightDate);
 
     let emoji = "✅";
     if (res.verdict === "INELIGIBLE_ON_TIME") emoji = "ℹ️";
     if (res.verdict === "FAIL_CLOSED_WEATHER_CONFLICT") emoji = "⚠️";
 
     const msg = `
-${emoji} *VERDICT: ${res.verdict.replace(/_/g, " ")}*
+${emoji} *VERDICT: ${res.verdict.replace(/_/g, " ")}* [${res.mode}]
 *Flight:* ${res.flight.carrier} ${res.flight.flightNumber} (${res.flight.origin} → ${res.flight.destination})
 *Gate Delay:* +${Math.floor(res.flight.delayMinutes / 60)}h ${res.flight.delayMinutes % 60}m (${res.flight.rawStatus})
 *Compensation Entitlement:* ${res.eligibleCompensation}
@@ -106,9 +133,9 @@ ${emoji} *VERDICT: ${res.verdict.replace(/_/g, " ")}*
 • ${res.weather.stormDetails}
 
 *Telegraph Receipts (Base Sepolia):*
-1. Transit Telemetry: [Tx Hash](${res.receipts.transitMiner.basescanUrl}) (Miner ${res.receipts.transitMiner.minerId})
-2. Weather Audit: [Tx Hash](${res.receipts.weatherMiner.basescanUrl}) (Miner ${res.receipts.weatherMiner.minerId})
-*Total Settled:* $${res.totalCostUsd.toFixed(2)} USDC
+1. Transit Telemetry: [Tx Hash](${res.receipts.transitMiner.basescanUrl}) (Miner ${res.receipts.transitMiner.minerId}) [${res.receipts.transitMiner.mode}]
+2. Weather Audit: [Tx Hash](${res.receipts.weatherMiner.basescanUrl}) (Miner ${res.receipts.weatherMiner.minerId}) [${res.receipts.weatherMiner.mode}]
+*Total Settled:* $${res.totalCostUsd.toFixed(2)} USDC · Status: ${res.consensus.minerAgreement ? "2/2 Agreement" : "Fail-Closed"}
 `;
 
     await ctx.reply(msg, { parse_mode: "Markdown", disable_web_page_preview: true });
@@ -143,17 +170,17 @@ async function runTerminalSimulator() {
     console.log("         • Buying TRAVEL_TRANSIT_LOCK from ttl-nws (m-106005)... $0.01");
     console.log("         • Buying STORM_ALERT from SkyWire MET Norway (m-79335)... $0.01");
 
-    const res = await verifyFlightDisruption(preset.flightNumber, preset.flightDate);
+    const res = await callClaimApi(preset.flightNumber, preset.flightDate);
 
     console.log(`\n  [Bot Response]:`);
-    console.log(`  VERDICT:                 [ ${res.verdict} ]`);
+    console.log(`  VERDICT:                 [ ${res.verdict} ] (Tag: ${res.mode})`);
     console.log(`  Flight:                  ${res.flight.carrier} ${res.flight.flightNumber} (${res.flight.origin} → ${res.flight.destination})`);
     console.log(`  Delay Confirmed:         +${Math.floor(res.flight.delayMinutes / 60)}h ${res.flight.delayMinutes % 60}m`);
     console.log(`  Statutory Entitlement:   ${res.eligibleCompensation}`);
     console.log(`  Consensus Rationale:     ${res.verdictRationale}`);
     console.log(`  Weather Defense Check:   ${res.weather.stormDetails}`);
-    console.log(`  Transit Receipt:         ${res.receipts.transitMiner.txHash.slice(0, 22)}... (Basescan)`);
-    console.log(`  Weather Receipt:         ${res.receipts.weatherMiner.txHash.slice(0, 22)}... (Basescan)`);
+    console.log(`  Transit Receipt:         ${res.receipts.transitMiner.txHash.slice(0, 22)}... [${res.receipts.transitMiner.mode}]`);
+    console.log(`  Weather Receipt:         ${res.receipts.weatherMiner.txHash.slice(0, 22)}... [${res.receipts.weatherMiner.mode}]`);
     console.log(`  Accounting Line:         $0.02 USDC total · 2/2 Receipts Verified on Diamond\n`);
   }
 

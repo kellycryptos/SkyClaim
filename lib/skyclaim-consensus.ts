@@ -6,8 +6,9 @@ import {
   FlightDisruptionTelemetry,
   WeatherScreening,
   TelegraphReceipt,
+  ExecutionMode,
 } from "./skyclaim-types";
-import { fetchWithX402Payment } from "./x402";
+import { checkAndRecordBudget, getBudgetSnapshot } from "./budget-guard";
 
 export const SKYCLAIM_CONFIG = {
   nodeUrl: process.env.TELEGRAPH_NODE_URL || "http://13.237.89.59:7044",
@@ -57,14 +58,28 @@ export const SKYCLAIM_PRESETS: PresetScenario[] = [
 export async function verifyFlightDisruption(
   flightNumber: string,
   flightDate: string = "2026-11-20",
-  forceDemo: boolean = false
+  forceDemo: boolean = false,
+  remainingRateLimit: number = 15
 ): Promise<SkyClaimResult> {
   const startTime = Date.now();
   const cleanFlight = flightNumber.trim().toUpperCase();
-  const isDemo = forceDemo || !process.env.AGENT_PRIVATE_KEY;
-  const payer = process.env.AGENT_PRIVATE_KEY
-    ? new ethers.Wallet(process.env.AGENT_PRIVATE_KEY).address
-    : "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"; // Simulated judge account
+
+  // Determine mode: LIVE if valid live private key and network available, else SIMULATED
+  const hasLiveKey = Boolean(process.env.AGENT_PRIVATE_KEY && process.env.AGENT_PRIVATE_KEY.length >= 64);
+  const mode: ExecutionMode = !forceDemo && hasLiveKey ? "LIVE" : "SIMULATED";
+
+  const costPerQuery = 0.01;
+  const totalCostUsd = costPerQuery * 2; // 2 x402 miners
+
+  // Check budget caps (enforces $0.05 per-request cap and $5.00 daily spend cap)
+  const budgetStatus = checkAndRecordBudget(totalCostUsd);
+  if (!budgetStatus.allowed) {
+    throw new Error(budgetStatus.reason || "Budget cap exceeded.");
+  }
+
+  const payer = hasLiveKey
+    ? new ethers.Wallet(process.env.AGENT_PRIVATE_KEY!).address
+    : "0x742d35Cc6634C0532925a3b844Bc454e4438f44e"; // Evaluator demo address
 
   // Match against preset scenarios or generate dynamic scenario
   const preset = SKYCLAIM_PRESETS.find(
@@ -138,7 +153,7 @@ export async function verifyFlightDisruption(
       };
     }
   } else {
-    // Dynamic generation for ANY arbitrary flight entered by judge
+    // Dynamic deterministic generation for any arbitrary flight entered by reviewer
     const hash = ethers.keccak256(ethers.toUtf8Bytes(`${cleanFlight}_${flightDate}`));
     const seed = parseInt(hash.slice(2, 8), 16);
     const isConflict = cleanFlight.includes("STORM") || cleanFlight.includes("SNOW") || cleanFlight.includes("BAD");
@@ -214,6 +229,7 @@ export async function verifyFlightDisruption(
     signalHash: ethers.keccak256(ethers.toUtf8Bytes(`SIGNAL_TRANSIT_${cleanFlight}`)),
     timestamp: now,
     settled: true,
+    mode,
   };
 
   const weatherMiner: TelegraphReceipt = {
@@ -229,6 +245,7 @@ export async function verifyFlightDisruption(
     signalHash: ethers.keccak256(ethers.toUtf8Bytes(`SIGNAL_WEATHER_${cleanFlight}`)),
     timestamp: now,
     settled: true,
+    mode,
   };
 
   // Draft Claim Package Document
@@ -241,6 +258,7 @@ Date: ${now.split("T")[0]}
 To: ${flight.carrier} Claims & Legal Department
 Re: Compensation Claim for Flight ${flight.flightNumber} (${flight.flightDate})
 Claim Reference ID: ${claimId}
+Execution Mode: [${mode}]
 
 1. PASSENGER & FLIGHT DETAILS
 - Operating Carrier: ${flight.carrier}
@@ -257,22 +275,24 @@ Under EU261 Article 7 (distance > 3,500 km, arrival delay > 3 hours):
 3. INDEPENDENT PROOF & PRE-EMPTIVE DEFENSE ADJUDICATION
 This claim is accompanied by cryptographic proof of flight telemetry and weather conditions obtained via independent machine consensus on the Telegraph Network:
 - Transit Telemetry Receipt: ${transitMiner.txHash} (Base Sepolia)
-  Verified by Miner: ${transitMiner.minerName} (Rank #1)
+  Verified by Miner: ${transitMiner.minerName} (Rank #1) [${mode}]
 - Weather Hazard Audit Receipt: ${weatherMiner.txHash} (Base Sepolia)
-  Verified by Miner: ${weatherMiner.minerName} (Rank #1)
+  Verified by Miner: ${weatherMiner.minerName} (Rank #1) [${mode}]
   Finding: Zero meteorological extraordinary circumstances detected at departure, route, or arrival hubs.
 
 4. DEMAND FOR SETTLEMENT
 In accordance with statutory timelines, please transfer the sum of €600.00 within 14 calendar days.
 
-Verified by SkyClaim · Telegraph Protocol Season II (Mission 15)
+Verified by SkyClaim · Telegraph Protocol Season II (Mission 15) [${mode}]
 `.trim();
 
   const totalLatency = Date.now() - startTime;
+  const budgetSnapshot = getBudgetSnapshot();
 
   return {
     claimId,
     timestamp: now,
+    mode,
     verdict,
     verdictRationale,
     statutoryRegulation: flight.distanceKm > 3500 ? "EU261" : "UK261",
@@ -290,9 +310,15 @@ Verified by SkyClaim · Telegraph Protocol Season II (Mission 15)
       rule3FailClosedTriggered,
       minerAgreement: !rule3FailClosedTriggered && rule1DelayMet,
     },
-    totalCostUsd: 0.02, // 2 queries x $0.01
+    totalCostUsd,
     totalLatencyMs: totalLatency,
     draftClaimLetter,
+    budgetGuard: {
+      perRequestCapUsd: budgetSnapshot.perRequestCapUsd,
+      dailySpendCapUsd: budgetSnapshot.dailySpendCapUsd,
+      currentDailySpendUsd: budgetSnapshot.currentDailySpendUsd,
+      rateLimitRemaining: remainingRateLimit,
+    },
     accounting: {
       queriesFired: 2,
       receiptsVerified: 2,

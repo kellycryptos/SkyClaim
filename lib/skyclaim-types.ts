@@ -3,6 +3,8 @@ export type ClaimVerdict =
   | "INELIGIBLE_ON_TIME"
   | "FAIL_CLOSED_WEATHER_CONFLICT";
 
+export type ExecutionMode = "LIVE" | "SIMULATED";
+
 export interface TelegraphReceipt {
   intent: string;
   minerId: string;
@@ -16,6 +18,7 @@ export interface TelegraphReceipt {
   signalHash: string;
   timestamp: string;
   settled: boolean;
+  mode: ExecutionMode;
 }
 
 export interface FlightDisruptionTelemetry {
@@ -39,9 +42,17 @@ export interface WeatherScreening {
   extraordinaryCircumstancesRisk: "NONE" | "LOW" | "HIGH_AIRLINE_DEFENSE";
 }
 
+export interface BudgetGuardInfo {
+  perRequestCapUsd: number;
+  dailySpendCapUsd: number;
+  currentDailySpendUsd: number;
+  rateLimitRemaining: number;
+}
+
 export interface SkyClaimResult {
   claimId: string;
   timestamp: string;
+  mode: ExecutionMode; // "LIVE" | "SIMULATED"
   verdict: ClaimVerdict;
   verdictRationale: string;
   statutoryRegulation: "EU261" | "UK261" | "US_DOT" | "NONE";
@@ -62,6 +73,7 @@ export interface SkyClaimResult {
   totalCostUsd: number;
   totalLatencyMs: number;
   draftClaimLetter: string;
+  budgetGuard: BudgetGuardInfo;
   accounting: {
     queriesFired: number;
     receiptsVerified: number;
