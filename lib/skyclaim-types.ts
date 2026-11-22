@@ -3,6 +3,29 @@ export type ClaimVerdict =
   | "INELIGIBLE_ON_TIME"
   | "FAIL_CLOSED_WEATHER_CONFLICT";
 
+export type ClaimRecommendation =
+  | "GREENLIGHT_TO_FILE"
+  | "DO_NOT_FILE_INELIGIBLE"
+  | "DO_NOT_FILE_HIGH_RISK";
+
+export interface PublicLedgerEntry {
+  id: string;
+  flightNumber: string;
+  carrier: string;
+  route: string;
+  delayText: string;
+  verdict: ClaimVerdict;
+  recommendation: ClaimRecommendation;
+  recommendationText: string;
+  compensationEur: number;
+  costUsd: number;
+  txTransit: string;
+  txWeather: string;
+  basescanTransit: string;
+  basescanWeather: string;
+  timestamp: string;
+}
+
 export type ExecutionMode = "LIVE" | "SIMULATED";
 
 export interface TelegraphReceipt {
@@ -55,6 +78,8 @@ export interface SkyClaimResult {
   mode: ExecutionMode; // "LIVE" | "SIMULATED"
   verdict: ClaimVerdict;
   verdictRationale: string;
+  recommendation: ClaimRecommendation;
+  recommendationText: string;
   statutoryRegulation: "EU261" | "UK261" | "US_DOT" | "NONE";
   eligibleCompensation: string;
   compensationAmountEur: number;
