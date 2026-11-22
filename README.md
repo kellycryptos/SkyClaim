@@ -52,10 +52,13 @@ npm install
 # 2. Run deterministic CI/CD test suite
 npm test
 
-# 3. Build optimized production bundle
+# 3. Verify real live Telegraph x402 purchase end-to-end
+npm run purchase:live
+
+# 4. Build optimized production bundle
 npm run build
 
-# 4. Boot Web Terminal on port 3000
+# 5. Boot Web Terminal on port 3000
 npm start
 ```
 

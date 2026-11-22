@@ -43,7 +43,7 @@ Automates verification at the moment of delay. Instead of passengers spending we
 Corporate travel desks and consumers gain timestamped, immutable proof of departure weather conditions, avoiding doomed claims when weather defense is strong and providing instant evidence packs when claims are viable.
 
 ### Question 5: How can someone try it?
-1. Clone the repo and run `npm install && npm test && npm run build && npm start`.
+1. Clone the repo and run `npm install && npm test && npm run purchase:live && npm run build && npm start`.
 2. Open `http://localhost:3000` to test the 3 labeled presets or query any US airport.
 3. Run `npm run bot:sim` to test the full Telegram bot flow in terminal.
 
