@@ -18,6 +18,13 @@ import {
   Copy,
   Check,
   ShieldAlert,
+  ArrowRight,
+  Scale,
+  Lock,
+  CloudSun,
+  FileText,
+  Activity,
+  Layers,
 } from "lucide-react";
 
 export default function SkyClaimHome() {
@@ -35,7 +42,7 @@ export default function SkyClaimHome() {
     const dateToTest = overrideDate || flightDate || "2026-11-20";
 
     if (!flightToTest) {
-      setError("Please select a preset or enter a flight number (e.g. BA178).");
+      setError("Please select a flight scenario or enter a flight code (e.g. BA178).");
       return;
     }
 
@@ -94,19 +101,19 @@ export default function SkyClaimHome() {
   };
 
   return (
-    <div className="min-h-screen bg-[#08090C] text-gray-100 flex flex-col font-sans">
-      {/* Top Header */}
-      <header className="border-b border-[#1C2028] bg-[#0A0C10] px-6 py-3.5 sticky top-0 z-40">
+    <div className="min-h-screen bg-[#060709] text-gray-100 flex flex-col font-sans radar-grid">
+      {/* Top Aerospace Header */}
+      <header className="border-b border-[#1A1E26] bg-[#0A0D14]/90 backdrop-blur-md px-6 py-3 sticky top-0 z-40">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-7 w-7 rounded-md bg-blue-600 flex items-center justify-center font-mono font-bold text-xs text-white">
-              <Plane className="h-4 w-4" />
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white">
+              <Plane className="h-4 w-4 transform -rotate-45" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-semibold text-sm tracking-wide text-white">SKYCLAIM</span>
-                <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-white/5 text-gray-400 border border-white/10">
-                  Mission 15 · Consumer Automation
+                <span className="font-bold text-sm tracking-widest text-white uppercase font-mono">SKYCLAIM</span>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                  AEROSPACE INTEL · MISSION 15
                 </span>
               </div>
             </div>
@@ -114,16 +121,16 @@ export default function SkyClaimHome() {
 
           <div className="flex items-center gap-3">
             {/* Budget & Safety Guard Pill */}
-            <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#12151D] border border-[#1C2028] text-[11px] font-mono text-gray-300">
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-md bg-[#0F131C] border border-[#1C2230] text-[11px] font-mono text-gray-300">
               <span className="text-emerald-400">Cap: $0.05/req</span>
               <span className="text-gray-600">·</span>
-              <span className="text-blue-400">Daily: $5.00 limit</span>
+              <span className="text-blue-400">Daily: $5.00</span>
               <span className="text-gray-600">·</span>
               <span className="text-purple-400">15 req/min</span>
             </div>
 
             {/* Network Pill */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
               Base Sepolia (84532)
             </div>
@@ -131,7 +138,7 @@ export default function SkyClaimHome() {
             {/* Sponsor Evidence Button */}
             <button
               onClick={() => setReceiptBoxOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-gray-200 transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-gray-200 transition"
             >
               <ShieldCheck className="h-3.5 w-3.5 text-blue-400" />
               The Receipt Box
@@ -140,18 +147,21 @@ export default function SkyClaimHome() {
         </div>
       </header>
 
-      {/* Main Container - 1 Minimal Page */}
+      {/* Main Single-Page Flight Desk */}
       <main className="max-w-6xl mx-auto w-full px-6 py-6 flex-1 space-y-6">
-        {/* 1-Click Reviewer Presets */}
-        <section className="bg-[#0C0E14] border border-[#1C2028] rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-              1-Click Reviewer Presets (The 3 Acceptance Scenarios)
-            </span>
+        {/* Flight Departure Terminal / Presets */}
+        <section className="bg-[#0A0D14] border border-[#1A1F2B] rounded-2xl p-5 shadow-2xl relative overflow-hidden">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-blue-400" />
+              <h1 className="text-xs font-semibold text-gray-300 uppercase tracking-widest font-mono">
+                Flight Telemetry Dispatcher · 1-Click Scenarios
+              </h1>
+            </div>
             <span className="text-xs text-gray-400 font-mono">Cost: $0.02 USDC (2 x402 miners)</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
             {SKYCLAIM_PRESETS.map((p) => {
               const isSelected = flightNumber.toUpperCase() === p.flightNumber.toUpperCase();
               return (
@@ -159,21 +169,23 @@ export default function SkyClaimHome() {
                   key={p.id}
                   onClick={() => selectPreset(p)}
                   disabled={loading}
-                  className={`text-left p-3 rounded-lg border transition ${
+                  className={`text-left p-4 rounded-xl border transition relative overflow-hidden group ${
                     isSelected
-                      ? "border-blue-500 bg-blue-500/5 text-white"
-                      : "border-[#1C2028] bg-[#10121A] hover:border-gray-700 text-gray-300"
+                      ? "border-blue-500/80 bg-blue-500/10 text-white shadow-lg shadow-blue-500/10"
+                      : "border-[#1A1F2B] bg-[#0E121B] hover:border-gray-700 text-gray-300"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold text-xs text-white">{p.flightNumber} · {p.carrier}</span>
+                    <span className="font-mono font-bold text-sm tracking-wide text-white group-hover:text-blue-400 transition">
+                      {p.flightNumber}
+                    </span>
                     <span
-                      className={`text-[10px] font-mono font-medium px-1.5 py-0.5 rounded ${
+                      className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
                         p.expectedVerdict === "APPROVED_FOR_CLAIM"
-                          ? "bg-emerald-500/10 text-emerald-400"
+                          ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
                           : p.expectedVerdict === "INELIGIBLE_ON_TIME"
-                          ? "bg-gray-500/10 text-gray-400"
-                          : "bg-amber-500/10 text-amber-400"
+                          ? "bg-gray-500/15 text-gray-400 border border-gray-500/30"
+                          : "bg-amber-500/15 text-amber-400 border border-amber-500/30"
                       }`}
                     >
                       {p.expectedVerdict === "APPROVED_FOR_CLAIM"
@@ -183,44 +195,45 @@ export default function SkyClaimHome() {
                         : "CONFLICT"}
                     </span>
                   </div>
-                  <p className="mt-1 text-[11px] text-gray-400 line-clamp-1">{p.summary}</p>
+                  <p className="mt-1.5 font-medium text-xs text-gray-200">{p.carrier}</p>
+                  <p className="mt-1 text-[11px] text-gray-400 line-clamp-2 leading-relaxed">{p.summary}</p>
                 </button>
               );
             })}
           </div>
 
-          {/* Flight Input Form */}
-          <div className="mt-4 pt-4 border-t border-[#1C2028] flex flex-col sm:flex-row gap-3">
+          {/* Quick Airport Search & Telemetry Input */}
+          <div className="mt-5 pt-4 border-t border-[#1A1F2B] flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+              <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Enter flight code (e.g. BA178, DL401, AF112)"
+                placeholder="Enter flight code (e.g. BA178, DL401, AF112, LH400)"
                 value={flightNumber}
                 onChange={(e) => setFlightNumber(e.target.value)}
-                className="w-full bg-[#10121A] border border-[#1C2028] rounded-lg pl-9 pr-4 py-2 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition uppercase"
+                className="w-full bg-[#0E121B] border border-[#1A1F2B] rounded-xl pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition uppercase tracking-wider"
               />
             </div>
             <input
               type="date"
               value={flightDate}
               onChange={(e) => setFlightDate(e.target.value)}
-              className="bg-[#10121A] border border-[#1C2028] rounded-lg px-3 py-2 text-xs font-mono text-gray-300 focus:outline-none focus:border-blue-500 transition"
+              className="bg-[#0E121B] border border-[#1A1F2B] rounded-xl px-4 py-2.5 text-xs font-mono text-gray-300 focus:outline-none focus:border-blue-500 transition"
             />
             <button
               onClick={() => runVerification()}
               disabled={loading}
-              className="flex items-center justify-center gap-2 px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium text-xs transition shrink-0"
+              className="flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 disabled:opacity-50 text-white font-semibold text-xs tracking-wide transition shadow-lg shadow-blue-600/20 shrink-0"
             >
               {loading ? (
                 <>
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                  Verifying Consensus ($0.02)...
+                  <RefreshCw className="h-4 w-4 animate-spin text-white" />
+                  <span>Auditing 2 Miners ($0.02)...</span>
                 </>
               ) : (
                 <>
-                  <Zap className="h-3.5 w-3.5" />
-                  Verify Flight Disruption
+                  <Zap className="h-4 w-4 text-amber-300" />
+                  <span>Verify Disruption Telemetry</span>
                 </>
               )}
             </button>
@@ -228,217 +241,305 @@ export default function SkyClaimHome() {
         </section>
 
         {error && (
-          <div className="p-4 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-2">
+          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-center gap-3">
             <AlertTriangle className="h-4 w-4 shrink-0 text-rose-400" />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Result Card & Claim Draft */}
+        {/* High-End Flight Boarding Pass & Telemetry Dossier */}
         {claim && (
-          <div className="space-y-6 animate-in fade-in duration-200">
-            {/* Result Card */}
+          <div className="space-y-6 animate-in fade-in duration-300">
+            {/* Luxury Boarding Pass Metaphor Card */}
             <section
-              className={`rounded-xl border p-5 transition ${
+              className={`rounded-2xl border relative overflow-hidden transition ${
                 claim.verdict === "APPROVED_FOR_CLAIM"
-                  ? "bg-emerald-950/20 border-emerald-500/30"
+                  ? "bg-gradient-to-b from-[#0B1516] to-[#080D12] border-emerald-500/40 glow-emerald"
                   : claim.verdict === "INELIGIBLE_ON_TIME"
-                  ? "bg-gray-900/40 border-gray-700/30"
-                  : "bg-amber-950/20 border-amber-500/30"
+                  ? "bg-gradient-to-b from-[#0F1218] to-[#0A0D12] border-gray-700/40"
+                  : "bg-gradient-to-b from-[#17120D] to-[#0D0B09] border-amber-500/40 glow-amber"
               }`}
             >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`h-11 w-11 rounded-lg flex items-center justify-center shrink-0 border ${
-                      claim.verdict === "APPROVED_FOR_CLAIM"
-                        ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                        : claim.verdict === "INELIGIBLE_ON_TIME"
-                        ? "bg-gray-500/10 text-gray-400 border-gray-500/20"
-                        : "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                    }`}
-                  >
-                    {claim.verdict === "APPROVED_FOR_CLAIM" && <CheckCircle2 className="h-6 w-6" />}
-                    {claim.verdict === "INELIGIBLE_ON_TIME" && <Clock className="h-6 w-6" />}
-                    {claim.verdict === "FAIL_CLOSED_WEATHER_CONFLICT" && <ShieldAlert className="h-6 w-6" />}
-                  </div>
+              {/* Notches for ticket cutout look */}
+              <div className="hidden lg:block ticket-notch-left top-1/2 -translate-y-1/2 border-r border-[#1A1F2B]" />
+              <div className="hidden lg:block ticket-notch-right top-1/2 -translate-y-1/2 border-l border-[#1A1F2B]" />
 
-                  <div>
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <h2 className="text-base font-bold text-white tracking-wide">
-                        {claim.flight.carrier} {claim.flight.flightNumber} ({claim.flight.origin} → {claim.flight.destination})
-                      </h2>
-
-                      {/* Visible LIVE / SIMULATED Badge */}
-                      <span
-                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${
-                          claim.mode === "LIVE"
-                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
-                            : "bg-blue-500/20 text-blue-300 border-blue-500/40"
-                        }`}
-                      >
-                        ● {claim.mode}
-                      </span>
-
-                      {/* Verdict Badge */}
-                      <span
-                        className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
-                          claim.verdict === "APPROVED_FOR_CLAIM"
-                            ? "bg-emerald-500/20 text-emerald-300"
-                            : claim.verdict === "INELIGIBLE_ON_TIME"
-                            ? "bg-gray-500/20 text-gray-300"
-                            : "bg-amber-500/20 text-amber-300"
-                        }`}
-                      >
-                        {claim.verdict.replace(/_/g, " ")}
-                      </span>
-                    </div>
-
-                    <p className="mt-1 text-xs text-gray-300">{claim.verdictRationale}</p>
-                    <p className="mt-1 text-[11px] font-mono text-gray-400">
-                      Scheduled: {claim.flight.scheduledArrival} · Actual: {claim.flight.actualArrival} · Delay: +{Math.floor(claim.flight.delayMinutes / 60)}h {claim.flight.delayMinutes % 60}m
-                    </p>
-                  </div>
+              {/* Pass Header */}
+              <div className="px-6 py-4 border-b border-white/5 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs font-semibold text-gray-400 uppercase tracking-widest">
+                    {claim.flight.carrier}
+                  </span>
+                  <span className="text-gray-600">·</span>
+                  <span className="font-mono text-sm font-bold text-white tracking-wider">
+                    {claim.flight.flightNumber}
+                  </span>
+                  <span className="text-gray-600">·</span>
+                  <span className="text-[11px] font-mono text-gray-400">
+                    Transatlantic Route ({claim.flight.distanceKm.toLocaleString()} km)
+                  </span>
                 </div>
 
-                {/* Compensation & Action */}
-                <div className="flex items-center gap-4 self-end md:self-auto border-t md:border-t-0 border-[#1C2028] pt-3 md:pt-0">
-                  <div className="text-right">
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wider block font-medium">Statutory Compensation</span>
-                    <span
-                      className={`text-2xl font-bold font-mono ${
-                        claim.verdict === "APPROVED_FOR_CLAIM"
-                          ? "text-emerald-400"
-                          : claim.verdict === "INELIGIBLE_ON_TIME"
-                          ? "text-gray-400"
-                          : "text-amber-400"
-                      }`}
-                    >
-                      {claim.eligibleCompensation.split(" ")[0]}
-                      <span className="text-xs text-gray-400 font-normal"> / pax</span>
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2.5">
+                  {/* Execution Mode Badge */}
+                  <span
+                    className={`text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border ${
+                      claim.mode === "LIVE"
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm shadow-emerald-500/20"
+                        : "bg-cyan-500/20 text-cyan-300 border-cyan-500/40 shadow-sm shadow-cyan-500/20"
+                    }`}
+                  >
+                    ● {claim.mode}
+                  </span>
 
-                  {claim.verdict === "APPROVED_FOR_CLAIM" && (
-                    <button
-                      onClick={downloadClaimPackage}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-medium text-white transition"
-                    >
-                      <Download className="h-3.5 w-3.5" />
-                      Download Claim
-                    </button>
-                  )}
+                  {/* Verdict Pill */}
+                  <span
+                    className={`text-xs font-mono font-bold px-3 py-1 rounded-full border ${
+                      claim.verdict === "APPROVED_FOR_CLAIM"
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                        : claim.verdict === "INELIGIBLE_ON_TIME"
+                        ? "bg-gray-500/20 text-gray-300 border-gray-500/40"
+                        : "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                    }`}
+                  >
+                    {claim.verdict.replace(/_/g, " ")}
+                  </span>
                 </div>
               </div>
 
-              {/* Status & Proof Footer */}
-              <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-gray-400">
-                <div className="flex items-center gap-4">
+              {/* Boarding Pass Flight Route & Gate Trajectory */}
+              <div className="p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                {/* Route Visualizer (8 cols) */}
+                <div className="lg:col-span-8 space-y-5">
+                  <div className="flex items-center justify-between">
+                    {/* Origin */}
+                    <div>
+                      <span className="text-3xl font-black font-mono tracking-tight text-white block">
+                        {claim.flight.origin}
+                      </span>
+                      <span className="text-xs text-gray-400 font-medium">
+                        {claim.flight.origin === "LHR" ? "London Heathrow" : claim.flight.origin === "CDG" ? "Paris Charles de Gaulle" : "New York JFK"}
+                      </span>
+                      <div className="mt-2 text-[11px] font-mono text-gray-500">
+                        Scheduled: <strong className="text-gray-300">{claim.flight.scheduledArrival.split(" ")[0]} UTC</strong>
+                      </div>
+                    </div>
+
+                    {/* Trajectory Flight Path */}
+                    <div className="flex-1 px-6 flex flex-col items-center">
+                      <div className="w-full flex items-center justify-center gap-2 text-gray-600">
+                        <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent via-gray-600 to-gray-500" />
+                        <Plane className="h-5 w-5 text-blue-400 transform rotate-90 shrink-0" />
+                        <div className="h-[1px] flex-1 bg-gradient-to-r from-gray-500 via-gray-600 to-transparent" />
+                      </div>
+
+                      {/* Delay Indicator Tag */}
+                      <div className="mt-2.5">
+                        <span
+                          className={`text-xs font-mono font-bold px-3 py-1 rounded-full border shadow-sm ${
+                            claim.flight.delayMinutes >= 180
+                              ? "bg-rose-500/15 text-rose-300 border-rose-500/30"
+                              : claim.flight.delayMinutes > 0
+                              ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                              : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                          }`}
+                        >
+                          +{Math.floor(claim.flight.delayMinutes / 60)}H {claim.flight.delayMinutes % 60}M DELAY
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Destination */}
+                    <div className="text-right">
+                      <span className="text-3xl font-black font-mono tracking-tight text-white block">
+                        {claim.flight.destination}
+                      </span>
+                      <span className="text-xs text-gray-400 font-medium">
+                        {claim.flight.destination === "JFK" ? "New York JFK" : claim.flight.destination === "LAX" ? "Los Angeles LAX" : "Chicago O'Hare"}
+                      </span>
+                      <div className="mt-2 text-[11px] font-mono text-gray-500">
+                        Actual Gate: <strong className="text-gray-200">{claim.flight.actualArrival}</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Operational Consensus Note */}
+                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-xs text-gray-300 leading-relaxed">
+                    <span className="font-semibold text-gray-100">Consensus Audit: </span>
+                    {claim.verdictRationale}
+                  </div>
+                </div>
+
+                {/* Right Payout Stub (4 cols) */}
+                <div className="lg:col-span-4 border-t lg:border-t-0 lg:border-l border-white/10 lg:pl-6 pt-5 lg:pt-0 flex flex-col justify-between h-full">
+                  <div>
+                    <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest block font-medium">
+                      Statutory Compensation Right
+                    </span>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span
+                        className={`text-3xl font-black font-mono tracking-tight ${
+                          claim.verdict === "APPROVED_FOR_CLAIM"
+                            ? "text-emerald-400"
+                            : claim.verdict === "INELIGIBLE_ON_TIME"
+                            ? "text-gray-400"
+                            : "text-amber-400"
+                        }`}
+                      >
+                        {claim.eligibleCompensation.split(" ")[0]}
+                      </span>
+                      <span className="text-xs font-mono text-gray-400">/ ticketed passenger</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-gray-400 font-mono">
+                      Regulation: <span className="text-gray-200">{claim.statutoryRegulation} Article 7</span>
+                    </p>
+                  </div>
+
+                  <div className="mt-5 space-y-2">
+                    {claim.verdict === "APPROVED_FOR_CLAIM" && (
+                      <button
+                        onClick={downloadClaimPackage}
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white transition shadow-lg shadow-emerald-600/20"
+                      >
+                        <Download className="h-3.5 w-3.5" />
+                        Download Claim Package
+                      </button>
+                    )}
+
+                    <button
+                      onClick={copyClaimPackage}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-gray-300 hover:text-white transition"
+                    >
+                      {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                      {copied ? "Dossier Copied to Clipboard" : "Copy Complete Dossier"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Pass Footer Micro-Ledger */}
+              <div className="px-6 py-3 border-t border-white/5 bg-black/30 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-gray-400">
+                <div className="flex items-center gap-5">
                   <span>
-                    Cost: <strong className="text-emerald-400">${claim.totalCostUsd.toFixed(2)} USDC</strong>
+                    Cost: <strong className="text-emerald-400">${claim.totalCostUsd.toFixed(2)} USDC</strong> (2 x402 miners)
                   </span>
                   <span>
                     Latency: <strong className="text-gray-200">{claim.totalLatencyMs}ms</strong>
                   </span>
                   <span>
-                    Consensus: <strong className="text-blue-400">{claim.consensus.minerAgreement ? "2/2 Agreement" : "Fail-Closed"}</strong>
+                    Consensus: <strong className="text-blue-400">{claim.consensus.minerAgreement ? "2/2 Locked" : "Fail-Closed"}</strong>
                   </span>
                 </div>
-                <div className="text-[11px] text-gray-400">
-                  Claim ID: <span className="text-gray-300">{claim.claimId}</span>
+                <div>
+                  Dossier Ref: <span className="text-gray-300">{claim.claimId}</span>
                 </div>
               </div>
             </section>
 
-            {/* Receipts Section */}
-            <section className="rounded-xl border border-[#1C2028] bg-[#0C0E14] overflow-hidden">
-              <div className="border-b border-[#1C2028] bg-white/[0.02] px-4 py-3 flex items-center justify-between text-xs font-semibold text-gray-300">
-                <span>Settled Telegraph Requests (2 Miners · Base Sepolia Chain ID 84532)</span>
-                <span className="font-mono text-emerald-400">Total: $0.02 USDC</span>
-              </div>
-              <div className="divide-y divide-[#1C2028]">
-                {/* Transit Miner Receipt */}
-                <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white">1. Transit Telemetry Check</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/5 text-gray-300">
-                        {claim.receipts.transitMiner.intent}
-                      </span>
-                      <span
-                        className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
-                          claim.receipts.transitMiner.mode === "LIVE"
-                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                            : "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                        }`}
-                      >
-                        {claim.receipts.transitMiner.mode}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-gray-400">
-                      Miner: <strong className="text-gray-200">{claim.receipts.transitMiner.minerName}</strong> · Rank: <strong className="text-blue-400">#{claim.receipts.transitMiner.networkRank}</strong>
-                    </p>
-                    <p className="mt-0.5 font-mono text-[11px] text-gray-500">
-                      Tx: <span className="text-gray-400">{claim.receipts.transitMiner.txHash}</span>
-                    </p>
+            {/* Dual-Miner Telemetry Radar Grid */}
+            <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Sensor 1: Flight Telemetry Miner */}
+              <div className="rounded-2xl border border-[#1A1F2B] bg-[#0A0D14] p-5 shadow-xl space-y-3 relative overflow-hidden">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Plane className="h-4 w-4 text-blue-400" />
+                    <span className="font-semibold text-xs text-white">Sensor Alpha · Transit Radar</span>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0 font-mono text-[11px]">
-                    <span className="text-emerald-400 font-bold">${claim.receipts.transitMiner.costUsd.toFixed(2)} USDC</span>
-                    <a
-                      href={claim.receipts.transitMiner.basescanUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-1 text-blue-400 hover:text-blue-300"
-                    >
-                      Basescan <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
+                  <span
+                    className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${
+                      claim.receipts.transitMiner.mode === "LIVE"
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                        : "bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
+                    }`}
+                  >
+                    {claim.receipts.transitMiner.mode}
+                  </span>
                 </div>
 
-                {/* Weather Miner Receipt */}
-                <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white">2. Weather Disruption Screening</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-white/5 text-gray-300">
-                        {claim.receipts.weatherMiner.intent}
-                      </span>
-                      <span
-                        className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded border ${
-                          claim.receipts.weatherMiner.mode === "LIVE"
-                            ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-                            : "bg-blue-500/20 text-blue-300 border-blue-500/30"
-                        }`}
-                      >
-                        {claim.receipts.weatherMiner.mode}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-gray-400">
-                      Miner: <strong className="text-gray-200">{claim.receipts.weatherMiner.minerName}</strong> · Rank: <strong className="text-blue-400">#{claim.receipts.weatherMiner.networkRank}</strong>
-                    </p>
-                    <p className="mt-0.5 font-mono text-[11px] text-gray-500">
-                      Tx: <span className="text-gray-400">{claim.receipts.weatherMiner.txHash}</span>
-                    </p>
+                <div className="space-y-1.5 text-xs">
+                  <p className="text-gray-300">
+                    Miner: <strong className="text-white">{claim.receipts.transitMiner.minerName}</strong>
+                  </p>
+                  <p className="text-gray-400 font-mono text-[11px]">
+                    Intent: <span className="text-gray-300">{claim.receipts.transitMiner.intent}</span> · Rank: <span className="text-blue-400 font-bold">#{claim.receipts.transitMiner.networkRank}</span>
+                  </p>
+                  <p className="text-gray-400 font-mono text-[11px]">
+                    Telemetry: <span className="text-gray-200">Delay +{claim.flight.delayMinutes}m verified at destination gate</span>
+                  </p>
+                  <p className="text-gray-400 font-mono text-[11px]">
+                    Rule 1 (&ge; 180 min): <strong className={claim.consensus.rule1DelayMet ? "text-emerald-400" : "text-gray-500"}>{claim.consensus.rule1DelayMet ? "SATISFIED ✓" : "BELOW STATUTORY THRESHOLD"}</strong>
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-[#1A1F2B] flex items-center justify-between text-[11px] font-mono text-gray-500">
+                  <span>Settled: $0.01 USDC</span>
+                  <a
+                    href={claim.receipts.transitMiner.basescanUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  >
+                    Basescan Proof <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Sensor 2: Meteorological Defense Miner */}
+              <div className="rounded-2xl border border-[#1A1F2B] bg-[#0A0D14] p-5 shadow-xl space-y-3 relative overflow-hidden">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CloudSun className="h-4 w-4 text-cyan-400" />
+                    <span className="font-semibold text-xs text-white">Sensor Beta · Weather Defense Scanner</span>
                   </div>
-                  <div className="flex items-center gap-3 shrink-0 font-mono text-[11px]">
-                    <span className="text-emerald-400 font-bold">${claim.receipts.weatherMiner.costUsd.toFixed(2)} USDC</span>
-                    <a
-                      href={claim.receipts.weatherMiner.basescanUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center gap-1 text-blue-400 hover:text-blue-300"
-                    >
-                      Basescan <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
+                  <span
+                    className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded border ${
+                      claim.receipts.weatherMiner.mode === "LIVE"
+                        ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                        : "bg-cyan-500/20 text-cyan-300 border-cyan-500/30"
+                    }`}
+                  >
+                    {claim.receipts.weatherMiner.mode}
+                  </span>
+                </div>
+
+                <div className="space-y-1.5 text-xs">
+                  <p className="text-gray-300">
+                    Miner: <strong className="text-white">{claim.receipts.weatherMiner.minerName}</strong>
+                  </p>
+                  <p className="text-gray-400 font-mono text-[11px]">
+                    Intent: <span className="text-gray-300">{claim.receipts.weatherMiner.intent}</span> · Rank: <span className="text-cyan-400 font-bold">#{claim.receipts.weatherMiner.networkRank}</span>
+                  </p>
+                  <p className="text-gray-400 font-mono text-[11px]">
+                    Atmosphere: <span className="text-gray-200">{claim.weather.stormDetails}</span>
+                  </p>
+                  <p className="text-gray-400 font-mono text-[11px]">
+                    Rule 2 (Weather clear): <strong className={claim.consensus.rule2WeatherClear ? "text-emerald-400" : "text-rose-400"}>{claim.consensus.rule2WeatherClear ? "DEFENSE REFUTED ✓" : "DEFENSE RISK ACTIVE ⚠️"}</strong>
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-[#1A1F2B] flex items-center justify-between text-[11px] font-mono text-gray-500">
+                  <span>Settled: $0.01 USDC</span>
+                  <a
+                    href={claim.receipts.weatherMiner.basescanUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                  >
+                    Basescan Proof <ExternalLink className="h-3 w-3" />
+                  </a>
                 </div>
               </div>
             </section>
 
-            {/* Generated Claim Draft */}
-            <section className="rounded-xl border border-[#1C2028] bg-[#0A0C10] p-4">
-              <div className="flex items-center justify-between mb-3 border-b border-[#1C2028] pb-2">
-                <span className="text-xs font-semibold text-gray-300">Statutory Passenger Claim Draft</span>
+            {/* Generated Dispute-Proof Legal Claim Package */}
+            <section className="rounded-2xl border border-[#1A1F2B] bg-[#0A0D14] p-5 shadow-xl">
+              <div className="flex items-center justify-between mb-3 border-b border-[#1A1F2B] pb-3">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-blue-400" />
+                  <span className="text-xs font-semibold text-gray-200 uppercase tracking-wider font-mono">
+                    Statutory Claim Dossier · Pre-Emptive Legal Demand
+                  </span>
+                </div>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={copyClaimPackage}
@@ -449,13 +550,13 @@ export default function SkyClaimHome() {
                   </button>
                   <button
                     onClick={downloadClaimPackage}
-                    className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300"
+                    className="flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 font-medium"
                   >
                     <Download className="h-3 w-3" /> Download .txt
                   </button>
                 </div>
               </div>
-              <pre className="font-mono text-[11px] text-gray-300 bg-[#060709] p-4 rounded-lg overflow-x-auto whitespace-pre-wrap border border-[#141720]">
+              <pre className="font-mono text-[11px] text-gray-300 bg-[#060709] p-4 rounded-xl overflow-x-auto whitespace-pre-wrap border border-[#141822] leading-relaxed">
                 {claim.draftClaimLetter}
               </pre>
             </section>
