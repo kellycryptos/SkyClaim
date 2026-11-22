@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start -p 3000",
     "test": "npx tsx scripts/test-skyclaim.ts",
+    "wallet:check": "npx tsx scripts/check-wallet.ts",
     "purchase:live": "npx tsx scripts/verify-live-purchase.ts",
     "bot": "npx tsx scripts/telegram-bot.ts",
     "bot:sim": "npx tsx scripts/telegram-bot.ts",
