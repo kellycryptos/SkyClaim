@@ -9,6 +9,9 @@
  * 3. Terminal Simulator Mode for instant zero-config reviewer testing
  */
 
+import { loadEnvConfig } from "@next/env";
+loadEnvConfig(process.cwd());
+
 import { Bot, InlineKeyboard } from "grammy";
 import {
   verifyFlightDisruption,
