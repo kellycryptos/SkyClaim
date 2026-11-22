@@ -9,21 +9,27 @@
 # Next.js
 /.next/
 /out/
+/dist/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Production
 /build
 
-# Misc
+# Misc & Keys
 .DS_Store
 *.pem
+*.key
+wallet.json
+*wallet*.json
 
 # Local env files (NEVER COMMIT SECRETS)
-.env
-.env*.local
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env*
+!.env.example
 
 # Vercel
 .vercel
@@ -37,3 +43,4 @@ next-env.d.ts
 /telegraph-examples/
 /telegraph-usecases/
 /_exploration_notes/
+/skyclaim-publish/

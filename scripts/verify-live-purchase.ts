@@ -80,7 +80,7 @@ async function main() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         intent: "TRAVEL_TRANSIT_LOCK_GENERAL",
-        query: `Active transit locks for ${airportCode} airport`,
+        params: { booking: `${airportCode}-LHR` },
       }),
       signal: AbortSignal.timeout(6000),
     });
@@ -100,8 +100,39 @@ async function main() {
       if (hasPrivateKey) {
         console.log("\n[3/3] Signing on-chain EIP-712 transfer authorization...");
         const wallet = new ethers.Wallet(privateKey!);
+        console.log(`      Signer / Payer:         ${wallet.address}`);
         const signedPayment = await signPayment(challenge, wallet, SKYCLAIM_CONFIG.chainId);
         console.log(`  ✓ EIP-712 Signature:    ${signedPayment.header.slice(0, 32)}...`);
+
+        console.log("      Broadcasting paid request with Payment-Signature...");
+        try {
+          const secondRes = await fetch(`${SKYCLAIM_CONFIG.nodeUrl}/engine/v1/ask`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Payment-Signature": signedPayment.header,
+            },
+            body: JSON.stringify({
+              intent: "TRAVEL_TRANSIT_LOCK_GENERAL",
+              params: { booking: `${airportCode}-LHR` },
+            }),
+            signal: AbortSignal.timeout(15000),
+          });
+
+          console.log(`      Settlement Response:    HTTP ${secondRes.status}`);
+          if (secondRes.ok) {
+            const body = await secondRes.json();
+            console.log(`  ✓ ON-CHAIN x402 PURCHASE SETTLED:`);
+            console.log(`    Miner:                ${body.miner_name || body.minerName || "ttl-nws"}`);
+            console.log(`    Cost:                 $0.01 USDC`);
+            console.log(`    Receipt / Tx Hash:    ${body.tx_hash || body.receipt_hash || body.signal_hash}`);
+          } else {
+            const errText = await secondRes.text();
+            console.log(`      Response body:          ${errText.slice(0, 160)}`);
+          }
+        } catch (err: any) {
+          console.log(`      Broadcasting note:      ${err?.message || err}`);
+        }
       } else {
         console.log("\n[3/3] Raw Wallet Signing: (AGENT_PRIVATE_KEY not set, relying on Escrow API Key)");
       }
