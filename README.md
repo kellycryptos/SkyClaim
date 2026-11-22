@@ -1,27 +1,31 @@
-# SkyClaim · Autonomous Flight Disruption & Claim Verifier
+# SkyClaim · Same-Day Flight Disruption Shield
 
-> **“SkyClaim only files a claim when two independent Telegraph miners agree the delay is eligible and weather does not give the airline a free pass. Otherwise it fails closed and tells you not to bother.”**
-
-> **Telegraph Hackathon Season II Official Entry**  
-> **Track:** Track 03 — Apps & Agents  
-> **Mission:** Mission 15 — Consumer Automation  
-> **Payment & Settlement Layer:** x402 Protocol · Circle USDC on Base Sepolia (Chain ID: 84532)
+> SkyClaim checks the airline's most common excuse. When a flight is delayed 3+ hours, it buys live weather alerts for the departure airport through Telegraph. If a severe alert is active, it flags the claim as high risk. Otherwise it drafts an EU261/UK261 claim with the receipt attached. Draft only, not legal advice. Coverage: US departures to Europe on EU/UK carriers. Testnet only.
 
 ---
 
-## ⚡ The 60-Second Differentiator: SkyClaim vs. Receipts Desk
+## ⚡ Positioning & Purpose
 
-Most "flight refund" bots are single-source query tools that blindly file claims whenever a delay is detected. SkyClaim applies the **Takar Consensus Pattern** to legal disruption claims:
+- **Timing:** SkyClaim triggers the moment a 3+ hour delay is detected, buying weather evidence immediately before transient storms clear at the departure airport.
+- **Jurisdiction & Coverage:** NWS alerts cover US airports; EU261 and UK261 cover flights departing the EU/UK or arriving in Europe on EU/UK carriers. The honest jurisdiction slice is **US departures to Europe on EU/UK carriers** (e.g., British Airways, Air France, Lufthansa flying out of JFK, ORD, BOS). US domestic flights have no statutory compensation regime and are outside this scope.
+- **Architecture:** One flight delay lookup paired with **one verified Telegraph weather intelligence purchase** ($0.01 USDC via x402 on Base Sepolia).
 
-| Feature Dimension | Generic Tools (e.g., Receipts Desk) | SkyClaim (Dual-Miner Consensus) |
-| :--- | :--- | :--- |
-| **Intelligence Architecture** | Single-source check against official data | **Two-Miner Consensus** (`TRAVEL_TRANSIT_LOCK` + `STORM_ALERT`) |
-| **Adjudication Behavior** | Blindly drafts claims on any delay | **Fail-Closed Weather Defense**: Halts if weather gives airline an Article 5(3) free pass |
-| **Regulatory Engine** | Vague US DOT focus (discretionary vouchers) | **EU261 / UK261 Precision**: Statutory cash (€250–€600) with strict carrier liability |
-| **Recommendation Clarity** | Always says "File Claim" (even doomed ones) | **Explicit Recommendations**: `GREENLIGHT TO FILE` vs. `DO NOT FILE — High Rejection Risk` |
-| **User Interfaces** | Web-only or bot-only | **Telegram-First + 1-Click Judge Presets + Web Terminal Mirror** |
-| **Public Transparency** | Black-box private queries | **Public Claim Board**: Live recovery ledger with on-chain BaseScan receipts |
-| **Unit Economics** | Unverified API costs | **$0.02 USDC settled per consensus check** via gasless EIP-712 on Base Sepolia |
+---
+
+## 🎯 The 3 Evaluator Test Scenarios
+
+```text
+CASE 1: CLAIM LOOKS VIABLE
+Delay 3h 42m (flight data: FIXTURE). Weather at departure: no active alerts (Telegraph purchase, $0.01, receipt shown, LIVE). The airline's weather excuse is not supported by this evidence. Draft claim ready. Compensation under EU261 is EUR 250 to 600 depending on distance.
+
+CASE 2: DELAY TOO SHORT
+Delay 1h 05m (flight data: FIXTURE). Below the 3 hour threshold. No claim drafted and no purchase made.
+
+CASE 3: WEATHER RISK
+Delay 4h 10m (flight data: FIXTURE). Severe weather alert active at departure (Telegraph receipt, RECORDED on 2026-11-20). The airline may argue extraordinary circumstances. Evidence is weak and the rejection risk is high. Whether to file is your decision. This tool does not decide legal fault.
+```
+
+In addition, reviewers can use the **Free-Input Mode** to enter any US departure airport (e.g., `JFK`, `ORD`, `BOS`, `MIA`) to query real-time live current alerts through Telegraph.
 
 ---
 
@@ -31,21 +35,21 @@ Most "flight refund" bots are single-source query tools that blindly file claims
 | :--- | :--- | :--- | :--- |
 | **Telegraph Diamond Contract** | Base Sepolia (`84532`) | `0x5a2324aA18613FAD4e44bDF0d6c73Ec1f6D87ff8` | [Basescan Explorer](https://sepolia.basescan.org/address/0x5a2324aA18613FAD4e44bDF0d6c73Ec1f6D87ff8) |
 | **Circle USDC (x402 Gate)** | Base Sepolia (`84532`) | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` | [Basescan Explorer](https://sepolia.basescan.org/token/0x036CbD53842c5426634e7929541eC2318f3dCF7e) |
-| **Live Node Engine** | HTTP / WS Engine | `http://13.237.89.59:7044` | [Healthz Endpoint](http://13.237.89.59:7044/miner-dispatcher/healthz) · [2,189 Miners Index](http://13.237.89.59:7044/engine/v1/subnets) |
-| **Miner 1: Transit Telemetry** | `TRAVEL_TRANSIT_LOCK_GENERAL` | Miner `ttl-nws` (`m-106005`) | [`lib/skyclaim-consensus.ts#L225`](lib/skyclaim-consensus.ts) |
-| **Miner 2: Weather Disruption** | `STORM_ALERT_GENERAL` | Miner `SkyWire MET Norway` (`m-79335`) | [`lib/skyclaim-consensus.ts#L239`](lib/skyclaim-consensus.ts) |
+| **Live Node Engine** | HTTP Engine | `http://13.237.89.59:7044` | [Node Healthz](http://13.237.89.59:7044/miner-dispatcher/healthz) · [Miners Index](http://13.237.89.59:7044/engine/v1/subnets) |
+| **Live Signal Receipt (JFK Check)** | `STORM_ALERT_GENERAL` | Miner `PREFLIGHT Infrastructure Signals` ($0.01) | [`0x19f108...5bead2`](https://anjoman.ai/dashboard/explore/signals/0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2) |
+| **Recorded Signal Receipt (ORD Storm)**| `STORM_ALERT_GENERAL` | Miner `ttl-nws` (`m-106005`) | [`lib/skyclaim-consensus.ts#L38`](lib/skyclaim-consensus.ts) |
 
 ---
 
 ## ⏱️ 90-Second Human Judge Quickstart
 
-This repository implements **Zero-Config Sandbox Resilience**. It compiles, tests, and boots in sterile environments with **no `.env` file required**.
+This repository implements strict **Zero-Config Sandbox Resilience**. It compiles, tests, and boots in sterile environments with **no `.env` file required**.
 
 ```bash
 # 1. Install dependencies
 npm install
 
-# 2. Run deterministic CI/CD test suite (100% automated pass)
+# 2. Run deterministic CI/CD test suite
 npm test
 
 # 3. Build optimized production bundle
@@ -55,7 +59,7 @@ npm run build
 npm start
 ```
 
-### Try Surface A: Telegram Bot & CLI Evaluator Simulator
+### Try Surface A: Telegram Bot Simulator
 ```bash
 # Run interactive Telegram bot simulation (all 3 scenarios with 100% fidelity)
 npm run bot:sim
@@ -64,120 +68,36 @@ npm run bot:sim
 npm run bot
 ```
 
-### Try Surface B: Web Terminal
-Open **[http://localhost:3000](http://localhost:3000)** in your browser:
-1. **The Hero Conflict Case (Preset 3 - AF112)**: Flight delayed 4h + severe blizzard at ORD $\to$ **`⛔ DO NOT FILE — High Rejection Risk`** (Fail-closed weather defense prevents doomed dispute).
-2. **Preset 1 (BA178)**: Flight delayed +3h 35m + clear weather $\to$ **`✅ GREENLIGHT TO FILE`** (€600 statutory recovery approved).
-3. **Preset 2 (DL401)**: Flight arrived +14m $\to$ **`⏹️ DO NOT FILE — Ineligible`** (Below statutory threshold; saved $0.02 and bureaucracy).
-4. **Public Claim Board**: Live recovery ledger showing €14,450+ recovered, $0.96 intel spend, and Basescan receipt links.
-5. **The Receipt Box**: Modal with live Base Sepolia contract permalinks.
-
----
-
-## 🎯 The 3 Evaluator Test Scenarios (At a Glance)
-
-```
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│ SCENARIO 1 · BA178 (LHR → JFK) · DELAYED + CLEAR WEATHER                                    │
-├─────────────────────────────────────────────────────────────────────────────────────────────┤
-│ • Transit Miner: Delay +3h 35m confirmed (Technical Turnaround)                             │
-│ • Weather Miner: Zero storm alerts · CAVOK clear conditions at LHR & JFK                    │
-│ • Consensus: 2/2 MINERS AGREE · Carrier-fault delay proven; weather defense refuted         │
-│ • RECOMMENDATION: ✅ GREENLIGHT TO FILE — €600 STATUTORY RECOVERY APPROVED                   │
-└─────────────────────────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│ SCENARIO 2 · DL401 (JFK → LAX) · ON-TIME / MINOR DELAY                                      │
-├─────────────────────────────────────────────────────────────────────────────────────────────┤
-│ • Transit Miner: Arrival delay +14m (Within schedule tolerance)                             │
-│ • Weather Miner: VFR clear conditions                                                       │
-│ • Consensus: Delay < 180 min statutory minimum                                             │
-│ • RECOMMENDATION: ⏹️ DO NOT FILE — INELIGIBLE (Saved $0.02 & Hours of Bureaucracy)          │
-└─────────────────────────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│ SCENARIO 3 (HERO) · AF112 (CDG → ORD) · THE TAKAR DUAL-MINER CONFLICT CASE                  │
-├─────────────────────────────────────────────────────────────────────────────────────────────┤
-│ • Transit Miner: Delay +4h 00m confirmed (Severe arrival disruption)                        │
-│ • Weather Miner: CRITICAL · Blizzard ground stop warning active at Chicago O'Hare           │
-│ • Consensus: DIVERGENCE DETECTED · Airline holds ironclad Article 5(3) weather defense      │
-│ • RECOMMENDATION: ⛔ DO NOT FILE — HIGH REJECTION RISK (FAIL-CLOSED DEFENSE DETECTED)        │
-│ • Result: Automated claim held; dispute dossier compiled with on-chain receipts             │
-└─────────────────────────────────────────────────────────────────────────────────────────────┘
-```
+### Try Surface B: Web Interface
+Open **[http://localhost:3000](http://localhost:3000)**:
+1. **Case 1 (BA178 JFK → LHR)**: Click to see `LIVE` weather purchase ($0.01) refuting the weather excuse, generating a €600 draft claim.
+2. **Case 2 (DL401 JFK → CDG)**: Click to see minor delay ($< 3$h) resulting in $0 spent and no claim.
+3. **Case 3 (AF112 ORD → CDG)**: Click to see high-risk alert flag (`RECORDED`) warning that airline holds an extraordinary circumstances defense.
+4. **Live US Airport Query**: Enter any 3-letter US airport code to fetch current real-time alerts.
 
 ---
 
 ## 📋 The 5 Commercial Summary Questions (Season II Rules §8)
 
 ### 01. Who is it for?
-**Airline passengers, travel agents, and corporate expense managers.** Under EU261 and UK261, passengers on delayed flights (>3 hours) are legally owed up to **€600 (£520)** in cash compensation, but over 85% of eligible passengers never claim because manual airline portals are intentionally labyrinthine and airlines routinely contest claims citing "extraordinary circumstances".
+Passengers, travel agents, and corporate travel desks managing transatlantic flights on EU/UK carriers departing US airports. When a flight is delayed 3+ hours, passengers are entitled to **€250–€600** under EU261/UK261, but airlines routinely deny claims citing weather.
 
 ### 02. What does it improve?
-Replaces 45-day claims-management companies (who charge 35-50% contingency fees) and slow manual filings with an **autonomous 20-second verification loop costing just $0.02 USDC**. By purchasing independent transit and weather intelligence simultaneously, SkyClaim pre-emptively disproves the airline's standard Article 5(3) "bad weather" defense before the claim is even submitted.
+Automates verification at the moment of delay. Instead of passengers spending weeks disputing an airline's generic weather excuse, SkyClaim purchases timestamped departure weather intelligence through Telegraph for **$0.01 USDC**, establishing whether weather alerts were actually active.
 
 ### 03. What does it do today?
-1. Accepts flight number and date via Telegram (`/claim BA178 2026-11-20`) or Web UI.
-2. Buys two parallel x402 intelligence queries for **$0.02 USDC total**:
-   - `TRAVEL_TRANSIT_LOCK_GENERAL`: Fetches gate arrival telemetry and delay duration.
-   - `STORM_ALERT_GENERAL`: Checks MET Norway & NOAA weather hazard locks at route hubs.
-3. Applies a **Fail-Closed Consensus Rule**:
-   - **Green-light:** Delay $\ge$ 180 min AND Weather == Clear $\to$ Emits formatted EU261 claim pack.
-   - **Ineligible:** Delay $<$ 180 min $\to$ Clean statutory threshold rejection.
-   - **Fail-Closed Conflict:** Delay $\ge$ 180 min AND Severe Storm Alert $\to$ Halts automated filing, flags extraordinary circumstances defense, and generates appeal evidence dossier.
-4. Settles micro-payments on **Base Sepolia (84532)** with gasless EIP-712 `TransferWithAuthorization` using Circle USDC.
+1. Detects flight delay duration.
+2. If delay $\ge$ 3 hours, purchases live weather alert intelligence for the US departure airport via Telegraph (`STORM_ALERT_GENERAL`).
+3. Evaluates 3 explicit outcomes:
+   - **Case 1 (Viable):** Weather clear $\to$ Drafts EU261 claim with on-chain receipt.
+   - **Case 2 (Ineligible):** Delay $< 3$h $\to$ No purchase made, no claim drafted.
+   - **Case 3 (Weather Risk):** Severe weather alert active $\to$ Flags high rejection risk.
+4. Settles x402 micro-payments on **Base Sepolia (84532)** with Circle USDC.
 
 ### 04. Why would someone adopt it?
-Passengers get their rightful statutory compensation with zero contingency fees; corporate travel desks recover hundreds of thousands in travel disruptions automatically; claims carry cryptographic on-chain receipts that make airline denials legally defensible in court.
+Corporate travel desks and consumers gain timestamped, immutable proof of departure weather conditions, avoiding doomed claims when weather defense is strong and providing instant evidence packs when claims are viable.
 
 ### 05. How can someone try it?
 1. Clone this repository and run `npm run build && npm start`.
-2. Use the 3 built-in 1-click presets or enter any arbitrary flight number.
-3. Test the Telegram Bot via `npm run bot:sim` or live with a bot token.
-
----
-
-## 🏗️ Consensus Architecture: "Consensus Before Action"
-
-```
-                              ┌─────────────────────────────────┐
-                              │     SKYCLAIM TELEGRAM / WEB     │
-                              │     /claim AF112 2026-11-19     │
-                              └────────────────┬────────────────┘
-                                               │
-                        Parallel Dispatched x402 Queries ($0.01 each)
-                        ┌──────────────────────┴──────────────────────┐
-                        ▼                                             ▼
-             ┌─────────────────────┐                       ┌─────────────────────┐
-             │       MINER 1       │                       │       MINER 2       │
-             │ TRAVEL_TRANSIT_LOCK │                       │     STORM_ALERT     │
-             │   (ttl-nws m-106005)│                       │  (SkyWire m-79335)  │
-             └──────────┬──────────┘                       └──────────┬──────────┘
-                        │                                             │
-                        │ Delay: +240 mins                            │ Blizzard Ground Stop ORD
-                        │ Gate Arrival: 20:45                         │ Storm Alert: TRUE (14cm snow)
-                        │                                             │
-                        └──────────────────────┬──────────────────────┘
-                                               ▼
-                              ┌─────────────────────────────────┐
-                              │   CONSENSUS & FAIL-CLOSED GATE  │
-                              │  Delay >= 180m AND Weather Clr? │
-                              └────────────────┬────────────────┘
-                                               │
-                       ┌───────────────────────┴───────────────────────┐
-                       ▼                                               ▼
-            [ CONSENSUS REACHED ]                           [ EVIDENCE CONFLICT ]
-           Delay >= 180m + Clear                            Delay >= 180m + Blizzard Alert
-       "GREENLIGHT: €600 Approved"                  "DO NOT FILE — High Rejection Risk"
-         Package + 2 BaseScan Tx                        Fail-Closed Protection Dossier
-```
-
----
-
-## 🛡️ Pre-Submission Verification
-
-- [x] **Starred the Telegraph Bounties repository**: Starred `github.com/telegraphprotocol/bounties` (Rule §5).
-- [x] **Zero-Config Sandbox Resilience**: Passed with NO `.env` file present.
-- [x] **3 Explicit Reviewer Scenarios**: Passed deterministically in `npm test`.
-- [x] **Production Build Clean**: Compiled with Next.js 16 (0 errors).
-- [x] **Competitive Separation**: 2-miner consensus + fail-closed weather + EU261 + Telegram presets + Public Claim Board.
+2. Open `http://localhost:3000` to run the 3 labeled presets or test a live US airport code.
+3. Run `npm run bot:sim` to test the full Telegram bot flow in terminal.
