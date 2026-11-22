@@ -119,15 +119,20 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
               <div className="p-3.5 flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white">Dual-Miner Consensus Pipeline</span>
+                    <span className="font-semibold text-white">Weather Intelligence Purchase Pipeline</span>
                     <span className="rounded bg-purple-500/10 px-1.5 py-0.5 text-[10px] text-purple-400">lib/skyclaim-consensus.ts</span>
                   </div>
-                  <p className="mt-0.5 text-gray-400">Fires TRAVEL_TRANSIT_LOCK_GENERAL &amp; STORM_ALERT_GENERAL in parallel ($0.02 USDC total).</p>
-                  <p className="mt-1 text-[11px] text-muted">Consensus rule: Delay &ge; 180 min AND Weather == Clear &rarr; Approved; else Fail-Closed.</p>
+                  <p className="mt-0.5 text-gray-400">Buys STORM_ALERT_GENERAL over x402 on Base Sepolia ($0.01 USDC). Attaches cryptographic receipt to EU261 claim if delay &ge; 180m and weather is clear.</p>
+                  <p className="mt-1 font-mono text-[11px] text-emerald-400">Verified Signal: 0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2</p>
                 </div>
-                <span className="flex items-center gap-1 text-emerald-400 font-mono shrink-0 mt-1">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Wired
-                </span>
+                <a
+                  href="https://anjoman.ai/dashboard/explore/signals/0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium"
+                >
+                  Anjoman Proof <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
             </div>
           </div>

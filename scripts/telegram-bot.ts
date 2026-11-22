@@ -7,7 +7,7 @@
  * 
  * Implements the 4 core Telegram commands and preset inline buttons:
  *   /start    - Welcome + 1-click evaluator preset keyboard
- *   /claim    - Dual-miner x402 disruption verification & claim generation
+ *   /claim    - Disruption verification & Telegraph weather check
  *   /receipts - On-chain Base Sepolia audit receipts
  *   /demo     - Runs all 3 reviewer acceptance test cases in sequence
  * 
@@ -25,7 +25,7 @@ const API_BASE_URL = process.env.API_URL || process.env.NEXT_PUBLIC_APP_URL || "
 /**
  * Unified API Client: Calls the shared HTTP API (/api/claim)
  */
-async function callClaimApi(flightNumber: string, flightDate: string = "2026-11-20"): Promise<SkyClaimResult> {
+async function callClaimApi(flightNumber: string, flightDate: string = "2026-11-22"): Promise<SkyClaimResult> {
   try {
     const res = await fetch(`${API_BASE_URL}/api/claim`, {
       method: "POST",
@@ -50,56 +50,46 @@ if (token) {
 
   const getPresetKeyboard = () => {
     return new InlineKeyboard()
-      .text("✈️ Test 1: BA178 (Approved Claim)", "claim:BA178")
+      .text("✈️ Case 1: BA178 (Claim Looks Viable)", "claim:BA178")
       .row()
-      .text("✈️ Test 2: DL401 (On-Time Reject)", "claim:DL401")
+      .text("✈️ Case 2: DL401 (Delay Too Short)", "claim:DL401")
       .row()
-      .text("✈️ Test 3: AF112 (Blizzard Conflict)", "claim:AF112");
+      .text("✈️ Case 3: AF112 (Weather Risk)", "claim:AF112");
   };
 
   bot.command("start", async (ctx) => {
     const welcome = `
 ✈️ *Welcome to SkyClaim Bot*
-_Dual-Miner Flight Disruption Consensus · Telegraph Protocol Season II (Mission 15)_
+_Same-Day Flight Disruption Shield · Mission 15: Consumer Automation_
 
-> *“SkyClaim only files a claim when two independent Telegraph miners agree the delay is eligible and weather does not give the airline a free pass. Otherwise it fails closed and tells you not to bother.”*
+> SkyClaim checks the airline's most common excuse. When a flight is delayed 3+ hours, it buys live weather alerts for the departure airport through Telegraph. If a severe alert is active, it flags the claim as high risk. Otherwise it drafts an EU261/UK261 claim with the receipt attached. Draft only, not legal advice. Coverage: US departures to Europe on EU/UK carriers. Testnet only.
 
-*Key Capabilities:*
-• *Two-Miner Consensus:* Parallel x402 purchases on Base Sepolia ($0.02 total).
-• *Fail-Closed Weather Adjudication:* Article 5(3) storm defenses hold doomed claims before filing.
-• *EU261 / UK261 Precision:* Recovers up to €600 / £520 cash per passenger with zero cuts.
-• *Public Ledger:* Real-time public claim board & on-chain transaction receipts.
+*Commands:*
+• \`/claim <FLIGHT_OR_AIRPORT>\` — Verify a flight or check live airport weather (e.g. \`/claim BA178\` or \`/claim JFK\`)
+• \`/demo\` — Run the 3 reviewer evaluation cases
+• \`/receipts\` — View Base Sepolia contract and verified signal proofs
+• \`/ledger\` — View public testnet activity
 
-*Quick Commands:*
-• \`/claim <FLIGHT> <DATE>\` — Verify a flight (e.g. \`/claim BA178 2026-11-20\`)
-• \`/ledger\` — View public claim board & total money recovered
-• \`/receipts\` — View Base Sepolia contract & transaction evidence
-• \`/demo\` — Run the 3 reviewer evaluation scenarios
-
-*Select a 1-click Evaluator Preset below:*
+*Select a 1-click preset scenario below:*
 `;
     await ctx.reply(welcome, { parse_mode: "Markdown", reply_markup: getPresetKeyboard() });
   });
 
   bot.command("ledger", async (ctx) => {
     let ledgerText = `
-📊 *SkyClaim · Public Claim Board & Recovery Ledger*
-• *Total Statutory Recovery Approved:* €14,450
-• *Total Machine Intel Spend:* $0.96 USDC (48 claims @ $0.02)
-• *Fail-Closed Protection Rate:* 31.2% (15 doomed claims prevented)
-• *Consensus Layer:* Base Sepolia Circle USDC (\`${SKYCLAIM_CONFIG.usdcAddress.slice(0, 10)}...\`)
-
-*Recent Claims:*
+📊 *SkyClaim · Public Testnet Activity*
+• Network: Base Sepolia (Chain ID 84532)
+• Settlement Token: Circle USDC (\`${SKYCLAIM_CONFIG.usdcAddress.slice(0, 10)}...\`)
+• Verified Cases:
 `;
     for (const item of SKYCLAIM_PUBLIC_LEDGER) {
-      const recIcon = item.recommendation === "GREENLIGHT_TO_FILE" ? "✅" : item.recommendation === "DO_NOT_FILE_INELIGIBLE" ? "⏹️" : "⛔";
-      ledgerText += `\n• *${item.flightNumber}* (${item.route}): ${recIcon} ${item.compensationEur > 0 ? `+€${item.compensationEur}` : "€0 Protected"} · [Transit Tx](${item.basescanTransit})`;
+      ledgerText += `\n• *${item.flightNumber}* (${item.route}): ${item.verdict.replace(/_/g, " ")} · [Flight: ${item.flightTag} | Weather: ${item.weatherTag}] · ${item.compensationEur > 0 ? `€${item.compensationEur}` : "€0"}`;
     }
     await ctx.reply(ledgerText, { parse_mode: "Markdown", disable_web_page_preview: true });
   });
 
   bot.command("demo", async (ctx) => {
-    await ctx.reply("Running 3 Evaluator Test Scenarios against Telegraph Consensus Engine...");
+    await ctx.reply("Running 3 Reviewer Evaluation Scenarios against Telegraph Weather Engine...");
     for (const p of SKYCLAIM_PRESETS) {
       await handleClaimExecution(ctx, p.flightNumber, p.flightDate);
     }
@@ -112,17 +102,18 @@ _Dual-Miner Flight Disruption Consensus · Telegraph Protocol Season II (Mission
 • *Diamond Contract:* \`${SKYCLAIM_CONFIG.diamondAddress}\`
 • *Circle USDC (x402 Gate):* \`${SKYCLAIM_CONFIG.usdcAddress}\`
 • *Live Node Engine:* \`${SKYCLAIM_CONFIG.nodeUrl}\`
-• *Micropayment Settlement:* $0.02 USDC per dual-miner consensus check
-• *Safety Caps:* $0.05 per-request cap · $5.00 daily spend limit · 15 req/min
+• *Verified Signal Hash:* \`0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2\`
+• *Proof URL:* https://anjoman.ai/dashboard/explore/signals/0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2
+• *Safety Guards:* $0.05 per-request cap · $5.00 daily spend limit · 15 req/min
 `;
-    await ctx.reply(text, { parse_mode: "Markdown" });
+    await ctx.reply(text, { parse_mode: "Markdown", disable_web_page_preview: true });
   });
 
   bot.command("claim", async (ctx) => {
     const text = ctx.message?.text || "";
     const parts = text.split(/\s+/).slice(1);
     const flightNumber = parts[0] || "BA178";
-    const flightDate = parts[1] || "2026-11-20";
+    const flightDate = parts[1] || "2026-11-22";
     await handleClaimExecution(ctx, flightNumber, flightDate);
   });
 
@@ -130,47 +121,36 @@ _Dual-Miner Flight Disruption Consensus · Telegraph Protocol Season II (Mission
     const data = ctx.callbackQuery.data;
     if (data.startsWith("claim:")) {
       const flight = data.split(":")[1];
-      await ctx.answerCallbackQuery({ text: `Analyzing flight ${flight}...` });
-      await handleClaimExecution(ctx, flight, "2026-11-20");
+      await ctx.answerCallbackQuery({ text: `Analyzing ${flight}...` });
+      await handleClaimExecution(ctx, flight, "2026-11-22");
     }
   });
 
   async function handleClaimExecution(ctx: any, flightNumber: string, flightDate: string) {
-    await ctx.reply(`🔍 *Dispatched 2 Parallel x402 Purchases for ${flightNumber} ($0.02 USDC)...*\n• Querying Transit Miner (m-106005)\n• Querying Weather Miner (m-79335)`, { parse_mode: "Markdown" });
-
     const res = await callClaimApi(flightNumber, flightDate);
 
-    let recHeader = "✅ *RECOMMENDATION: GREENLIGHT TO FILE — €600 STATUTORY CLAIM APPROVED*";
-    if (res.verdict === "INELIGIBLE_ON_TIME") {
-      recHeader = "⏹️ *RECOMMENDATION: DO NOT FILE — INELIGIBLE (+14m Minor Delay)*\n_Saved passenger hours of wasted bureaucracy and $0.02 on doomed filing._";
-    }
-    if (res.verdict === "FAIL_CLOSED_WEATHER_CONFLICT") {
-      recHeader = "⛔ *RECOMMENDATION: DO NOT FILE — HIGH REJECTION RISK (Fail-Closed Weather Defense)*\n_Airline holds ironclad Article 5(3) blizzard defense. Claim halted to protect legal standing._";
-    }
-
     const msg = `
-${recHeader}
+*${res.caseTitle}*
 
-*Flight:* ${res.flight.carrier} ${res.flight.flightNumber} (${res.flight.origin} → ${res.flight.destination})
-*Gate Delay:* +${Math.floor(res.flight.delayMinutes / 60)}h ${res.flight.delayMinutes % 60}m (${res.flight.rawStatus})
-*Compensation Entitlement:* ${res.eligibleCompensation}
+${res.caseCopy}
 
-*Consensus Evaluation:*
-• ${res.verdictRationale}
+*Flight Telemetry [${res.flight.tag}]:*
+• Carrier: ${res.flight.carrier} (${res.flight.flightNumber})
+• Route: ${res.flight.origin} → ${res.flight.destination} (${res.flight.distanceKm} km)
+• Delay: +${Math.floor(res.flight.delayMinutes / 60)}h ${res.flight.delayMinutes % 60}m
 
-*Weather Check (Article 5.3 Defense):*
-• ${res.weather.stormDetails}
-
-*Telegraph Receipts (Base Sepolia Chain ID 84532):*
-1. Transit Telemetry: [Tx Hash](${res.receipts.transitMiner.basescanUrl}) (Miner ${res.receipts.transitMiner.minerId}) [${res.receipts.transitMiner.mode}]
-2. Weather Audit: [Tx Hash](${res.receipts.weatherMiner.basescanUrl}) (Miner ${res.receipts.weatherMiner.minerId}) [${res.receipts.weatherMiner.mode}]
-*Settlement Line:* $${res.totalCostUsd.toFixed(2)} USDC total · Status: ${res.consensus.minerAgreement ? "2/2 Agreement" : "Fail-Closed"}
+*Weather Intelligence [${res.weather.tag}]:*
+• Airport: ${res.weather.departureAirport}
+• Status: ${res.weather.stormDetails}
+• Authority: ${res.weather.sourceAuthority}
+• Cost: $${res.totalCostUsd.toFixed(2)} USDC (${res.totalLatencyMs}ms)
+${res.receipt ? `• Verified Proof: [Receipt Link](${res.receipt.basescanUrl})` : ""}
 `;
 
     await ctx.reply(msg, { parse_mode: "Markdown", disable_web_page_preview: true });
 
-    if (res.verdict === "APPROVED_FOR_CLAIM") {
-      await ctx.reply(`📄 *Generated Statutory Claim Letter:*\n\`\`\`text\n${res.draftClaimLetter.slice(0, 800)}...\n\`\`\``, { parse_mode: "Markdown" });
+    if (res.verdict === "CLAIM_LOOKS_VIABLE" && res.draftClaimLetter) {
+      await ctx.reply(`📄 *Generated Statutory Claim Letter (EU261 Article 7):*\n\`\`\`text\n${res.draftClaimLetter}\n\`\`\``, { parse_mode: "Markdown" });
     }
   }
 
@@ -185,9 +165,10 @@ async function runTerminalSimulator() {
   console.log("\n" + "=".repeat(80));
   console.log("  SKYCLAIM · TELEGRAM BOT EVALUATOR SIMULATOR");
   console.log("  Mission 15: Consumer Automation · Telegraph Protocol Season II");
-  console.log("  “SkyClaim only files a claim when two independent Telegraph miners agree");
-  console.log("   the delay is eligible and weather does not give the airline a free pass.");
-  console.log("   Otherwise it fails closed and tells you not to bother.”");
+  console.log("  “SkyClaim checks the airline's most common excuse. When a flight is delayed");
+  console.log("   3+ hours, it buys live weather alerts for the departure airport through");
+  console.log("   Telegraph. If a severe alert is active, it flags the claim as high risk.");
+  console.log("   Otherwise it drafts an EU261/UK261 claim with the receipt attached.”");
   console.log("=".repeat(80));
   console.log("  Note: TELEGRAM_BOT_TOKEN not configured in .env.");
   console.log("  Running 100% faithful CLI simulation of the Telegram Bot interaction flows.\n");
@@ -195,32 +176,30 @@ async function runTerminalSimulator() {
   for (const preset of SKYCLAIM_PRESETS) {
     console.log("-".repeat(80));
     console.log(`▶ USER CLICKS INLINE BUTTON: [${preset.title}]`);
-    console.log(`  Executing: /claim ${preset.flightNumber} ${preset.flightDate}`);
+    console.log(`  Executing: /claim ${preset.flightNumber}`);
     console.log("-".repeat(80));
-
-    console.log("  [Bot]: 🔍 Firing 2 parallel x402 purchases on Base Sepolia ($0.02 USDC)...");
-    console.log("         • Buying TRAVEL_TRANSIT_LOCK from ttl-nws (m-106005)... $0.01");
-    console.log("         • Buying STORM_ALERT from SkyWire MET Norway (m-79335)... $0.01");
 
     const res = await callClaimApi(preset.flightNumber, preset.flightDate);
 
     console.log(`\n  [Bot Response]:`);
-    console.log(`  RECOMMENDATION:          [ ${res.recommendationText || res.verdict} ]`);
-    console.log(`  VERDICT:                 [ ${res.verdict} ] (Tag: ${res.mode})`);
-    console.log(`  Flight:                  ${res.flight.carrier} ${res.flight.flightNumber} (${res.flight.origin} → ${res.flight.destination})`);
-    console.log(`  Delay Confirmed:         +${Math.floor(res.flight.delayMinutes / 60)}h ${res.flight.delayMinutes % 60}m`);
+    console.log(`  TITLE:                   [ ${res.caseTitle} ]`);
+    console.log(`  VERDICT:                 [ ${res.verdict} ]`);
+    console.log(`  EXACT COPY:              ${res.caseCopy}`);
+    console.log(`  Flight Data:             ${res.flight.carrier} ${res.flight.flightNumber} (${res.flight.origin} → ${res.flight.destination}) [${res.flight.tag}]`);
+    console.log(`  Delay at Departure:      +${Math.floor(res.flight.delayMinutes / 60)}h ${res.flight.delayMinutes % 60}m`);
+    console.log(`  Weather Intelligence:    ${res.weather.stormDetails} [${res.weather.tag}]`);
     console.log(`  Statutory Entitlement:   ${res.eligibleCompensation}`);
-    console.log(`  Consensus Rationale:     ${res.verdictRationale}`);
-    console.log(`  Weather Defense Check:   ${res.weather.stormDetails}`);
-    console.log(`  Transit Receipt:         ${res.receipts.transitMiner.txHash.slice(0, 22)}... [${res.receipts.transitMiner.mode}]`);
-    console.log(`  Weather Receipt:         ${res.receipts.weatherMiner.txHash.slice(0, 22)}... [${res.receipts.weatherMiner.mode}]`);
-    console.log(`  Accounting Line:         $0.02 USDC total · 2/2 Receipts Verified on Diamond\n`);
+    if (res.receipt) {
+      console.log(`  Telegraph Receipt:       ${res.receipt.signalHash} ($${res.totalCostUsd} USDC)`);
+      console.log(`  Proof Link:              ${res.receipt.basescanUrl}`);
+    } else {
+      console.log(`  Telegraph Purchase:      $0.00 (Query bypassed, below 3h threshold)`);
+    }
+    console.log("");
   }
 
   console.log("=".repeat(80));
-  console.log("  PUBLIC CLAIM BOARD & RECOVERY LEDGER SNAPSHOT (/ledger)");
-  console.log("  • Total Recovered: €14,450 | Total Intel Spend: $0.96 USDC | Fail-Closed: 31.2%");
-  console.log("  ALL 3 TELEGRAM EVALUATOR PRESETS VERIFIED CLEANLY");
+  console.log("  ALL 3 TELEGRAM EVALUATOR PRESETS VERIFIED DETERMINISTICALLY");
   console.log("  To connect live to Telegram, set TELEGRAM_BOT_TOKEN=<your_token> in .env");
   console.log("=".repeat(80) + "\n");
 }

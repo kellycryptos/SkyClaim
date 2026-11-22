@@ -1,12 +1,15 @@
 export type ClaimVerdict =
-  | "APPROVED_FOR_CLAIM"
-  | "INELIGIBLE_ON_TIME"
-  | "FAIL_CLOSED_WEATHER_CONFLICT";
+  | "CLAIM_LOOKS_VIABLE"
+  | "DELAY_TOO_SHORT"
+  | "WEATHER_RISK";
 
 export type ClaimRecommendation =
-  | "GREENLIGHT_TO_FILE"
-  | "DO_NOT_FILE_INELIGIBLE"
-  | "DO_NOT_FILE_HIGH_RISK";
+  | "DRAFT_CLAIM_READY"
+  | "NO_PURCHASE_BELOW_THRESHOLD"
+  | "HIGH_REJECTION_RISK";
+
+export type FlightDataTag = "FIXTURE" | "LIVE";
+export type WeatherDataTag = "LIVE" | "RECORDED" | "SIMULATED";
 
 export interface PublicLedgerEntry {
   id: string;
@@ -19,14 +22,12 @@ export interface PublicLedgerEntry {
   recommendationText: string;
   compensationEur: number;
   costUsd: number;
-  txTransit: string;
-  txWeather: string;
-  basescanTransit: string;
-  basescanWeather: string;
+  txHash: string;
+  basescanUrl: string;
   timestamp: string;
+  flightTag: FlightDataTag;
+  weatherTag: WeatherDataTag;
 }
-
-export type ExecutionMode = "LIVE" | "SIMULATED";
 
 export interface TelegraphReceipt {
   intent: string;
@@ -41,28 +42,34 @@ export interface TelegraphReceipt {
   signalHash: string;
   timestamp: string;
   settled: boolean;
-  mode: ExecutionMode;
+  weatherTag: WeatherDataTag;
+  recordedDate?: string;
+  rawDetails?: string;
 }
 
 export interface FlightDisruptionTelemetry {
   flightNumber: string;
   flightDate: string;
   carrier: string;
-  origin: string; // IATA (e.g. LHR, JFK, CDG)
-  destination: string; // IATA (e.g. JFK, LAX, ORD)
+  origin: string; // e.g. JFK, ORD, BOS (US Departure)
+  destination: string; // e.g. LHR, CDG, FRA (Europe)
   distanceKm: number;
-  scheduledArrival: string;
-  actualArrival: string;
+  scheduledDeparture: string;
+  actualDeparture: string;
   delayMinutes: number;
   delayCategory: "MECHANICAL_OPERATIONAL" | "ON_TIME" | "WEATHER_IMPACTED";
   rawStatus: string;
+  tag: FlightDataTag;
 }
 
 export interface WeatherScreening {
+  departureAirport: string;
   hasSevereStormAlert: boolean;
   stormDetails: string;
-  sourceAuthority: string; // e.g. MET Norway / NOAA NWS
-  extraordinaryCircumstancesRisk: "NONE" | "LOW" | "HIGH_AIRLINE_DEFENSE";
+  sourceAuthority: string;
+  extraordinaryCircumstancesRisk: "NONE" | "HIGH_AIRLINE_DEFENSE";
+  tag: WeatherDataTag;
+  recordedDate?: string;
 }
 
 export interface BudgetGuardInfo {
@@ -75,26 +82,19 @@ export interface BudgetGuardInfo {
 export interface SkyClaimResult {
   claimId: string;
   timestamp: string;
-  mode: ExecutionMode; // "LIVE" | "SIMULATED"
+  caseNumber: 1 | 2 | 3;
+  caseTitle: string;
+  caseCopy: string;
   verdict: ClaimVerdict;
   verdictRationale: string;
   recommendation: ClaimRecommendation;
   recommendationText: string;
-  statutoryRegulation: "EU261" | "UK261" | "US_DOT" | "NONE";
+  statutoryRegulation: "EU261" | "UK261" | "NONE";
   eligibleCompensation: string;
   compensationAmountEur: number;
   flight: FlightDisruptionTelemetry;
   weather: WeatherScreening;
-  receipts: {
-    transitMiner: TelegraphReceipt;
-    weatherMiner: TelegraphReceipt;
-  };
-  consensus: {
-    rule1DelayMet: boolean;
-    rule2WeatherClear: boolean;
-    rule3FailClosedTriggered: boolean;
-    minerAgreement: boolean;
-  };
+  receipt?: TelegraphReceipt;
   totalCostUsd: number;
   totalLatencyMs: number;
   draftClaimLetter: string;
@@ -111,11 +111,13 @@ export interface SkyClaimResult {
 
 export interface PresetScenario {
   id: string;
+  caseNumber: 1 | 2 | 3;
   flightNumber: string;
   flightDate: string;
   title: string;
   route: string;
   carrier: string;
+  delayMinutes: number;
   expectedVerdict: ClaimVerdict;
-  summary: string;
+  exactCopy: string;
 }
