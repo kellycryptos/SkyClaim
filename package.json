@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start -p 3000",
     "test": "node scripts/test-audit.js",
+    "agent": "node scripts/cli-agent.js",
+    "benchmark": "node evaluator/benchmark-audit.js",
     "lint": "next lint"
   },
   "dependencies": {
