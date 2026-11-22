@@ -1,6 +1,8 @@
+"use client";
+
 import React from "react";
 import { SKYCLAIM_CONFIG } from "@/lib/skyclaim-consensus";
-import { X, ExternalLink, ShieldCheck, CheckCircle2, Layers } from "lucide-react";
+import { X, ExternalLink, ShieldCheck, CheckCircle2, Layers, Cpu, Terminal } from "lucide-react";
 
 interface TheReceiptBoxProps {
   isOpen: boolean;
@@ -11,65 +13,77 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl rounded-xl border border-border bg-[#0C0E14] p-6 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-border pb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600/10 text-blue-400 border border-blue-500/20">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+      <div className="relative w-full max-w-3xl rounded-xl border border-[#1E293B] bg-[#111827] p-6 shadow-2xl">
+        <div className="flex items-center justify-between border-b border-[#1E293B] pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600/15 text-blue-400 border border-blue-500/30 shadow-inner">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white tracking-wide">The Receipt Box &amp; Sponsor Verification Matrix</h2>
-              <p className="text-xs text-muted">Telegraph Protocol Season II · Mission 15 (Consumer Automation)</p>
+              <h2 className="text-base font-bold text-[#F8FAFC] tracking-tight font-mono">
+                The Receipt Box &amp; Sponsor Verification Matrix
+              </h2>
+              <p className="text-xs text-[#94A3B8]">
+                Telegraph Protocol Season II · Track 03 (Apps &amp; Agents) · Mission 15 (Consumer Automation)
+              </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-white/5 hover:text-white transition"
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-[#161F33] hover:text-white transition cursor-pointer"
+            aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="mt-5 space-y-4 max-h-[70vh] overflow-y-auto pr-1">
-          {/* Track Summary */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-lg border border-border bg-[#10121A] p-3">
-              <span className="text-[11px] font-medium text-muted uppercase tracking-wider">Competition Track</span>
-              <p className="mt-1 text-sm font-semibold text-white">Track 03: Apps &amp; Agents</p>
+          {/* Track Summary Badges */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="rounded-xl border border-[#1E293B] bg-[#161F33] p-3.5">
+              <span className="text-[10px] font-mono font-medium text-[#94A3B8] uppercase tracking-wider">Competition Track</span>
+              <p className="mt-1 text-sm font-semibold text-[#F8FAFC]">Track 03: Apps &amp; Agents</p>
             </div>
-            <div className="rounded-lg border border-border bg-[#10121A] p-3">
-              <span className="text-[11px] font-medium text-muted uppercase tracking-wider">Target Mission</span>
-              <p className="mt-1 text-sm font-semibold text-white">Mission 15: Consumer Auto</p>
+            <div className="rounded-xl border border-[#1E293B] bg-[#161F33] p-3.5">
+              <span className="text-[10px] font-mono font-medium text-[#94A3B8] uppercase tracking-wider">Target Mission</span>
+              <p className="mt-1 text-sm font-semibold text-[#F8FAFC]">Mission 15: Consumer Auto</p>
             </div>
-            <div className="rounded-lg border border-border bg-[#10121A] p-3">
-              <span className="text-[11px] font-medium text-muted uppercase tracking-wider">Payment Layer</span>
-              <p className="mt-1 text-sm font-semibold text-emerald-400">x402 (Base Sepolia USDC)</p>
+            <div className="rounded-xl border border-[#1E293B] bg-[#161F33] p-3.5">
+              <span className="text-[10px] font-mono font-medium text-[#94A3B8] uppercase tracking-wider">Payment Layer</span>
+              <p className="mt-1 text-sm font-mono font-bold text-emerald-400 flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                x402 (Base Sepolia USDC)
+              </p>
             </div>
           </div>
 
           {/* Verification Table */}
-          <div className="rounded-lg border border-border bg-[#10121A] overflow-hidden">
-            <div className="border-b border-border bg-white/[0.02] px-4 py-2.5 flex items-center justify-between">
-              <span className="text-xs font-semibold text-gray-200">Protocol Evidence &amp; Permalinks</span>
-              <span className="text-[11px] text-emerald-400 font-mono">Verified On-Chain</span>
+          <div className="rounded-xl border border-[#1E293B] bg-[#161F33] overflow-hidden">
+            <div className="border-b border-[#1E293B] bg-[#0B1120]/50 px-4 py-2.5 flex items-center justify-between">
+              <span className="text-xs font-semibold text-[#F8FAFC] font-mono">Protocol Evidence &amp; Permalinks</span>
+              <span className="text-[10px] text-emerald-400 font-mono px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 font-bold">
+                VERIFIED ON-CHAIN
+              </span>
             </div>
-            <div className="divide-y divide-border text-xs">
+            <div className="divide-y divide-[#1E293B] text-xs">
               {/* Row 1 */}
               <div className="p-3.5 flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-white">Telegraph Diamond Contract</span>
-                    <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-gray-300">Base Sepolia 84532</span>
+                    <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-mono text-blue-400 border border-blue-500/20">
+                      Base Sepolia 84532
+                    </span>
                   </div>
-                  <p className="mt-0.5 text-gray-400">Escrow, job settlement, and miner registry watched by node.</p>
-                  <p className="mt-1 font-mono text-[11px] text-muted">{SKYCLAIM_CONFIG.diamondAddress}</p>
+                  <p className="mt-0.5 text-[#94A3B8]">Escrow, job settlement, and miner registry watched by node.</p>
+                  <p className="mt-1 font-mono text-[11px] text-slate-400">{SKYCLAIM_CONFIG.diamondAddress}</p>
                 </div>
                 <a
                   href={`${SKYCLAIM_CONFIG.basescan}/address/${SKYCLAIM_CONFIG.diamondAddress}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium"
+                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium font-mono text-xs"
                 >
                   Basescan <ExternalLink className="h-3 w-3" />
                 </a>
@@ -80,16 +94,18 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-white">Circle USDC Token (x402 Gate)</span>
-                    <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] text-emerald-400">Gasless EIP-3009</span>
+                    <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/20">
+                      Gasless EIP-3009
+                    </span>
                   </div>
-                  <p className="mt-0.5 text-gray-400">Canonical Circle USDC used for gasless TransferWithAuthorization micropayments.</p>
-                  <p className="mt-1 font-mono text-[11px] text-muted">{SKYCLAIM_CONFIG.usdcAddress}</p>
+                  <p className="mt-0.5 text-[#94A3B8]">Canonical Circle USDC used for gasless TransferWithAuthorization micropayments.</p>
+                  <p className="mt-1 font-mono text-[11px] text-slate-400">{SKYCLAIM_CONFIG.usdcAddress}</p>
                 </div>
                 <a
                   href={`${SKYCLAIM_CONFIG.basescan}/token/${SKYCLAIM_CONFIG.usdcAddress}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium"
+                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium font-mono text-xs"
                 >
                   Basescan <ExternalLink className="h-3 w-3" />
                 </a>
@@ -100,16 +116,18 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-white">Live Node &amp; Miner Engine</span>
-                    <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] text-blue-400">2,189 Active Miners</span>
+                    <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-mono text-blue-400 border border-blue-500/20">
+                      2,189 Active Miners
+                    </span>
                   </div>
-                  <p className="mt-0.5 text-gray-400">Resolves intents and auto-routes queries to highest-ranked miners.</p>
-                  <p className="mt-1 font-mono text-[11px] text-muted">{SKYCLAIM_CONFIG.nodeUrl}</p>
+                  <p className="mt-0.5 text-[#94A3B8]">Resolves intents and auto-routes queries to highest-ranked miners.</p>
+                  <p className="mt-1 font-mono text-[11px] text-slate-400">{SKYCLAIM_CONFIG.nodeUrl}</p>
                 </div>
                 <a
                   href={`${SKYCLAIM_CONFIG.nodeUrl}/miner-dispatcher/healthz`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium"
+                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium font-mono text-xs"
                 >
                   Healthz <ExternalLink className="h-3 w-3" />
                 </a>
@@ -120,16 +138,22 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-white">Weather Intelligence Purchase Pipeline</span>
-                    <span className="rounded bg-purple-500/10 px-1.5 py-0.5 text-[10px] text-purple-400">lib/skyclaim-consensus.ts</span>
+                    <span className="rounded bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-mono text-indigo-400 border border-indigo-500/20">
+                      lib/skyclaim-consensus.ts
+                    </span>
                   </div>
-                  <p className="mt-0.5 text-gray-400">Buys STORM_ALERT_GENERAL over x402 on Base Sepolia ($0.01 USDC). Attaches cryptographic receipt to EU261 claim if delay &ge; 180m and weather is clear.</p>
-                  <p className="mt-1 font-mono text-[11px] text-emerald-400">Verified Signal: 0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2</p>
+                  <p className="mt-0.5 text-[#94A3B8]">
+                    Buys STORM_ALERT_GENERAL over x402 on Base Sepolia ($0.01 USDC). Attaches cryptographic receipt to EU261 claim if delay &ge; 180m and weather is clear.
+                  </p>
+                  <p className="mt-1 font-mono text-[11px] text-emerald-400 break-all">
+                    Verified Signal: 0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2
+                  </p>
                 </div>
                 <a
                   href="https://anjoman.ai/dashboard/explore/signals/0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2"
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium"
+                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium font-mono text-xs"
                 >
                   Anjoman Proof <ExternalLink className="h-3 w-3" />
                 </a>
@@ -138,21 +162,21 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
           </div>
 
           {/* Sandbox Resilience Callout */}
-          <div className="rounded-lg border border-border/80 bg-black/40 p-3.5 text-xs text-gray-300 space-y-1">
-            <span className="font-semibold text-gray-100 flex items-center gap-1.5">
-              <Layers className="h-3.5 w-3.5 text-blue-400" /> Zero-Config Resilience Guarantee
+          <div className="rounded-xl border border-[#1E293B] bg-[#0B1120] p-4 text-xs text-[#94A3B8] space-y-1.5">
+            <span className="font-semibold text-[#F8FAFC] flex items-center gap-2 font-mono">
+              <Layers className="h-4 w-4 text-blue-400" /> Zero-Config Sandbox Resilience Guarantee
             </span>
-            <p className="text-gray-400">
-              Clones, builds, and runs cleanly with NO <code className="text-gray-200">.env</code> file required.
+            <p className="leading-relaxed">
+              SkyClaim boots cleanly in a sterile container with NO <code className="text-white bg-[#161F33] px-1 py-0.5 rounded border border-[#1E293B]">.env</code> file required.
               In sterile judging sandboxes, the deterministic engine runs with 100% fidelity across all 3 reviewer acceptance cases.
             </p>
           </div>
         </div>
 
-        <div className="mt-5 flex items-center justify-end border-t border-border pt-4">
+        <div className="mt-5 flex items-center justify-end border-t border-[#1E293B] pt-4">
           <button
             onClick={onClose}
-            className="rounded-lg bg-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/15 transition"
+            className="rounded-lg bg-blue-600 hover:bg-blue-500 px-5 py-2 text-xs font-semibold text-white transition shadow-md shadow-blue-600/20 cursor-pointer"
           >
             Close Matrix
           </button>
