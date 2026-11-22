@@ -1,15 +1,18 @@
 export type ClaimVerdict =
-  | "CLAIM_LOOKS_VIABLE"
-  | "DELAY_TOO_SHORT"
-  | "WEATHER_RISK";
+  | "ELIGIBLE_FOR_CLAIM"
+  | "INELIGIBLE"
+  | "FAIL_CLOSED_WEATHER"
+  | "INSUFFICIENT_EVIDENCE";
 
 export type ClaimRecommendation =
   | "DRAFT_CLAIM_READY"
   | "NO_PURCHASE_BELOW_THRESHOLD"
-  | "HIGH_REJECTION_RISK";
+  | "HIGH_REJECTION_RISK"
+  | "INSUFFICIENT_DATA";
 
-export type FlightDataTag = "FIXTURE" | "LIVE";
-export type WeatherDataTag = "LIVE" | "RECORDED" | "SIMULATED";
+export type DataBadge = "LIVE" | "SIMULATED" | "FIXTURE";
+export type FlightDataTag = "FIXTURE" | "LIVE" | "SIMULATED";
+export type WeatherDataTag = "LIVE" | "SIMULATED" | "FIXTURE";
 
 export interface PublicLedgerEntry {
   id: string;
@@ -20,13 +23,13 @@ export interface PublicLedgerEntry {
   verdict: ClaimVerdict;
   recommendation: ClaimRecommendation;
   recommendationText: string;
-  compensationEur: number;
+  compensationRange: string;
   costUsd: number;
-  txHash: string;
-  basescanUrl: string;
+  txHash?: string;
+  basescanUrl?: string;
   timestamp: string;
-  flightTag: FlightDataTag;
-  weatherTag: WeatherDataTag;
+  badge: DataBadge;
+  badgeNote?: string;
 }
 
 export interface TelegraphReceipt {
@@ -43,12 +46,12 @@ export interface TelegraphReceipt {
   timestamp: string;
   settled: boolean;
   weatherTag: WeatherDataTag;
-  recordedDate?: string;
   rawDetails?: string;
 }
 
 export interface FlightDisruptionTelemetry {
   flightNumber: string;
+  isHypothetical: boolean;
   flightDate: string;
   carrier: string;
   origin: string; // e.g. JFK, ORD, BOS (US Departure)
@@ -56,7 +59,9 @@ export interface FlightDisruptionTelemetry {
   distanceKm: number;
   scheduledDeparture: string;
   actualDeparture: string;
-  delayMinutes: number;
+  scheduledArrival: string;
+  actualArrival: string;
+  arrivalDelayMinutes: number; // Statutory basis for EU261
   delayCategory: "MECHANICAL_OPERATIONAL" | "ON_TIME" | "WEATHER_IMPACTED";
   rawStatus: string;
   tag: FlightDataTag;
@@ -69,7 +74,6 @@ export interface WeatherScreening {
   sourceAuthority: string;
   extraordinaryCircumstancesRisk: "NONE" | "HIGH_AIRLINE_DEFENSE";
   tag: WeatherDataTag;
-  recordedDate?: string;
 }
 
 export interface BudgetGuardInfo {
@@ -82,16 +86,19 @@ export interface BudgetGuardInfo {
 export interface SkyClaimResult {
   claimId: string;
   timestamp: string;
-  caseNumber: 1 | 2 | 3;
+  caseNumber?: 1 | 2 | 3;
   caseTitle: string;
   caseCopy: string;
+  badge: DataBadge;
+  badgeNote: string;
   verdict: ClaimVerdict;
   verdictRationale: string;
   recommendation: ClaimRecommendation;
   recommendationText: string;
   statutoryRegulation: "EU261" | "UK261" | "NONE";
-  eligibleCompensation: string;
-  compensationAmountEur: number;
+  statutoryDelayBasis: string; // "Arrival delay at final destination (EU261 Court of Justice standard)"
+  eligibleCompensationRange: string; // e.g. "€300 – €600 (to be checked under Art. 7(2))"
+  compensationNote: string;
   flight: FlightDisruptionTelemetry;
   weather: WeatherScreening;
   receipt?: TelegraphReceipt;
@@ -113,11 +120,14 @@ export interface PresetScenario {
   id: string;
   caseNumber: 1 | 2 | 3;
   flightNumber: string;
+  isHypothetical: boolean;
   flightDate: string;
   title: string;
   route: string;
   carrier: string;
-  delayMinutes: number;
+  arrivalDelayMinutes: number;
+  badge: DataBadge;
   expectedVerdict: ClaimVerdict;
+  eligibleCompensationRange: string;
   exactCopy: string;
 }

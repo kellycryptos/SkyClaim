@@ -8,6 +8,7 @@ import {
   FlightDisruptionTelemetry,
   WeatherScreening,
   TelegraphReceipt,
+  DataBadge,
 } from "./skyclaim-types";
 import { checkAndRecordBudget, getBudgetSnapshot } from "./budget-guard";
 
@@ -18,6 +19,11 @@ export const SKYCLAIM_CONFIG = {
   diamondAddress: "0x5a2324aA18613FAD4e44bDF0d6c73Ec1f6D87ff8",
   usdcAddress: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   basescan: "https://sepolia.basescan.org",
+  supportedIntents: ["TRAVEL_TRANSIT_LOCK_GENERAL"],
+  activeMiners: [
+    { id: "106005", name: "ttl-nws (NWS Station Transit Alerts)", rank: 1 },
+    { id: "106004", name: "ttl-airsigmet (Aviation Severe Weather Hazards)", rank: 2 },
+  ],
 };
 
 export const SKYCLAIM_PRESETS: PresetScenario[] = [
@@ -25,101 +31,220 @@ export const SKYCLAIM_PRESETS: PresetScenario[] = [
     id: "case-1",
     caseNumber: 1,
     flightNumber: "BA178",
+    isHypothetical: true,
     flightDate: "2026-11-22",
-    title: "CASE 1: CLAIM LOOKS VIABLE",
+    title: "CASE 1: CLEAN DELAY (Hypothetical BA178)",
     route: "New York JFK → London LHR (5,550 km)",
     carrier: "British Airways",
-    delayMinutes: 222, // 3h 42m
-    expectedVerdict: "CLAIM_LOOKS_VIABLE",
+    arrivalDelayMinutes: 222, // 3h 42m
+    badge: "FIXTURE",
+    expectedVerdict: "ELIGIBLE_FOR_CLAIM",
+    eligibleCompensationRange: "€300 – €600 (to be checked under Art. 7(2))",
     exactCopy:
-      "Delay 3h 42m (flight data: FIXTURE). Weather at departure: no active alerts (Telegraph purchase, $0.01, receipt shown, LIVE). The airline's weather excuse is not supported by this evidence. Draft claim ready. Compensation under EU261 is EUR 250 to 600 depending on distance.",
+      "Hypothetical flight BA178 (New York JFK → London LHR). Arrival delay: 3h 42m (FIXTURE). Weather at departure: no active alerts (FIXTURE). Airline's weather excuse is not supported by evidence. Eligible compensation to be checked under EU261: €300 to €600 (subject to Article 7(2) 50% rule for 3h–4h arrival delays on flights > 3,500 km). Draft claim ready.",
   },
   {
     id: "case-2",
     caseNumber: 2,
     flightNumber: "DL401",
+    isHypothetical: true,
     flightDate: "2026-11-22",
-    title: "CASE 2: DELAY TOO SHORT",
+    title: "CASE 2: MINOR DELAY (Hypothetical DL401)",
     route: "New York JFK → Paris CDG (5,835 km)",
     carrier: "Delta / Air France",
-    delayMinutes: 65, // 1h 05m
-    expectedVerdict: "DELAY_TOO_SHORT",
+    arrivalDelayMinutes: 65, // 1h 05m
+    badge: "FIXTURE",
+    expectedVerdict: "INELIGIBLE",
+    eligibleCompensationRange: "€0 (Below 3-hour statutory arrival threshold)",
     exactCopy:
-      "Delay 1h 05m (flight data: FIXTURE). Below the 3 hour threshold. No claim drafted and no purchase made.",
+      "Hypothetical flight DL401 (New York JFK → Paris CDG). Arrival delay: 1h 05m (FIXTURE). Below the 3-hour statutory arrival threshold under EU261. Ineligible for statutory compensation ($0 spent, no purchase made).",
   },
   {
     id: "case-3",
     caseNumber: 3,
     flightNumber: "AF112",
+    isHypothetical: true,
     flightDate: "2026-11-22",
-    title: "CASE 3: WEATHER RISK",
+    title: "CASE 3: DELAY WITH WEATHER RISK (Hypothetical AF112)",
     route: "Chicago ORD → Paris CDG (6,670 km)",
     carrier: "Air France",
-    delayMinutes: 250, // 4h 10m
-    expectedVerdict: "WEATHER_RISK",
+    arrivalDelayMinutes: 250, // 4h 10m
+    badge: "FIXTURE",
+    expectedVerdict: "FAIL_CLOSED_WEATHER",
+    eligibleCompensationRange: "Disputed / High Rejection Risk (€0)",
     exactCopy:
-      "Delay 4h 10m (flight data: FIXTURE). Severe weather alert active at departure (Telegraph receipt, RECORDED on 2026-11-20). The airline may argue extraordinary circumstances. Evidence is weak and the rejection risk is high. Whether to file is your decision. This tool does not decide legal fault.",
+      "Hypothetical flight AF112 (Chicago ORD → Paris CDG). Arrival delay: 4h 10m (FIXTURE). Severe winter blizzard ground-stop alert active at departure (FIXTURE). The airline holds a valid extraordinary circumstances defense under Article 5(3). Fails closed to avoid doomed dispute.",
   },
 ];
 
 /**
- * Queries live weather alert from Telegraph node for any US departure airport.
+ * Queries live weather alert from Telegraph Protocol.
+ * 1. If TELEGRAPH_API_KEY is present: calls https://backend.telegraphprotocol.com/engine/ask (Escrow rail)
+ * 2. If AGENT_PRIVATE_KEY is present: executes on-chain EIP-712 payment over x402 on Base Sepolia
+ * 3. Fallback: Returns SIMULATED mode for zero-config sandbox resilience
  */
 export async function queryLiveTelegraphWeather(airportCode: string): Promise<{
+  badge: "LIVE" | "SIMULATED";
+  badgeNote: string;
   hasAlert: boolean;
   summary: string;
-  minerId: string;
-  minerName: string;
-  txHash: string;
-  costUsd: number;
-  durationMs: number;
-  rawDetails: string;
+  receipt?: TelegraphReceipt;
 }> {
   const cleanCode = airportCode.trim().toUpperCase();
-  
-  // Real verified signal from testnet node / Anjoman query
-  const liveHash = "0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2";
-  
-  try {
-    const res = await fetch(`${SKYCLAIM_CONFIG.nodeUrl}/engine/v1/ask`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: `Active severe weather alerts for ${cleanCode} airport`,
-      }),
-      signal: AbortSignal.timeout(3000),
-    });
 
-    if (res.status === 402 || res.ok) {
-      return {
-        hasAlert: false,
-        summary: `No active severe weather alerts at ${cleanCode} departure corridor (MODERATE risk index 0.266). Peak gusts 40 km/h, no thunderstorms.`,
-        minerId: "a1-preflight",
-        minerName: "PREFLIGHT Infrastructure Signals",
-        txHash: liveHash,
-        costUsd: 0.01,
-        durationMs: 3798,
-        rawDetails: `Signal Hash: ${liveHash} · Upstream: Open-Meteo, MET Norway, NOAA METAR`,
-      };
+  // PATH 1: Anjoman API Key (Escrow Rail)
+  const apiKey = process.env.TELEGRAPH_API_KEY;
+  if (apiKey && apiKey.trim().length > 10) {
+    try {
+      const res = await fetch("https://backend.telegraphprotocol.com/engine/ask", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey.trim()}`,
+          "Content-Type": "application/json",
+          "User-Agent": "SkyClaim/1.0",
+        },
+        body: JSON.stringify({
+          query: `Active severe weather alerts for ${cleanCode} airport`,
+        }),
+        signal: AbortSignal.timeout(30000),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const resultObj = data.result || {};
+        const receiptObj = data.receipt || {};
+
+        // Extract summary from findings
+        const summaryItem = resultObj.findings?.items?.find(
+          (i: any) => i.name === "summary" || i.name === "answer"
+        );
+        const summary =
+          summaryItem?.value ||
+          resultObj.result?.summary ||
+          `Weather observation for ${cleanCode}: Risk level ${resultObj.result?.risk_level || "MODERATE"}, peak gusts ${resultObj.result?.peak_gust_kmh || 40} km/h.`;
+
+        const riskLevel = resultObj.result?.risk_level;
+        const riskScore = resultObj.result?.risk_score;
+        const hasSevereAlert =
+          riskLevel === "CRITICAL" ||
+          riskLevel === "HIGH" ||
+          (typeof riskScore === "number" && riskScore >= 0.7);
+
+        const signalHash = resultObj.signal_hash || receiptObj.receipt_hash || "0x...";
+        const txHash = receiptObj.receipt_hash || signalHash;
+
+        return {
+          badge: "LIVE",
+          badgeNote: `Live intelligence purchase settled via Escrow on Telegraph Protocol (Receipt: ${txHash.slice(0, 16)}...).`,
+          hasAlert: hasSevereAlert,
+          summary,
+          receipt: {
+            intent: resultObj.intent || "STORM_ALERT_GENERAL",
+            minerId: resultObj.miner_id || "9002",
+            minerName: resultObj.miner_name || "TxLens",
+            networkRank: resultObj.served_rank || 1,
+            confidence: 0.95,
+            latencyMs: resultObj.duration_ms || 350,
+            costUsd: resultObj.cost_usd || 0.01,
+            txHash,
+            basescanUrl: `https://anjoman.ai/dashboard/explore/signals/${signalHash}`,
+            signalHash,
+            timestamp: resultObj.timestamp || new Date().toISOString(),
+            settled: true,
+            weatherTag: "LIVE",
+            rawDetails: `Paid via Escrow on Telegraph Protocol · Miner: ${resultObj.miner_name || "TxLens"} · Payer: ${receiptObj.payer || "Escrow Account"}`,
+          },
+        };
+      }
+    } catch (err: any) {
+      console.warn("Telegraph API Key request error:", err?.message);
     }
-  } catch {
-    // Network sandbox fallback
   }
 
+  // PATH 2: On-chain x402 signing with AGENT_PRIVATE_KEY
+  const privateKey = process.env.AGENT_PRIVATE_KEY;
+  if (privateKey && privateKey.length >= 64) {
+    try {
+      const { decodeChallenge, signPayment } = await import("./x402");
+      const wallet = new ethers.Wallet(privateKey);
+
+      const askRes = await fetch(`${SKYCLAIM_CONFIG.nodeUrl}/engine/v1/ask`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          intent: "TRAVEL_TRANSIT_LOCK_GENERAL",
+          query: `Active transit weather alerts and severe locks for ${cleanCode} airport`,
+        }),
+        signal: AbortSignal.timeout(5000),
+      });
+
+      if (askRes.status === 402) {
+        const challengeHeader = askRes.headers.get("Payment-Required");
+        if (challengeHeader) {
+          const challenge = decodeChallenge(challengeHeader);
+          const signed = await signPayment(challenge, wallet, SKYCLAIM_CONFIG.chainId);
+
+          const paidRes = await fetch(`${SKYCLAIM_CONFIG.nodeUrl}/engine/v1/ask`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Payment-Signature": signed.header,
+            },
+            body: JSON.stringify({
+              intent: "TRAVEL_TRANSIT_LOCK_GENERAL",
+              query: `Active transit weather alerts and severe locks for ${cleanCode} airport`,
+            }),
+            signal: AbortSignal.timeout(8000),
+          });
+
+          if (paidRes.ok) {
+            const result = await paidRes.json();
+            const txHash = result?.txHash || result?.signalHash;
+            if (txHash) {
+              return {
+                badge: "LIVE",
+                badgeNote: "Live on-chain purchase verified through Telegraph node on Base Sepolia.",
+                hasAlert: Boolean(result?.hasAlert),
+                summary: result?.summary || `Live observation received from miner for ${cleanCode}`,
+                receipt: {
+                  intent: "TRAVEL_TRANSIT_LOCK_GENERAL",
+                  minerId: result?.minerId || "106005",
+                  minerName: result?.minerName || "ttl-nws (NWS Station Transit Alerts)",
+                  networkRank: result?.networkRank || 1,
+                  confidence: result?.confidence || 0.95,
+                  latencyMs: result?.latencyMs || 850,
+                  costUsd: 0.01,
+                  txHash,
+                  basescanUrl: `${SKYCLAIM_CONFIG.basescan}/tx/${txHash}`,
+                  signalHash: txHash,
+                  timestamp: new Date().toISOString(),
+                  settled: true,
+                  weatherTag: "LIVE",
+                  rawDetails: result?.rawDetails || "Live verified response from node",
+                },
+              };
+            }
+          }
+        }
+      }
+    } catch (err: any) {
+      console.warn("x402 payment signing error:", err?.message);
+    }
+  }
+
+  // PATH 3: Zero-Config Sandbox Fallback
   return {
+    badge: "SIMULATED",
+    badgeNote:
+      "Simulated Mode: No active credentials configured in environment. Displaying simulated baseline departure report. No on-chain purchase was made, so no transaction hash or miner receipt is displayed.",
     hasAlert: false,
-    summary: `No active severe weather alerts at ${cleanCode} departure corridor. Weather excuse not supported by evidence.`,
-    minerId: "a1-preflight",
-    minerName: "PREFLIGHT Infrastructure Signals",
-    txHash: liveHash,
-    costUsd: 0.01,
-    durationMs: 3798,
-    rawDetails: `Signal Hash: ${liveHash} · Paid via x402 on Base Sepolia`,
+    summary: `Simulated baseline observation for ${cleanCode} departure corridor: Overcast, light precipitation, zero severe storm locks active.`,
+    receipt: undefined,
   };
 }
 
 /**
- * Executes SkyClaim disruption verification against the 3 judge presets or custom airport.
+ * Executes SkyClaim disruption verification against the 3 hypothetical presets or custom airport.
  */
 export async function verifyFlightDisruption(
   queryInput: string,
@@ -131,7 +256,7 @@ export async function verifyFlightDisruption(
   const clean = queryInput.trim().toUpperCase();
 
   // 1. Identify preset scenario
-  let preset = SKYCLAIM_PRESETS.find(
+  const preset = SKYCLAIM_PRESETS.find(
     (p) =>
       p.flightNumber.toUpperCase() === clean ||
       p.id.toLowerCase() === clean.toLowerCase() ||
@@ -140,108 +265,108 @@ export async function verifyFlightDisruption(
       (clean === "3" && p.caseNumber === 3)
   );
 
-  let caseNumber: 1 | 2 | 3 = 1;
+  let caseNumber: 1 | 2 | 3 | undefined;
   let flight: FlightDisruptionTelemetry;
   let weather: WeatherScreening;
   let receipt: TelegraphReceipt | undefined;
   let costUsd = 0;
-  let verdict: ClaimVerdict = "CLAIM_LOOKS_VIABLE";
+  let badge: DataBadge = "FIXTURE";
+  let badgeNote = "";
+  let verdict: ClaimVerdict = "ELIGIBLE_FOR_CLAIM";
   let recommendation: ClaimRecommendation = "DRAFT_CLAIM_READY";
-  let recommendationText: string = "";
-  let verdictRationale: string = "";
-  let caseTitle: string = "";
-  let caseCopy: string = "";
-  let compEur = 0;
-  let compensation = "€0";
+  let recommendationText = "";
+  let verdictRationale = "";
+  let caseTitle = "";
+  let caseCopy = "";
+  let eligibleCompensationRange = "€0";
+  let compensationNote = "";
 
   if (!preset) {
-    // Check if input is a 3-letter US airport code for free-input mode
-    if (clean.length === 3 || clean.includes("AIRPORT") || clean.includes("JFK") || clean.includes("ORD") || clean.includes("BOS")) {
-      const airport = clean.length === 3 ? clean : "JFK";
-      const live = await queryLiveTelegraphWeather(airport);
+    // Free input mode: custom airport or custom flight
+    const airport = clean.length === 3 ? clean : "JFK";
+    const liveCheck = await queryLiveTelegraphWeather(airport);
 
-      caseNumber = 1;
-      caseTitle = `FREE INPUT: LIVE AIRPORT CHECK (${airport})`;
-      caseCopy = `Delay 3h 42m (flight data: FIXTURE). Weather at departure (${airport}): no active alerts (Telegraph purchase, $0.01, receipt shown, LIVE). The airline's weather excuse is not supported by this evidence. Draft claim ready. Compensation under EU261 is EUR 250 to 600 depending on distance.`;
-      
-      costUsd = 0.01;
+    badge = liveCheck.badge;
+    badgeNote = liveCheck.badgeNote;
+    receipt = liveCheck.receipt;
+    costUsd = badge === "LIVE" ? 0.01 : 0.00;
+
+    if (costUsd > 0) {
       checkAndRecordBudget(costUsd);
+    }
 
-      flight = {
-        flightNumber: `FL-${airport}`,
-        flightDate,
-        carrier: "EU Carrier (US Departure)",
-        origin: airport,
-        destination: "LHR",
-        distanceKm: 5550,
-        scheduledDeparture: "14:00 EST",
-        actualDeparture: "17:42 EST",
-        delayMinutes: 222,
-        delayCategory: "MECHANICAL_OPERATIONAL",
-        rawStatus: "DELAY_DETECTED_3H_42M",
-        tag: "FIXTURE",
-      };
+    caseTitle = `FREE INPUT: AIRPORT CHECK (${airport})`;
+    caseCopy = `Hypothetical departure from ${airport}. Arrival delay: 3h 42m (SIMULATED). Weather screening: ${badge} mode. ${badgeNote}`;
 
-      weather = {
-        departureAirport: airport,
-        hasSevereStormAlert: live.hasAlert,
-        stormDetails: live.summary,
-        sourceAuthority: live.minerName,
-        extraordinaryCircumstancesRisk: live.hasAlert ? "HIGH_AIRLINE_DEFENSE" : "NONE",
-        tag: "LIVE",
-      };
+    flight = {
+      flightNumber: `FL-${airport}`,
+      isHypothetical: true,
+      flightDate,
+      carrier: "EU/UK Carrier (Transatlantic Route)",
+      origin: airport,
+      destination: "LHR",
+      distanceKm: 5550,
+      scheduledDeparture: "18:00 EST",
+      actualDeparture: "21:30 EST",
+      scheduledArrival: "06:15 GMT",
+      actualArrival: "09:57 GMT",
+      arrivalDelayMinutes: 222, // 3h 42m
+      delayCategory: "MECHANICAL_OPERATIONAL",
+      rawStatus: "ARRIVAL_DELAY_3H_42M",
+      tag: "SIMULATED",
+    };
 
-      verdict = "CLAIM_LOOKS_VIABLE";
+    weather = {
+      departureAirport: airport,
+      hasSevereStormAlert: liveCheck.hasAlert,
+      stormDetails: liveCheck.summary,
+      sourceAuthority: receipt ? receipt.minerName : "Telegraph Weather Adapter (Simulated)",
+      extraordinaryCircumstancesRisk: liveCheck.hasAlert ? "HIGH_AIRLINE_DEFENSE" : "NONE",
+      tag: badge === "LIVE" ? "LIVE" : "SIMULATED",
+    };
+
+    if (liveCheck.hasAlert) {
+      verdict = "FAIL_CLOSED_WEATHER";
+      recommendation = "HIGH_REJECTION_RISK";
+      recommendationText = "Severe weather alert active at departure — High rejection risk.";
+      verdictRationale = "Severe storm alert active. Airline holds valid extraordinary circumstances defense under Article 5(3). Fails closed.";
+      eligibleCompensationRange = "Disputed / High Rejection Risk (€0)";
+      compensationNote = "Carrier defense under Article 5(3) likely to be upheld due to active meteorological warnings.";
+    } else {
+      verdict = "ELIGIBLE_FOR_CLAIM";
       recommendation = "DRAFT_CLAIM_READY";
       recommendationText = "Draft Claim Ready — The airline's weather excuse is not supported by this evidence.";
-      verdictRationale = "When flight reached 3+ hour delay threshold, Telegraph weather purchase confirmed no active severe weather alerts at departure airport. Draft EU261 claim generated with cryptographic proof attached.";
-      compEur = 600;
-      compensation = "€600 (Transatlantic flight > 3,500 km)";
-
-      receipt = {
-        intent: "STORM_ALERT_GENERAL",
-        minerId: live.minerId,
-        minerName: live.minerName,
-        networkRank: 1,
-        confidence: 0.90,
-        latencyMs: live.durationMs,
-        costUsd: 0.01,
-        txHash: live.txHash,
-        basescanUrl: `https://anjoman.ai/dashboard/explore/signals/${live.txHash}`,
-        signalHash: live.txHash,
-        timestamp: new Date().toISOString(),
-        settled: true,
-        weatherTag: "LIVE",
-        rawDetails: live.rawDetails,
-      };
-    } else {
-      // Default fallback to Case 1
-      preset = SKYCLAIM_PRESETS[0];
+      verdictRationale = "Arrival delay at final destination is 3h 42m (exceeds 3-hour statutory threshold). Departure weather screening confirms zero active severe storm alerts. Eligible for compensation review.";
+      eligibleCompensationRange = "€300 – €600 (to be checked under Art. 7(2))";
+      compensationNote = "Flight distance > 3,500 km with arrival delay between 3 and 4 hours. Under EU261 Article 7(2)(c), statutory compensation may be reduced by 50% from €600 to €300. Final amount to be verified with carrier.";
     }
-  }
-
-  if (preset) {
+  } else {
+    // Preset evaluation cases
     caseNumber = preset.caseNumber;
     caseTitle = preset.title;
     caseCopy = preset.exactCopy;
+    badge = "FIXTURE";
+    receipt = undefined;
+    costUsd = 0.00;
 
     if (preset.caseNumber === 1) {
-      // CASE 1: CLAIM LOOKS VIABLE
-      costUsd = 0.01;
-      checkAndRecordBudget(costUsd);
-
+      // CASE 1: CLEAN DELAY
+      badgeNote = "Preset test fixture: hypothetical schedule, arrival delay, and weather observations are deterministic test vectors. No on-chain purchase was made.";
       flight = {
         flightNumber: "BA178",
+        isHypothetical: true,
         flightDate,
         carrier: "British Airways",
         origin: "JFK",
         destination: "LHR",
         distanceKm: 5550,
         scheduledDeparture: "18:00 EST",
-        actualDeparture: "21:42 EST",
-        delayMinutes: 222, // 3h 42m
+        actualDeparture: "21:30 EST",
+        scheduledArrival: "06:15 GMT",
+        actualArrival: "09:57 GMT",
+        arrivalDelayMinutes: 222, // 3h 42m arrival delay
         delayCategory: "MECHANICAL_OPERATIONAL",
-        rawStatus: "DELAY_DETECTED_3H_42M",
+        rawStatus: "ARRIVAL_DELAY_3H_42M",
         tag: "FIXTURE",
       };
 
@@ -249,86 +374,72 @@ export async function verifyFlightDisruption(
         departureAirport: "JFK",
         hasSevereStormAlert: false,
         stormDetails: "No active severe weather alerts at New York JFK (overcast, gusts 40 km/h, low thunderstorm probability).",
-        sourceAuthority: "PREFLIGHT Infrastructure Signals",
+        sourceAuthority: "ttl-nws / Station JFK Telemetry",
         extraordinaryCircumstancesRisk: "NONE",
-        tag: "LIVE",
+        tag: "FIXTURE",
       };
 
-      verdict = "CLAIM_LOOKS_VIABLE";
+      verdict = "ELIGIBLE_FOR_CLAIM";
       recommendation = "DRAFT_CLAIM_READY";
-      recommendationText = "Draft Claim Ready — The airline's weather excuse is not supported by this evidence.";
-      verdictRationale = "The airline's weather excuse is not supported by this evidence. When a 3+ hour delay was detected, SkyClaim bought live departure alerts via Telegraph showing zero active severe alerts. Draft claim ready.";
-      compEur = 600;
-      compensation = "€600 (Transatlantic flight > 3,500 km under EU261 Article 7)";
-
-      receipt = {
-        intent: "STORM_ALERT_GENERAL",
-        minerId: "a1-preflight",
-        minerName: "PREFLIGHT Infrastructure Signals",
-        networkRank: 1,
-        confidence: 0.90,
-        latencyMs: 3798,
-        costUsd: 0.01,
-        txHash: "0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2",
-        basescanUrl: "https://anjoman.ai/dashboard/explore/signals/0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2",
-        signalHash: "0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2",
-        timestamp: "2026-11-22T04:46:08Z",
-        settled: true,
-        weatherTag: "LIVE",
-        rawDetails: "Live check at departure: overcast, 0 convective warnings. Sources: Open-Meteo, MET Norway, NOAA METAR",
-      };
+      recommendationText = "Draft Claim Ready — Airline weather excuse unsupported. Eligible for carrier review.";
+      verdictRationale = "Arrival delay at London Heathrow is 3h 42m (exceeds 3h statutory threshold). Weather screening confirmed no active severe alerts at departure. Under EU261 Article 7(2)(c), long-haul flights (> 3,500 km) with arrival delays between 3 and 4 hours may be subject to a 50% reduction (€300 vs €600).";
+      eligibleCompensationRange = "€300 – €600 (to be checked under Art. 7(2))";
+      compensationNote = "Statutory arrival delay is 3h 42m. Under Article 7(2)(c), if arrival delay is under 4 hours on flights > 3,500 km, the carrier may reduce statutory compensation by 50% down to €300. Eligible compensation must be verified with carrier.";
     } else if (preset.caseNumber === 2) {
-      // CASE 2: DELAY TOO SHORT
-      costUsd = 0.00; // No purchase made
-
+      // CASE 2: MINOR DELAY
+      badgeNote = "Preset test fixture: arrival delay is under 3 hours statutory threshold ($0 spent). No transaction was executed.";
       flight = {
         flightNumber: "DL401",
+        isHypothetical: true,
         flightDate,
         carrier: "Delta / Air France",
         origin: "JFK",
         destination: "CDG",
         distanceKm: 5835,
         scheduledDeparture: "19:15 EST",
-        actualDeparture: "20:20 EST",
-        delayMinutes: 65, // 1h 05m
+        actualDeparture: "20:15 EST",
+        scheduledArrival: "08:30 CET",
+        actualArrival: "09:35 CET",
+        arrivalDelayMinutes: 65, // 1h 05m arrival delay
         delayCategory: "ON_TIME",
-        rawStatus: "DELAY_1H_05M",
+        rawStatus: "ARRIVAL_DELAY_1H_05M",
         tag: "FIXTURE",
       };
 
       weather = {
         departureAirport: "JFK",
         hasSevereStormAlert: false,
-        stormDetails: "Query bypassed: Delay is below 3 hour statutory threshold.",
+        stormDetails: "Query bypassed: Arrival delay is below 3-hour statutory threshold.",
         sourceAuthority: "N/A",
         extraordinaryCircumstancesRisk: "NONE",
-        tag: "SIMULATED",
+        tag: "FIXTURE",
       };
 
-      verdict = "DELAY_TOO_SHORT";
+      verdict = "INELIGIBLE";
       recommendation = "NO_PURCHASE_BELOW_THRESHOLD";
-      recommendationText = "No Claim Drafted — Delay 1h 05m is below the 3-hour statutory threshold.";
-      verdictRationale = "Below the 3 hour threshold. No claim drafted and no purchase made ($0 spent). Saved user and travel desk unnecessary fees.";
-      compEur = 0;
-      compensation = "€0 (Below 3-hour threshold)";
-      receipt = undefined;
+      recommendationText = "Ineligible for Claim — Arrival delay 1h 05m is below the 3-hour statutory threshold.";
+      verdictRationale = "Arrival delay at Paris CDG is 1h 05m (below the 3-hour threshold established under EU261 case law). Ineligible for compensation. No purchase made ($0 spent).";
+      eligibleCompensationRange = "€0 (Below 3-hour statutory arrival threshold)";
+      compensationNote = "EU261 rights activate only when arrival delay at destination reaches or exceeds 3 hours.";
     } else {
-      // CASE 3: WEATHER RISK
-      costUsd = 0.01;
-      checkAndRecordBudget(costUsd);
-
+      // CASE 3: DELAY WITH WEATHER RISK
+      badge = "FIXTURE";
+      badgeNote = "Preset test fixture: hypothetical test case representing a severe winter blizzard ground stop at Chicago ORD. No live purchase made for preset.";
       flight = {
         flightNumber: "AF112",
+        isHypothetical: true,
         flightDate,
         carrier: "Air France",
         origin: "ORD",
         destination: "CDG",
         distanceKm: 6670,
         scheduledDeparture: "16:45 CST",
-        actualDeparture: "20:55 CST",
-        delayMinutes: 250, // 4h 10m
+        actualDeparture: "20:50 CST",
+        scheduledArrival: "08:00 CET",
+        actualArrival: "12:10 CET",
+        arrivalDelayMinutes: 250, // 4h 10m arrival delay
         delayCategory: "WEATHER_IMPACTED",
-        rawStatus: "DELAY_DETECTED_4H_10M",
+        rawStatus: "ARRIVAL_DELAY_4H_10M",
         tag: "FIXTURE",
       };
 
@@ -338,58 +449,43 @@ export async function verifyFlightDisruption(
         stormDetails: "CRITICAL: Severe winter blizzard ground-stop alert active at Chicago O'Hare (ORD).",
         sourceAuthority: "ttl-nws (NWS Station ORD Alert)",
         extraordinaryCircumstancesRisk: "HIGH_AIRLINE_DEFENSE",
-        tag: "RECORDED",
-        recordedDate: "2026-11-20",
+        tag: "FIXTURE",
       };
 
-      verdict = "WEATHER_RISK";
+      verdict = "FAIL_CLOSED_WEATHER";
       recommendation = "HIGH_REJECTION_RISK";
       recommendationText = "Severe weather alert active at departure — High rejection risk.";
-      verdictRationale = "The airline may argue extraordinary circumstances under Article 5(3). Evidence is weak and the rejection risk is high. Whether to file is your decision. This tool does not decide legal fault.";
-      compEur = 0;
-      compensation = "Disputed / Unlikely to succeed (€0)";
-
-      receipt = {
-        intent: "STORM_ALERT_GENERAL",
-        minerId: "m-106005-ord",
-        minerName: "ttl-nws (NWS Transit Alerts)",
-        networkRank: 1,
-        confidence: 0.98,
-        latencyMs: 843,
-        costUsd: 0.01,
-        txHash: "0x8fa921be6058e50b1d83ce9327aa49bc12e0947ba9468903c0291ba48c5e9021",
-        basescanUrl: "https://sepolia.basescan.org/tx/0x8fa921be6058e50b1d83ce9327aa49bc12e0947ba9468903c0291ba48c5e9021",
-        signalHash: "0x8fa921be6058e50b1d83ce9327aa49bc12e0947ba9468903c0291ba48c5e9021",
-        timestamp: "2026-11-20T19:30:00Z",
-        settled: true,
-        weatherTag: "RECORDED",
-        recordedDate: "2026-11-20",
-        rawDetails: "NWS Ground Stop Alert at Chicago ORD. Blizzard warning in effect.",
-      };
+      verdictRationale = "The airline holds a valid extraordinary circumstances defense under Article 5(3). Severe blizzard ground-stop active at departure hub. Fails closed to prevent doomed dispute.";
+      eligibleCompensationRange = "Disputed / High Rejection Risk (€0)";
+      compensationNote = "Airlines are exempt from paying compensation if disruption was caused by extraordinary circumstances (Article 5(3)).";
     }
   }
 
-  // Generate Draft Claim Letter if viable
+  // Generate Draft Claim Letter if eligible
   let draftClaimLetter = "";
-  if (verdict === "CLAIM_LOOKS_VIABLE") {
+  if (verdict === "ELIGIBLE_FOR_CLAIM") {
     draftClaimLetter = `To: ${flight!.carrier} Passenger Claims Department
-Subject: Statutory Compensation Claim under Regulation (EC) No 261/2004
+Subject: Request for Statutory Compensation under Regulation (EC) No 261/2004
 
 Passenger Flight: ${flight!.flightNumber} (${flight!.origin} → ${flight!.destination})
 Flight Date: ${flight!.flightDate}
-Scheduled Departure: ${flight!.scheduledDeparture}
-Actual Departure: ${flight!.actualDeparture}
-Delay at Departure: ${Math.floor(flight!.delayMinutes / 60)}h ${flight!.delayMinutes % 60}m
+Scheduled Arrival: ${flight!.scheduledArrival}
+Actual Arrival: ${flight!.actualArrival}
+Arrival Delay at Final Destination: ${Math.floor(flight!.arrivalDelayMinutes / 60)}h ${flight!.arrivalDelayMinutes % 60}m
 
-Pursuant to Article 7 of Regulation (EC) 261/2004, passenger is entitled to €600 statutory compensation for long-haul flight delay exceeding 3 hours.
+Pursuant to Regulation (EC) 261/2004 and Court of Justice case law (Sturgeon v Condor), passenger is entitled to statutory compensation for arrival delay exceeding 3 hours on a flight over 3,500 km.
 
-Attached Evidence:
-- Telegraph Protocol Weather Intelligence Receipt (x402 Micro-settlement on Base Sepolia):
-  Receipt Hash: ${receipt?.txHash || "0x19f108...5bead2"}
-  Verification Link: ${receipt?.basescanUrl}
-  Findings: Meteorological observations at ${flight!.origin} confirm zero active severe thunderstorm or blizzard alerts during departure.
+Eligible Compensation Range to be Checked:
+- Baseline statutory entitlement (Art. 7(1)(c)): €600
+- If carrier invokes Article 7(2)(c) (arrival delay under 4 hours): 50% reduction applies, making eligible amount €300.
+Eligible Amount Submitted for Verification: ${eligibleCompensationRange}
 
-Please confirm receipt and transfer statutory compensation within 14 business days.
+Attached Verification Evidence:
+- Arrival Telemetry: Arrival at ${flight!.destination} delayed by ${Math.floor(flight!.arrivalDelayMinutes / 60)}h ${flight!.arrivalDelayMinutes % 60}m.
+- Departure Weather Status: Meteorological screening at ${flight!.origin} confirms zero active severe thunderstorm or blizzard ground-stop alerts during departure. The carrier's weather defense is not supported by this evidence.
+${receipt?.txHash ? `- Verified Telegraph Protocol x402 Settlement Receipt: ${receipt.txHash} (${receipt.basescanUrl})` : `- Verification Mode: ${badge} (${badgeNote})`}
+
+Please confirm receipt and evaluate this claim within 14 business days.
 (Draft generated by SkyClaim. Draft only, not legal advice.)`;
   }
 
@@ -398,16 +494,19 @@ Please confirm receipt and transfer statutory compensation within 14 business da
   return {
     claimId: `CLM-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
     timestamp: new Date().toISOString(),
-    caseNumber: caseNumber!,
-    caseTitle: caseTitle!,
-    caseCopy: caseCopy!,
-    verdict: verdict!,
-    verdictRationale: verdictRationale!,
-    recommendation: recommendation!,
-    recommendationText: recommendationText!,
+    caseNumber,
+    caseTitle,
+    caseCopy,
+    badge,
+    badgeNote,
+    verdict,
+    verdictRationale,
+    recommendation,
+    recommendationText,
     statutoryRegulation: "EU261",
-    eligibleCompensation: compensation,
-    compensationAmountEur: compEur,
+    statutoryDelayBasis: "Arrival delay at final destination (CJEU Sturgeon v Condor standard)",
+    eligibleCompensationRange,
+    compensationNote,
     flight: flight!,
     weather: weather!,
     receipt,
@@ -422,11 +521,11 @@ Please confirm receipt and transfer statutory compensation within 14 business da
     },
     accounting: {
       queriesFired: costUsd > 0 ? 1 : 0,
-      receiptsVerified: costUsd > 0 ? 1 : 0,
+      receiptsVerified: receipt ? 1 : 0,
       settlementChain: "Base Sepolia (EIP-155:84532)",
       settlementToken: "Circle USDC (0x036CbD53842c5426634e7929541eC2318f3dCF7e)",
       diamondContract: SKYCLAIM_CONFIG.diamondAddress,
-      payerAddress: "0x742d35Cc6634C0532925a3b844Bc454e4438f44e",
+      payerAddress: receipt ? "0xC0A3FB6d3F1f4B54617d29ffbdA4663Af5F96e2e" : "none (zero on-chain spend)",
     },
   };
 }
@@ -434,56 +533,49 @@ Please confirm receipt and transfer statutory compensation within 14 business da
 export const INITIAL_LEDGER: PublicLedgerEntry[] = [
   {
     id: "LEDGER-001",
-    flightNumber: "BA178",
+    flightNumber: "Hypothetical BA178",
     carrier: "British Airways",
     route: "JFK → LHR",
-    delayText: "+3h 42m",
-    verdict: "CLAIM_LOOKS_VIABLE",
+    delayText: "+3h 42m arrival delay",
+    verdict: "ELIGIBLE_FOR_CLAIM",
     recommendation: "DRAFT_CLAIM_READY",
-    recommendationText: "Draft claim ready (€600). Departure weather clear.",
-    compensationEur: 600,
-    costUsd: 0.01,
-    txHash: "0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2",
-    basescanUrl: "https://anjoman.ai/dashboard/explore/signals/0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2",
+    recommendationText: "Eligible for claim review (€300–€600 to be checked under Art. 7(2)).",
+    compensationRange: "€300 – €600",
+    costUsd: 0.00,
     timestamp: "10 mins ago",
-    flightTag: "FIXTURE",
-    weatherTag: "LIVE",
+    badge: "FIXTURE",
+    badgeNote: "Preset test fixture — no on-chain transaction executed",
   },
   {
     id: "LEDGER-002",
-    flightNumber: "DL401",
+    flightNumber: "Hypothetical DL401",
     carrier: "Delta / Air France",
     route: "JFK → CDG",
-    delayText: "+1h 05m",
-    verdict: "DELAY_TOO_SHORT",
+    delayText: "+1h 05m arrival delay",
+    verdict: "INELIGIBLE",
     recommendation: "NO_PURCHASE_BELOW_THRESHOLD",
-    recommendationText: "Below 3h threshold. $0 spent.",
-    compensationEur: 0,
+    recommendationText: "Below 3h arrival threshold. $0 spent.",
+    compensationRange: "€0",
     costUsd: 0.00,
-    txHash: "-",
-    basescanUrl: "#",
     timestamp: "24 mins ago",
-    flightTag: "FIXTURE",
-    weatherTag: "SIMULATED",
+    badge: "FIXTURE",
+    badgeNote: "Preset test fixture — below statutory threshold",
   },
   {
     id: "LEDGER-003",
-    flightNumber: "AF112",
+    flightNumber: "Hypothetical AF112",
     carrier: "Air France",
     route: "ORD → CDG",
-    delayText: "+4h 10m",
-    verdict: "WEATHER_RISK",
+    delayText: "+4h 10m arrival delay",
+    verdict: "FAIL_CLOSED_WEATHER",
     recommendation: "HIGH_REJECTION_RISK",
-    recommendationText: "Severe blizzard alert active at departure. High rejection risk.",
-    compensationEur: 0,
-    costUsd: 0.01,
-    txHash: "0x8fa921be6058e50b1d83ce9327aa49bc12e0947ba9468903c0291ba48c5e9021",
-    basescanUrl: "https://sepolia.basescan.org/tx/0x8fa921be6058e50b1d83ce9327aa49bc12e0947ba9468903c0291ba48c5e9021",
+    recommendationText: "Severe blizzard alert active at departure. High rejection risk under Art. 5(3).",
+    compensationRange: "€0",
+    costUsd: 0.00,
     timestamp: "45 mins ago",
-    flightTag: "FIXTURE",
-    weatherTag: "RECORDED",
+    badge: "FIXTURE",
+    badgeNote: "Preset test fixture — blizzard ground stop test case",
   },
 ];
 
 export const SKYCLAIM_PUBLIC_LEDGER: PublicLedgerEntry[] = INITIAL_LEDGER;
-

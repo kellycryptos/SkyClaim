@@ -11,21 +11,21 @@ Under European Regulation (EC) No 261/2004 and UK Air Passenger Rights:
 - **The Airline Defense:** Under Article 5(3), airlines are exempt from paying if they prove the delay was caused by *"extraordinary circumstances which could not have been avoided"*, most commonly claiming bad weather or air traffic control.
 
 **SkyClaim** checks the airline's most common excuse at the exact moment of delay:
-1. When a 3+ hour delay is detected on a transatlantic departure, SkyClaim immediately purchases live weather alert intelligence for the US departure airport via Telegraph Protocol (`STORM_ALERT_GENERAL`).
-2. If severe storm/ground-stop alerts are active, SkyClaim warns the passenger that the airline holds an ironclad Article 5(3) defense (`WEATHER_RISK`), preventing doomed disputes.
-3. If weather is clear, SkyClaim issues `CLAIM_LOOKS_VIABLE`, generating a complete EU261 claim package with the cryptographic Telegraph purchase receipt attached, pre-emptively closing the airline's weather excuse.
+1. When a 3+ hour arrival delay is detected on a transatlantic departure, SkyClaim immediately verifies departure weather alert intelligence for the US departure airport via Telegraph Protocol (`TRAVEL_TRANSIT_LOCK_GENERAL`).
+2. If severe storm/ground-stop alerts are active, SkyClaim warns the passenger that the airline holds an extraordinary circumstances defense (`FAIL_CLOSED_WEATHER`), preventing doomed disputes.
+3. If weather is clear, SkyClaim issues `ELIGIBLE_FOR_CLAIM`, generating a complete EU261 claim draft with statutory delay basis and eligible compensation range (€300 to €600, subject to Article 7(2)(c)), pre-emptively closing the airline's weather excuse.
 
 ---
 
-## 2. Honest Data Boundaries: FIXTURE vs. LIVE vs. RECORDED
+## 2. Honest Data Boundaries: FIXTURE vs. LIVE vs. SIMULATED
 
 To ensure transparent and reproducible adjudication, SkyClaim enforces explicit data labeling:
 
 | Component | Nature | Description |
 | :--- | :--- | :--- |
-| **Flight Schedule & Delay** | `[FIXTURE]` | Historical flight schedule telemetry (delay duration and arrival times). |
+| **Preset Telemetry** | `[FIXTURE]` | Deterministic test vectors for hypothetical flights and departure weather. |
 | **Live Departure Weather** | `[LIVE]` | Real-time weather alert query purchased via Telegraph x402 ($0.01 USDC on Base Sepolia). |
-| **Recorded Severe Storm** | `[RECORDED]` | Verified Telegraph alert snapshot recorded during a real blizzard event (2026-11-20). |
+| **Free-Input Baseline** | `[SIMULATED]` | Zero-cost baseline when `AGENT_PRIVATE_KEY` is not present in environment. |
 | **Short Delay (< 3 Hours)** | `[$0 SPENT]` | Autonomous circuit breaker: Below statutory threshold, no query purchased. |
 
 ---
@@ -33,14 +33,14 @@ To ensure transparent and reproducible adjudication, SkyClaim enforces explicit 
 ## 3. The 3 Evaluator Test Scenarios
 
 ```text
-CASE 1: CLAIM LOOKS VIABLE
-Delay 3h 42m (flight data: FIXTURE). Weather at departure: no active alerts (Telegraph purchase, $0.01, receipt shown, LIVE). The airline's weather excuse is not supported by this evidence. Draft claim ready. Compensation under EU261 is EUR 250 to 600 depending on distance.
+CASE 1: CLEAN DELAY (Hypothetical BA178 JFK -> LHR)
+Arrival delay: 3h 42m (flight data: FIXTURE). Weather at departure: no active alerts (FIXTURE). The airline's weather excuse is not supported by this evidence. Draft claim ready. Eligible compensation to be checked under EU261 Article 7(2): €300 to €600.
 
-CASE 2: DELAY TOO SHORT
-Delay 1h 05m (flight data: FIXTURE). Below the 3 hour threshold. No claim drafted and no purchase made.
+CASE 2: MINOR DELAY (Hypothetical DL401 JFK -> CDG)
+Arrival delay: 1h 05m (flight data: FIXTURE). Below the 3 hour statutory threshold. Ineligible; no claim drafted and no purchase made ($0 spent).
 
-CASE 3: WEATHER RISK
-Delay 4h 10m (flight data: FIXTURE). Severe weather alert active at departure (Telegraph receipt, RECORDED on 2026-11-20). The airline may argue extraordinary circumstances. Evidence is weak and the rejection risk is high. Whether to file is your decision. This tool does not decide legal fault.
+CASE 3: WEATHER RISK (Hypothetical AF112 ORD -> CDG)
+Arrival delay: 4h 10m (flight data: FIXTURE). Severe weather blizzard alert active at departure (FIXTURE). The airline holds an extraordinary circumstances defense under Article 5(3). Verdict: FAIL_CLOSED_WEATHER. Fails closed to prevent doomed dispute.
 ```
 
 ---

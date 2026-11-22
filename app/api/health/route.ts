@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { TELEGRAPH_CONFIG } from "@/lib/telegraph";
+import { SKYCLAIM_CONFIG } from "@/lib/skyclaim-consensus";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,7 @@ export async function GET() {
   let minerCount = 0;
 
   try {
-    const res = await fetch(`${TELEGRAPH_CONFIG.nodeUrl}/engine/v1/subnets`, {
+    const res = await fetch(`${SKYCLAIM_CONFIG.nodeUrl}/engine/v1/subnets`, {
       signal: AbortSignal.timeout(2000),
       cache: "no-store",
     });
@@ -25,9 +25,9 @@ export async function GET() {
   return NextResponse.json({
     status: "ok",
     network: "Base Sepolia (84532)",
-    diamond: TELEGRAPH_CONFIG.diamondAddress,
-    usdc: TELEGRAPH_CONFIG.usdcAddress,
-    nodeUrl: TELEGRAPH_CONFIG.nodeUrl,
+    diamond: SKYCLAIM_CONFIG.diamondAddress,
+    usdc: SKYCLAIM_CONFIG.usdcAddress,
+    nodeUrl: SKYCLAIM_CONFIG.nodeUrl,
     nodeConnected,
     minerCount: nodeConnected ? minerCount : "offline-fixture-ready",
     sandboxResilience: true,

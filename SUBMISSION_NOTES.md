@@ -1,5 +1,5 @@
 # Telegraph Hackathon Season II · Official Entry Dossier & Form Notes
-> **Project:** SkyClaim · Autonomous Flight Disruption & Weather Defense Shield  
+> **Project:** SkyClaim · Autonomous Flight Disruption Evidence Tool  
 > **Track:** Track 03 — Apps & Agents  
 > **Mission:** Mission 15 — Consumer Automation  
 > **Status:** Submission-Ready (Pre-filled notes to copy-paste into the official form when it opens)
@@ -26,7 +26,7 @@
 ## 2. Short Public Summary & Five Commercial Questions
 
 ### One-Sentence Positioning Hook:
-> *“SkyClaim checks the airline's most common excuse. When a transatlantic flight is delayed 3+ hours, it buys live weather alerts for the US departure airport through Telegraph. If a severe alert is active, it flags the claim as high risk; otherwise, it drafts an EU261 claim with the cryptographic receipt attached.”*
+> *“SkyClaim checks the airline's most common excuse. When a flight is delayed 3+ hours, it verifies weather alerts for the departure airport through Telegraph Protocol. If a severe alert is active, it flags the claim as high risk; otherwise, it drafts an EU261/UK261 claim with the receipt attached. Draft only, not legal advice. Coverage: US departures to Europe on EU/UK carriers. Testnet only.”*
 
 ### Question 1: Who is it for?
 Passengers, corporate travel desks, and claims managers dealing with transatlantic flights on EU/UK carriers departing US airports. Under Regulation (EC) No 261/2004, delays exceeding 3 hours entitle passengers to €250–€600 statutory compensation, but airlines routinely reject claims citing "extraordinary weather circumstances".
@@ -35,12 +35,12 @@ Passengers, corporate travel desks, and claims managers dealing with transatlant
 Eliminates bureaucratic delays and false rejections. Instead of passengers blindly disputing an airline's weather defense weeks later, SkyClaim purchases timestamped departure weather intelligence through Telegraph for $0.01 USDC at the moment of disruption, establishing whether severe storm alerts actually existed.
 
 ### Question 3: What does it do today?
-1. Detects flight delay duration from departure telemetry.
-2. If delay $\ge$ 3 hours, purchases live weather alert intelligence for the US departure airport via Telegraph (`STORM_ALERT_GENERAL`).
+1. Evaluates arrival delay duration against the 3-hour statutory threshold (CJEU *Sturgeon v Condor* standard).
+2. If arrival delay $\ge$ 3 hours, purchases live weather alert intelligence for the US departure airport via Telegraph (`TRAVEL_TRANSIT_LOCK_GENERAL`).
 3. Adjudicates 3 explicit outcomes:
-   - **Case 1 (Claim Looks Viable):** Delay $\ge$ 3h + Weather clear $\to$ Drafts statutory claim with on-chain receipt (€600).
-   - **Case 2 (Delay Too Short):** Delay $< 3$h $\to$ Fails early, $0 spent, no unnecessary purchase made.
-   - **Case 3 (Weather Risk):** Delay $\ge$ 3h + Severe weather alert active $\to$ Flags high rejection risk (Article 5(3) defense).
+   - **Case 1 (Clean Delay):** Arrival delay $\ge$ 3h + Weather clear $\to$ `ELIGIBLE_FOR_CLAIM` (€300–€600 eligible compensation to be checked under Article 7(2)).
+   - **Case 2 (Minor Delay):** Arrival delay $< 3$h $\to$ `INELIGIBLE` ($0 spent, no purchase made).
+   - **Case 3 (Weather Risk):** Arrival delay $\ge$ 3h + Severe weather alert active $\to$ `FAIL_CLOSED_WEATHER`.
 4. Settles x402 micro-payments on Base Sepolia (`84532`) in Circle USDC.
 
 ### Question 4: Why would someone adopt it?
@@ -63,11 +63,11 @@ Corporate travel management desks save hundreds of hours of doomed dispute labor
 - **Video Script Outline:**
   - `0:00 - 0:20`: **The Problem:** €600 EU261 claims rejected by airlines claiming "weather" when skies were clear.
   - `0:20 - 1:15`: **Live Web Terminal Demo:**
-    - Click **Preset 1 (BA178):** 3h 42m delay, live Telegraph query ($0.01 USDC), clear skies confirmed, draft claim generated with receipt.
-    - Click **Preset 2 (DL401):** 1h 05m delay, below 3h threshold, $0 spent (no drain).
-    - Click **Preset 3 (AF112):** 4h 10m delay, blizzard ground-stop active, flags high rejection risk.
-  - `1:15 - 1:45`: **Terminal Telegram Bot Simulator:** Run `npm run bot:sim`, demonstrate the conversational flow and receipt generation.
-  - `1:45 - 2:30`: **Telegraph Integration & Receipt Box:** Show the live node interaction (`http://13.237.89.59:7044`), Base Sepolia Diamond (`0x5a2324...`), and BaseScan receipt links.
+    - Click **Preset 1 (BA178):** 3h 42m clean delay, weather clear, `APPROVED_FOR_CLAIM` with draft claim generated.
+    - Click **Preset 2 (DL401):** 1h 05m delay, below 3h threshold, `INELIGIBLE` ($0 spent).
+    - Click **Preset 3 (AF112):** 4h 10m delay, blizzard ground-stop active, `FAIL_CLOSED_WEATHER`.
+  - `1:15 - 1:45`: **Terminal Telegram Bot Simulator:** Run `npm run bot:sim`, demonstrate conversational flow and transparent data badges.
+  - `1:45 - 2:30`: **Telegraph Integration & Receipt Box:** Show the live node interaction (`http://13.237.89.59:7044`), Base Sepolia Diamond (`0x5a2324...`), and live verified x402 challenge flow.
   - `2:30 - 3:00`: **Summary:** Real demand, x402 micropayments, zero-env resilience.
 
 ---
@@ -84,10 +84,11 @@ Corporate travel management desks save hundreds of hours of doomed dispute labor
 - **Sample Request:**
   - Query: `BA178` (or custom airport code `JFK`)
 - **Expected Result:**
-  - HTTP 200 JSON payload containing `verdict: "CLAIM_LOOKS_VIABLE"`, `eligibleCompensation: "€600"`, and `receipt` object with Base Sepolia txHash.
+  - HTTP 200 JSON payload containing `verdict: "APPROVED_FOR_CLAIM"`, `eligibleCompensation: "€600"`, `badge: "FIXTURE"`.
 - **Settlement Network:** Base Sepolia (EIP-155 Chain ID: `84532`).
 - **Settlement Asset:** Circle USDC (`0x036CbD53842c5426634e7929541eC2318f3dCF7e`).
 - **Unit Cost:** $0.01 USDC per verified departure weather intelligence query.
+- **Supported Intent:** `TRAVEL_TRANSIT_LOCK_GENERAL` (`ttl-nws` 106005, `ttl-airsigmet` 106004).
 - **Known Limitations:**
   - Coverage scope: US departures to Europe on EU/UK carriers (EU261/UK261 jurisdiction).
   - Draft claim letter only; does not provide formal legal representation or automated court filing.
@@ -102,9 +103,8 @@ Corporate travel management desks save hundreds of hours of doomed dispute labor
   [`0x036CbD53842c5426634e7929541eC2318f3dCF7e`](https://sepolia.basescan.org/token/0x036CbD53842c5426634e7929541eC2318f3dCF7e)
 - **Live Node Engine Dispatcher:**
   `http://13.237.89.59:7044` ([Subnets / Miners Index](http://13.237.89.59:7044/engine/v1/subnets))
-- **Live Signal Receipt Hash:**
-  `0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2`
-  - *Explorer Link:* https://anjoman.ai/dashboard/explore/signals/0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2
+- **Live Node x402 Probe Verification:**
+  Run `npm run purchase:live` to verify HTTP 402 challenge negotiation on Base Sepolia.
 - **Test Evidence:**
   - Run `npm test` to verify 100% passing rate across all 3 scenarios and anti-drain budget caps.
 

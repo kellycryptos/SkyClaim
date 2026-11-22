@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { SKYCLAIM_PRESETS, SKYCLAIM_PUBLIC_LEDGER } from "@/lib/skyclaim-consensus";
+import { SKYCLAIM_PRESETS, SKYCLAIM_CONFIG, SKYCLAIM_PUBLIC_LEDGER } from "@/lib/skyclaim-consensus";
 import { SkyClaimResult, PresetScenario } from "@/lib/skyclaim-types";
 import { TheReceiptBox } from "@/components/TheReceiptBox";
 import {
@@ -19,7 +19,7 @@ import {
   CloudSun,
   FileText,
   Activity,
-  ArrowRight,
+  Info,
 } from "lucide-react";
 
 export default function SkyClaimHome() {
@@ -33,7 +33,7 @@ export default function SkyClaimHome() {
   const runVerification = async (target?: string) => {
     const inputToTest = (target || queryInput).trim();
     if (!inputToTest) {
-      setError("Please select a preset case or enter a flight/airport code.");
+      setError("Please select a preset case or enter a flight or US airport code.");
       return;
     }
 
@@ -74,7 +74,7 @@ export default function SkyClaimHome() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${claim.flight.flightNumber}-Disruption-Claim.txt`;
+    a.download = `${claim.flight.flightNumber}-Disruption-Claim-Package.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -87,19 +87,26 @@ export default function SkyClaimHome() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090E] text-gray-100 flex flex-col font-sans">
-      {/* Header */}
-      <header className="border-b border-[#1A1F2E] bg-[#0A0D15]/95 backdrop-blur px-6 py-3.5 sticky top-0 z-40">
+    <div className="min-h-screen bg-[#07090E] text-white flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+      {/* Top Header */}
+      <header className="border-b border-[#1E2538] bg-[#0A0D14]/80 backdrop-blur sticky top-0 z-40 px-6 py-3.5">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-600/30">
-              <Plane className="h-4 w-4 transform -rotate-45" />
+            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-md shadow-blue-500/20">
+              <Plane className="h-4 w-4" />
             </div>
-            <div className="flex items-center gap-2.5">
-              <span className="font-bold text-sm tracking-wider text-white font-mono uppercase">SkyClaim</span>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                Mission 15 · Consumer Auto
-              </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-sm font-bold tracking-tight text-white font-mono">
+                  SkyClaim · Flight Disruption Shield
+                </h1>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20 font-bold">
+                  TESTNET ONLY
+                </span>
+              </div>
+              <p className="text-[11px] text-gray-400 font-mono">
+                Same-Day US Departures to Europe on EU/UK Carriers (EU261 / UK261)
+              </p>
             </div>
           </div>
 
@@ -130,7 +137,7 @@ export default function SkyClaimHome() {
       <main className="max-w-5xl mx-auto w-full px-6 py-6 flex-1 space-y-6">
         {/* Positioning Banner */}
         <div className="rounded-xl border border-blue-500/30 bg-[#0B101C] p-4 text-xs sm:text-sm text-gray-300 leading-relaxed shadow-lg">
-          SkyClaim checks the airline's most common excuse. When a flight is delayed 3+ hours, it buys live weather alerts for the departure airport through Telegraph. If a severe alert is active, it flags the claim as high risk. Otherwise it drafts an EU261/UK261 claim with the receipt attached. Draft only, not legal advice. Coverage: US departures to Europe on EU/UK carriers. Testnet only.
+          SkyClaim checks the airline's most common excuse. When a transatlantic flight is delayed 3+ hours, it verifies weather alerts for the departure airport through Telegraph. If a severe alert is active, it flags the claim as high risk; otherwise it drafts an EU261 statutory claim. Draft only, not legal advice. Coverage: US departures to Europe on EU/UK carriers. Testnet only.
         </div>
 
         {/* 1-Click Reviewer Presets */}
@@ -138,9 +145,9 @@ export default function SkyClaimHome() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs font-semibold text-gray-300 font-mono uppercase tracking-wider">
               <Activity className="h-4 w-4 text-blue-400" />
-              <span>Reviewer Presets</span>
+              <span>Reviewer Presets (Deterministic Acceptance Cases)</span>
             </div>
-            <span className="text-[11px] text-gray-400 font-mono">Testnet Micropayment: $0.01 USDC</span>
+            <span className="text-[11px] text-gray-400 font-mono">Intent: TRAVEL_TRANSIT_LOCK_GENERAL</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -163,26 +170,29 @@ export default function SkyClaimHome() {
                     </span>
                     <span
                       className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${
-                        p.caseNumber === 1
+                        p.expectedVerdict === "ELIGIBLE_FOR_CLAIM"
                           ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                          : p.caseNumber === 2
+                          : p.expectedVerdict === "INELIGIBLE"
                           ? "bg-gray-500/15 text-gray-400 border-gray-500/30"
-                          : "bg-rose-500/15 text-rose-400 border-rose-500/30"
+                          : "bg-amber-500/15 text-amber-400 border-amber-500/30"
                       }`}
                     >
-                      {p.caseNumber === 1 ? "CLAIM VIABLE" : p.caseNumber === 2 ? "< 3H DELAY" : "WEATHER RISK"}
+                      {p.expectedVerdict.replace(/_/g, " ")}
                     </span>
                   </div>
                   <p className="mt-2 font-medium text-xs text-gray-200">{p.title}</p>
                   <p className="mt-1 text-[11px] text-gray-400 leading-normal">{p.route}</p>
                   
                   <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[10px] font-mono">
-                    <span className="text-gray-400">Flight: <strong className="text-gray-300">FIXTURE</strong></span>
-                    <span className="text-gray-400">
-                      Weather:{" "}
-                      <strong className={p.caseNumber === 1 ? "text-emerald-400" : p.caseNumber === 3 ? "text-amber-400" : "text-gray-400"}>
-                        {p.caseNumber === 1 ? "LIVE" : p.caseNumber === 3 ? "RECORDED" : "$0 SPENT"}
-                      </strong>
+                    <span className="text-gray-400">Badge:</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded border font-bold ${
+                        p.badge === "LIVE"
+                          ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
+                          : "bg-blue-500/10 text-blue-300 border-blue-500/20"
+                      }`}
+                    >
+                      {p.badge}
                     </span>
                   </div>
                 </button>
@@ -190,13 +200,13 @@ export default function SkyClaimHome() {
             })}
           </div>
 
-          {/* Custom US Airport Search */}
+          {/* Custom US Airport Free-Input Search */}
           <div className="pt-3 border-t border-[#1B2132] flex flex-col sm:flex-row gap-2.5">
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-3 h-4 w-4 text-gray-400" />
               <input
                 type="text"
-                placeholder="Or test live weather alerts at any US departure airport (e.g. JFK, ORD, BOS, MIA, SFO)"
+                placeholder="Or test live alerts at any US departure airport (e.g. JFK, ORD, BOS, SFO)"
                 value={queryInput}
                 onChange={(e) => setQueryInput(e.target.value)}
                 className="w-full bg-[#0E121E] border border-[#1E2436] rounded-lg pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition uppercase"
@@ -207,7 +217,7 @@ export default function SkyClaimHome() {
               disabled={loading}
               className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium text-xs transition shrink-0"
             >
-              {loading ? "Checking Weather ($0.01)..." : "Run Disruption Check"}
+              {loading ? "Checking Weather..." : "Run Disruption Check"}
             </button>
           </div>
         </section>
@@ -225,35 +235,57 @@ export default function SkyClaimHome() {
             {/* Verdict Card */}
             <div
               className={`rounded-xl border p-5 transition ${
-                claim.verdict === "CLAIM_LOOKS_VIABLE"
+                claim.verdict === "ELIGIBLE_FOR_CLAIM"
                   ? "bg-[#091512] border-emerald-500/40"
-                  : claim.verdict === "DELAY_TOO_SHORT"
+                  : claim.verdict === "INELIGIBLE"
                   ? "bg-[#0E121A] border-gray-700/50"
                   : "bg-[#18110D] border-amber-500/40"
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/5 pb-3">
                 <div className="flex items-center gap-2.5">
-                  {claim.verdict === "CLAIM_LOOKS_VIABLE" && <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />}
-                  {claim.verdict === "DELAY_TOO_SHORT" && <Clock className="h-5 w-5 text-gray-400 shrink-0" />}
-                  {claim.verdict === "WEATHER_RISK" && <ShieldAlert className="h-5 w-5 text-amber-400 shrink-0" />}
+                  {claim.verdict === "ELIGIBLE_FOR_CLAIM" && <CheckCircle2 className="h-5 w-5 text-emerald-400 shrink-0" />}
+                  {claim.verdict === "INELIGIBLE" && <Clock className="h-5 w-5 text-gray-400 shrink-0" />}
+                  {claim.verdict === "FAIL_CLOSED_WEATHER" && <ShieldAlert className="h-5 w-5 text-amber-400 shrink-0" />}
                   <div>
-                    <h2 className="text-sm font-bold font-mono text-white tracking-wide">{claim.caseTitle}</h2>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-sm font-bold font-mono text-white tracking-wide">{claim.caseTitle}</h2>
+                      <span
+                        className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase ${
+                          claim.badge === "LIVE"
+                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                            : "bg-blue-500/15 text-blue-300 border-blue-500/30"
+                        }`}
+                      >
+                        {claim.badge}
+                      </span>
+                    </div>
                     <span className="text-[11px] text-gray-400 font-mono">{claim.recommendationText}</span>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-xs font-mono font-bold px-2.5 py-1 rounded bg-black/40 border border-white/10 text-gray-200">
-                    {claim.eligibleCompensation}
+                    {claim.eligibleCompensationRange}
                   </span>
                 </div>
               </div>
 
-              {/* Exact Case Copy */}
+              {/* Exact Case / Mode Copy */}
               <div className="mt-4 p-3.5 rounded-lg bg-black/30 border border-white/5 font-mono text-xs text-gray-200 leading-relaxed">
                 {claim.caseCopy}
               </div>
+
+              {/* Visible Note for Non-Live Modes */}
+              {claim.badge !== "LIVE" && (
+                <div className="mt-3 p-3 rounded-lg bg-white/[0.03] border border-white/10 flex items-start gap-2.5 text-xs text-gray-400 font-mono">
+                  <Info className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="text-gray-200 font-semibold">{claim.badge} Data Notice: </span>
+                    {claim.badgeNote}
+                  </div>
+                </div>
+              )}
 
               {/* Telemetry & Weather Breakdown */}
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
@@ -270,8 +302,8 @@ export default function SkyClaimHome() {
                   <div className="text-gray-300 font-mono text-[11px] space-y-1">
                     <p>Flight: <strong className="text-white">{claim.flight.flightNumber}</strong> ({claim.flight.carrier})</p>
                     <p>Route: <span className="text-gray-200">{claim.flight.origin} → {claim.flight.destination}</span> ({claim.flight.distanceKm.toLocaleString()} km)</p>
-                    <p>Departure: <span className="text-gray-200">Scheduled {claim.flight.scheduledDeparture} · Actual {claim.flight.actualDeparture}</span></p>
-                    <p>Delay at Departure: <strong className={claim.flight.delayMinutes >= 180 ? "text-emerald-400" : "text-gray-400"}>+{Math.floor(claim.flight.delayMinutes / 60)}h {claim.flight.delayMinutes % 60}m</strong></p>
+                    <p>Arrival: <span className="text-gray-200">Scheduled {claim.flight.scheduledArrival} · Actual {claim.flight.actualArrival}</span></p>
+                    <p>Arrival Delay: <strong className={claim.flight.arrivalDelayMinutes >= 180 ? "text-emerald-400" : "text-gray-400"}>+{Math.floor(claim.flight.arrivalDelayMinutes / 60)}h {claim.flight.arrivalDelayMinutes % 60}m</strong> (Statutory basis: arrival at destination)</p>
                   </div>
                 </div>
 
@@ -279,49 +311,54 @@ export default function SkyClaimHome() {
                 <div className="p-3.5 rounded-lg bg-[#0E121E] border border-[#1E2436] space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-gray-300 flex items-center gap-1.5">
-                      <CloudSun className="h-3.5 w-3.5 text-cyan-400" /> Telegraph Weather Intelligence
+                      <CloudSun className="h-3.5 w-3.5 text-cyan-400" /> Departure Weather Screening
                     </span>
                     <span
                       className={`text-[10px] font-mono px-2 py-0.5 rounded border font-bold ${
-                        claim.weather.tag === "LIVE"
+                        claim.badge === "LIVE"
                           ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                          : claim.weather.tag === "RECORDED"
-                          ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
                           : "bg-gray-500/15 text-gray-400 border-gray-500/30"
                       }`}
                     >
-                      {claim.weather.tag === "RECORDED" ? `RECORDED on ${claim.weather.recordedDate}` : claim.weather.tag}
+                      {claim.badge}
                     </span>
                   </div>
                   <div className="text-gray-300 font-mono text-[11px] space-y-1">
                     <p>Departure Airport: <strong className="text-white">{claim.weather.departureAirport}</strong></p>
                     <p>Observation: <span className="text-gray-200">{claim.weather.stormDetails}</span></p>
-                    <p>Authority / Miner: <span className="text-gray-300">{claim.weather.sourceAuthority}</span></p>
+                    <p>Authority: <span className="text-gray-300">{claim.weather.sourceAuthority}</span></p>
                     <p>
-                      Cost: <strong className="text-emerald-400">${claim.totalCostUsd.toFixed(2)} USDC</strong> · Latency: <span className="text-gray-300">{claim.totalLatencyMs}ms</span>
+                      Cost: <strong className={claim.totalCostUsd > 0 ? "text-emerald-400" : "text-gray-400"}>${claim.totalCostUsd.toFixed(2)} USDC</strong>
                     </p>
                   </div>
 
-                  {claim.receipt && (
-                    <div className="pt-2 border-t border-white/5 flex items-center justify-between text-[11px] font-mono">
-                      <span className="text-gray-400">Signal Proof:</span>
-                      <a
-                        href={claim.receipt.basescanUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-blue-400 hover:text-blue-300 flex items-center gap-1 underline"
-                      >
-                        {claim.receipt.signalHash.slice(0, 10)}...{claim.receipt.signalHash.slice(-8)}
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
+                  {/* Show Miner details ONLY if LIVE result */}
+                  {claim.badge === "LIVE" && claim.receipt && (
+                    <div className="pt-2 border-t border-white/5 space-y-1 text-[11px] font-mono">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">Miner:</span>
+                        <span className="text-white">{claim.receipt.minerName} (Rank #{claim.receipt.networkRank})</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">On-Chain Tx:</span>
+                        <a
+                          href={claim.receipt.basescanUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-400 hover:text-blue-300 flex items-center gap-1 underline"
+                        >
+                          {claim.receipt.txHash.slice(0, 10)}...{claim.receipt.txHash.slice(-8)}
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Statutory Claim Draft (shown when claim is viable) */}
-            {claim.verdict === "CLAIM_LOOKS_VIABLE" && claim.draftClaimLetter && (
+            {/* Statutory Claim Draft (shown when claim is eligible) */}
+            {claim.verdict === "ELIGIBLE_FOR_CLAIM" && claim.draftClaimLetter && (
               <div className="rounded-xl border border-[#1E2436] bg-[#0B0E17] p-5 space-y-3">
                 <div className="flex items-center justify-between border-b border-[#1E2436] pb-3">
                   <div className="flex items-center gap-2">
@@ -359,18 +396,18 @@ export default function SkyClaimHome() {
           <div className="flex items-center justify-between border-b border-[#1B2132] pb-3">
             <div>
               <h3 className="text-xs font-semibold text-gray-200 uppercase tracking-wider font-mono">
-                Public Testnet Activity &amp; Receipts
+                Public Disruption Verification Activity
               </h3>
               <p className="text-[11px] text-gray-400 font-mono">
-                Verifiable Telegraph weather intelligence micropayments on Base Sepolia
+                Historical &amp; simulated review ledger with explicit data badges
               </p>
             </div>
             <div className="flex items-center gap-2 text-[11px] font-mono">
               <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">
-                €1,200 Recoverable
+                €300–€600 Eligible (Art. 7(2))
               </span>
               <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
-                $0.02 USDC Spent
+                1 Claim Held (Weather)
               </span>
             </div>
           </div>
@@ -382,9 +419,9 @@ export default function SkyClaimHome() {
                   <th className="py-2 px-3">Flight</th>
                   <th className="py-2 px-3">Delay</th>
                   <th className="py-2 px-3">Verdict</th>
-                  <th className="py-2 px-3">Tags</th>
-                  <th className="py-2 px-3">Statutory Amount</th>
-                  <th className="py-2 px-3 text-right">Receipt</th>
+                  <th className="py-2 px-3">Data Badge</th>
+                  <th className="py-2 px-3">Statutory Range</th>
+                  <th className="py-2 px-3 text-right">Settlement Proof</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#151926] text-gray-300">
@@ -398,9 +435,9 @@ export default function SkyClaimHome() {
                     <td className="py-2.5 px-3">
                       <span
                         className={`text-[10px] font-bold px-2 py-0.5 rounded border uppercase ${
-                          entry.verdict === "CLAIM_LOOKS_VIABLE"
+                          entry.verdict === "ELIGIBLE_FOR_CLAIM"
                             ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                            : entry.verdict === "DELAY_TOO_SHORT"
+                            : entry.verdict === "INELIGIBLE"
                             ? "bg-gray-500/15 text-gray-400 border-gray-500/30"
                             : "bg-amber-500/15 text-amber-400 border-amber-500/30"
                         }`}
@@ -409,30 +446,23 @@ export default function SkyClaimHome() {
                       </span>
                     </td>
                     <td className="py-2.5 px-3">
-                      <div className="flex items-center gap-1.5 text-[10px]">
-                        <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-300 border border-blue-500/20">
-                          {entry.flightTag}
-                        </span>
-                        <span
-                          className={`px-1.5 py-0.5 rounded border ${
-                            entry.weatherTag === "LIVE"
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                              : entry.weatherTag === "RECORDED"
-                              ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                              : "bg-gray-500/10 text-gray-400 border-gray-500/20"
-                          }`}
-                        >
-                          {entry.weatherTag}
-                        </span>
-                      </div>
+                      <span
+                        className={`px-1.5 py-0.5 rounded border text-[10px] font-bold ${
+                          entry.badge === "LIVE"
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            : "bg-blue-500/10 text-blue-300 border-blue-500/20"
+                        }`}
+                      >
+                        {entry.badge}
+                      </span>
                     </td>
                     <td className="py-2.5 px-3 font-bold">
-                      <span className={entry.compensationEur > 0 ? "text-emerald-400" : "text-gray-500"}>
-                        {entry.compensationEur > 0 ? `€${entry.compensationEur}` : "€0"}
+                      <span className={entry.compensationRange !== "€0" ? "text-emerald-400" : "text-gray-500"}>
+                        {entry.compensationRange}
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-right">
-                      {entry.basescanUrl !== "#" ? (
+                      {entry.txHash && entry.basescanUrl ? (
                         <a
                           href={entry.basescanUrl}
                           target="_blank"
@@ -442,7 +472,7 @@ export default function SkyClaimHome() {
                           Proof <ExternalLink className="h-2.5 w-2.5" />
                         </a>
                       ) : (
-                        <span className="text-gray-600">N/A ($0)</span>
+                        <span className="text-gray-500 text-[11px]">No on-chain tx (Preset)</span>
                       )}
                     </td>
                   </tr>
@@ -453,7 +483,7 @@ export default function SkyClaimHome() {
         </section>
       </main>
 
-      {/* The Receipt Box Modal */}
+      {/* The Receipt Box Drawer */}
       <TheReceiptBox isOpen={receiptBoxOpen} onClose={() => setReceiptBoxOpen(false)} />
     </div>
   );
