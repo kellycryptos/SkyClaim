@@ -56,7 +56,7 @@ export const SKYCLAIM_PRESETS: PresetScenario[] = [
     flightNumber: "BA178",
     isHypothetical: true,
     flightDate: "2026-11-22",
-    title: "CASE 1: CLEAN DELAY (Hypothetical BA178)",
+    title: "CASE 1: CLEAN DELAY UNDER UK261 (Hypothetical BA178)",
     route: "New York JFK → London LHR (5,550 km)",
     carrier: "British Airways",
     operatingCarrier: "British Airways",
@@ -65,9 +65,9 @@ export const SKYCLAIM_PRESETS: PresetScenario[] = [
     arrivalDelayMinutes: 222, // 3h 42m
     badge: "FIXTURE",
     expectedVerdict: "ELIGIBLE_FOR_CLAIM",
-    eligibleCompensationRange: "€300 – €600 (to be checked under Art. 7(2))",
+    eligibleCompensationRange: "£260 – £520 (UK261 Art. 7(2) 50% discount for 3h–4h delay)",
     exactCopy:
-      "Hypothetical flight BA178 (New York JFK → London LHR). Operating carrier: British Airways (UK/EU carrier). Arrival delay: 3h 42m (FIXTURE). Departure & arrival weather: clear corridors (FIXTURE). Airline's weather defense is not supported by evidence. Eligible compensation under EU261: €300 to €600 (subject to Article 7(2) 50% rule for 3h–4h arrival delays on flights > 3,500 km). Draft claim ready.",
+      "Hypothetical flight BA178 (New York JFK → London LHR). Operating carrier: British Airways (UK carrier). Arrival delay: 3h 42m (FIXTURE). Departure weather: clear corridor (FIXTURE). Airline's weather defense is not supported by evidence. Eligible compensation under UK261: £260 to £520 (subject to Article 7(2) 50% rule for 3h–4h arrival delays on flights > 3,500 km). Draft claim template ready.",
   },
   {
     id: "case-2",
@@ -75,20 +75,20 @@ export const SKYCLAIM_PRESETS: PresetScenario[] = [
     flightNumber: "DL401",
     isHypothetical: true,
     flightDate: "2026-11-22",
-    title: "CASE 2: MINOR DELAY & NON-EU OPERATING METAL (Hypothetical DL401)",
+    title: "CASE 2: NON-EU OPERATING METAL EXCLUSION (Hypothetical DL401)",
     route: "New York JFK → Paris CDG (5,835 km)",
     carrier: "Delta / Air France",
     operatingCarrier: "Delta Air Lines",
     marketingCarrier: "Air France / Delta (Codeshare AF3600 / DL401)",
     isOperatingCarrierEUUK: false,
     operatingCarrierExclusionReason:
-      "Operating carrier: Delta (not EU/UK) → not covered by EU261 for US departures under Regulation (EC) 261/2004 Art. 3(1)(b) & CJEU Case C-502/18.",
-    arrivalDelayMinutes: 65, // 1h 05m
+      "Operating carrier: Delta Air Lines (non-EU metal ex-USA) → not covered by EU261 for US departures under Regulation (EC) No 261/2004 Art. 3(1)(b).",
+    arrivalDelayMinutes: 210, // 3h 30m arrival delay (exceeds 3h threshold, but excluded solely due to operating metal)
     badge: "FIXTURE",
     expectedVerdict: "INELIGIBLE",
-    eligibleCompensationRange: "€0 (Operating carrier non-EU & delay < 3h)",
+    eligibleCompensationRange: "€0 (Operating carrier non-EU ex-third country under Art. 3(1)(b))",
     exactCopy:
-      "Hypothetical flight DL401 (New York JFK → Paris CDG). Operating carrier: Delta Air Lines (not EU/UK) → not covered by EU261 on departures from third countries (Regulation (EC) 261/2004 Art. 3(1)(b) & CJEU Case C-502/18). Furthermore, arrival delay (1h 05m) is below the 3-hour statutory threshold. Ineligible ($0 spent, no purchase made).",
+      "Hypothetical flight DL401 (New York JFK → Paris CDG). Arrival delay: 3h 30m (exceeds 3h statutory threshold). Operating carrier: Delta Air Lines (not EU/UK) → not covered by EU261 on departures from third countries under Regulation (EC) No 261/2004 Art. 3(1)(b). Delta operating metal is excluded regardless of codeshare. Ineligible ($0 spent, telemetry bypassed).",
   },
   {
     id: "case-3",
@@ -96,7 +96,7 @@ export const SKYCLAIM_PRESETS: PresetScenario[] = [
     flightNumber: "AF112",
     isHypothetical: true,
     flightDate: "2026-11-22",
-    title: "CASE 3: SEVERE WEATHER DEFENSE (Hypothetical AF112 ORD → CDG)",
+    title: "CASE 3: EXTRAORDINARY WEATHER CIRCUMSTANCES DEFENSE (Hypothetical AF112 ORD → CDG)",
     route: "Chicago ORD → Paris CDG (6,670 km)",
     carrier: "Air France",
     operatingCarrier: "Air France",
@@ -105,9 +105,9 @@ export const SKYCLAIM_PRESETS: PresetScenario[] = [
     arrivalDelayMinutes: 250, // 4h 10m
     badge: "FIXTURE",
     expectedVerdict: "FAIL_CLOSED_WEATHER",
-    eligibleCompensationRange: "€300 – €600 (Contested Art. 5(3) Weather Defense)",
+    eligibleCompensationRange: "€600 (subject to Art. 5(3) extraordinary circumstances defense)",
     exactCopy:
-      "Hypothetical flight AF112 (Chicago ORD → Paris CDG). Operating carrier: Air France (EU carrier). Arrival delay: 4h 10m (FIXTURE). Severe winter blizzard ground-stop alert active at departure hub (FIXTURE). The airline holds an extraordinary circumstances defense under Article 5(3). Contested claim draft generated to challenge whether other carriers operated.",
+      "Hypothetical flight AF112 (Chicago ORD → Paris CDG). Operating carrier: Air France (EU carrier). Arrival delay: 4h 10m (FIXTURE). Severe winter blizzard ground-stop alert active at Chicago departure hub (FIXTURE). The airline holds an extraordinary circumstances defense under Article 5(3). Contested claim template generated to request proof of reasonable measures taken.",
   },
 ];
 
@@ -362,7 +362,7 @@ export async function queryLiveTelegraphWeather(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(askReqBody),
-        signal: AbortSignal.timeout(6000),
+        signal: AbortSignal.timeout(4000),
       });
 
       if (askRes.status === 402) {
@@ -378,7 +378,7 @@ export async function queryLiveTelegraphWeather(
               "Payment-Signature": signed.header,
             },
             body: JSON.stringify(askReqBody),
-            signal: AbortSignal.timeout(15000),
+            signal: AbortSignal.timeout(4500),
           });
 
           if (paidRes.ok) {
@@ -508,7 +508,7 @@ export async function queryLiveTelegraphWeather(
         body: JSON.stringify({
           query: `Severe weather alerts and transit lock for ${depClean} to ${arrClean} corridor`,
         }),
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(4000),
       });
 
       if (res.ok) {
@@ -815,9 +815,9 @@ export async function verifyFlightDisruption(
         arrivalWeather: "EGLL VFR (Clear, visibility 9999m) · Standard instrument arrivals active.",
         hasSevereArrivalAlert: false,
         bothCorridorsClear: true,
-        coverageNote: "Dual-hub screening confirmed clean corridors at both JFK departure and LHR arrival.",
+        coverageNote: "Departure corridor screening confirmed clean conditions at JFK; destination operations normal.",
         hasSevereStormAlert: false,
-        stormDetails: "No active severe storm alerts at New York JFK departure corridor or London Heathrow arrival.",
+        stormDetails: "No active severe storm alerts at New York JFK departure corridor.",
         sourceAuthority: "ttl-nws & PREFLIGHT Infrastructure Signals Telemetry",
         secondaryCrossCheck: {
           source: "aviationweather.gov METAR",
@@ -833,16 +833,16 @@ export async function verifyFlightDisruption(
 
       verdict = "ELIGIBLE_FOR_CLAIM";
       recommendation = "DRAFT_CLAIM_READY";
-      recommendationText = "Draft Claim Ready — Operating carrier is British Airways (UK/EU). Airline weather excuse unsupported.";
+      recommendationText = "Draft Claim Ready — Operating carrier is British Airways (UK carrier). Airline weather excuse unsupported.";
       verdictRationale =
-        "Arrival delay at London Heathrow is 3h 42m (exceeds 3h statutory threshold). Dual-hub weather screening confirmed no active severe alerts at departure or arrival. Under EU261 Article 7(2)(c), long-haul flights (> 3,500 km) with arrival delays between 3 and 4 hours may be subject to a 50% reduction (€300 vs €600).";
-      eligibleCompensationRange = "€300 – €600 (to be checked under Art. 7(2))";
+        "Arrival delay at London Heathrow is 3h 42m (exceeds 3h statutory threshold). Departure weather screening confirmed no active severe alerts. Under UK261 (Air Passenger Rights SI 2019/278), for flights exceeding 3,500 km delayed between 3 and 4 hours on arrival, Article 7(2)(c) permits a 50% reduction from £520 down to £260.";
+      eligibleCompensationRange = "£260 – £520 (UK261 Art. 7(2) 50% discount for 3h–4h delay)";
       compensationNote =
-        "Statutory arrival delay is 3h 42m. Under Article 7(2)(c), if arrival delay is under 4 hours on flights > 3,500 km, the carrier may reduce statutory compensation by 50% down to €300. Eligible compensation must be verified with carrier.";
+        "Statutory arrival delay is 3h 42m. Under UK261 Article 7(2)(c), if arrival delay is under 4 hours on flights > 3,500 km, the carrier may reduce statutory compensation by 50% down to £260 (full compensation is £520).";
     } else if (preset.caseNumber === 2) {
-      // CASE 2: MINOR DELAY & NON-EU OPERATING CARRIER (DL401 JFK -> CDG)
+      // CASE 2: NON-EU OPERATING METAL EXCLUSION (DL401 JFK -> CDG)
       badgeNote =
-        "Preset test fixture: operating carrier is Delta Air Lines (not EU/UK carrier ex-USA) and arrival delay is under 3 hours ($0 spent). No transaction executed.";
+        "Preset test fixture: arrival delay is 3h 30m, but operating carrier is Delta Air Lines (non-EU metal ex-USA). Ineligible under Art. 3(1)(b) ($0 spent). No transaction executed.";
       flight = {
         flightNumber: "DL401",
         isHypothetical: true,
@@ -852,23 +852,23 @@ export async function verifyFlightDisruption(
         marketingCarrier: "Air France / Delta Air Lines (Codeshare AF3600 / DL401)",
         isOperatingCarrierEUUK: false,
         operatingCarrierExclusionReason:
-          "Operating carrier: Delta (not EU/UK) → not covered by EU261 for US departures under Regulation (EC) 261/2004 Art. 3(1)(b) & CJEU Case C-502/18.",
+          "Operating carrier: Delta Air Lines (non-EU metal ex-USA) → not covered by EU261 for US departures under Regulation (EC) No 261/2004 Art. 3(1)(b).",
         origin: "JFK",
         destination: "CDG",
         distanceKm: 5835,
         scheduledDeparture: "19:15 EST",
-        actualDeparture: "20:15 EST",
+        actualDeparture: "22:45 EST",
         scheduledArrival: "08:30 CET",
-        actualArrival: "09:35 CET",
-        arrivalDelayMinutes: 65, // 1h 05m arrival delay
-        delayCategory: "ON_TIME",
-        rawStatus: "ARRIVAL_DELAY_1H_05M",
+        actualArrival: "12:00 CET",
+        arrivalDelayMinutes: 210, // 3h 30m arrival delay
+        delayCategory: "MECHANICAL_OPERATIONAL",
+        rawStatus: "ARRIVAL_DELAY_3H_30M",
         tag: "FIXTURE",
       };
 
       weather = {
         departureAirport: "JFK",
-        departureWeather: "Query bypassed: Operating carrier is non-EU metal & arrival delay is below 3-hour threshold.",
+        departureWeather: "Query bypassed: Operating carrier is non-EU metal ex-third country.",
         hasSevereDepartureAlert: false,
         arrivalAirport: "CDG",
         arrivalWeather: "Query bypassed.",
@@ -876,7 +876,7 @@ export async function verifyFlightDisruption(
         bothCorridorsClear: true,
         coverageNote: "Telemetry bypassed to preserve budget on non-qualifying flight.",
         hasSevereStormAlert: false,
-        stormDetails: "Query bypassed: Ineligible due to non-EU operating metal and arrival delay under 3 hours.",
+        stormDetails: "Query bypassed: Ineligible due to non-EU operating metal under Regulation (EC) No 261/2004 Art. 3(1)(b).",
         sourceAuthority: "N/A",
         secondaryCrossCheck: {
           source: "SkyClaim Statutory Classifier",
@@ -891,11 +891,12 @@ export async function verifyFlightDisruption(
       verdict = "INELIGIBLE";
       recommendation = "NO_PURCHASE_BELOW_THRESHOLD";
       recommendationText =
-        "Ineligible for Claim — Operating carrier is Delta (not EU/UK) and arrival delay 1h 05m is below 3-hour statutory threshold.";
+        "Ineligible for Claim — Operating carrier is Delta Air Lines (non-EU metal). Excluded from EU261 under Article 3(1)(b).";
       verdictRationale =
-        "Two independent disqualifications: 1) Operating carrier: Delta (not EU/UK) → not covered by EU261 on US departures under Regulation (EC) 261/2004 Art. 3(1)(b) & CJEU Case C-502/18. 2) Arrival delay at Paris CDG is 1h 05m (below the 3-hour statutory threshold). Ineligible ($0 spent, no purchase made).";
-      eligibleCompensationRange = "€0 (Operating carrier non-EU & delay < 3h)";
+        "Operating carrier exclusion: Delta Air Lines is a non-EU carrier. Under Regulation (EC) No 261/2004 Art. 3(1)(b), flights departing a third country (USA) to an EU Member State are only covered if operated by an EU Community carrier. Marketing codeshare on Air France does not confer eligibility. Ineligible ($0 spent, telemetry bypassed).";
+      eligibleCompensationRange = "€0 (Operating carrier non-EU ex-third country under Art. 3(1)(b))";
       compensationNote =
+        "EU261 rights only apply on US departures if an EU carrier operates the aircraft. Marketing codeshare on Air France does not grant eligibility if Delta operates the aircraft.";
         "EU261 rights only apply on US departures if an EU carrier operates the flight. Marketing codeshare on Air France does not grant eligibility if Delta operates the aircraft.";
     } else {
       // CASE 3: DELAY WITH WEATHER RISK (AF112 ORD -> CDG)
@@ -950,45 +951,53 @@ export async function verifyFlightDisruption(
       verdict = "FAIL_CLOSED_WEATHER";
       recommendation = "HIGH_REJECTION_RISK";
       recommendationText =
-        "Severe weather alert active at departure — High airline defense risk under Art. 5(3). Contested claim draft generated.";
+        "Severe weather alert active at departure — High airline defense risk under Art. 5(3). Contested claim template generated.";
       verdictRationale =
-        "The airline will invoke an extraordinary circumstances defense under Article 5(3) due to the severe blizzard at Chicago ORD. However, weather alerts do not automatically excuse the airline if other flights departed or reasonable measures were omitted (Wallentin-Hermann v Alitalia C-549/07). Flagged as contested claim.";
-      eligibleCompensationRange = "€300 – €600 (Contested Art. 5(3) Weather Defense)";
+        "The airline will invoke an extraordinary circumstances defense under Article 5(3) due to the severe blizzard at Chicago ORD. Under Court of Justice jurisprudence (Case C-549/07 Wallentin-Hermann), an extraordinary circumstances defense requires the carrier to prove that the delay could not have been avoided even if all reasonable measures had been taken. Flagged as contested claim template.";
+      eligibleCompensationRange = "€600 (subject to Art. 5(3) extraordinary circumstances defense)";
       compensationNote =
-        "The carrier holds an active extraordinary circumstances defense under Article 5(3). SkyClaim flags this claim as contested rather than dead, providing a specialized legal letter demanding carrier evidence that no reasonable measures could prevent the delay.";
+        "Statutory arrival delay is 4h 10m on a flight > 3,500 km. Under Regulation (EC) No 261/2004 Article 7(1)(c), baseline compensation is €600. The carrier holds an active extraordinary circumstances defense under Article 5(3). SkyClaim provides a contested claim template requesting proof that all reasonable measures were taken.";
     }
+  }
+
+  // Determine applicable statutory regulation from carrier and destination
+  let statutoryReg: "EU261" | "UK261" | "NONE" = "EU261";
+  if (flight?.destination === "LHR" || flight?.operatingCarrier.includes("British Airways") || flight?.operatingCarrier.includes("Virgin")) {
+    statutoryReg = "UK261";
+  } else if (!flight?.isOperatingCarrierEUUK) {
+    statutoryReg = "NONE";
   }
 
   // Generate Draft Claim Letter or Statutory Assessment
   let draftClaimLetter = "";
   if (verdict === "ELIGIBLE_FOR_CLAIM") {
+    const isUK = statutoryReg === "UK261";
     draftClaimLetter = `To: ${flight!.operatingCarrier} Passenger Claims Department
-Subject: Request for Statutory Compensation under Regulation (EC) No 261/2004
+Subject: Request for Statutory Compensation under ${isUK ? "UK261 (Air Passenger Rights SI 2019/278)" : "Regulation (EC) No 261/2004"}
 
 Passenger Flight: ${flight!.flightNumber} (${flight!.origin} → ${flight!.destination})
-Operating Carrier: ${flight!.operatingCarrier} (EU/UK Community Carrier)
+Operating Carrier: ${flight!.operatingCarrier} (${isUK ? "UK Licensed Carrier" : "EU Community Carrier"})
 Marketing Carrier: ${flight!.marketingCarrier || flight!.carrier}
 Flight Date: ${flight!.flightDate}
 Scheduled Arrival: ${flight!.scheduledArrival}
 Actual Arrival: ${flight!.actualArrival}
 Arrival Delay at Final Destination: ${Math.floor(flight!.arrivalDelayMinutes / 60)}h ${flight!.arrivalDelayMinutes % 60}m
 
-Pursuant to Regulation (EC) 261/2004 and Court of Justice case law (Sturgeon v Condor, Joined Cases C-402/07 & C-432/07), passenger is entitled to statutory compensation for arrival delay exceeding 3 hours on a flight over 3,500 km.
+Pursuant to ${isUK ? "UK261 (Air Passenger Rights SI 2019/278)" : "Regulation (EC) 261/2004"} and landmark Court of Justice case law (Sturgeon v Condor, Joined Cases C-402/07 & C-432/07), passenger is entitled to statutory compensation for arrival delay exceeding 3 hours on a long-haul flight exceeding 3,500 km.
 
-Eligible Compensation Range to be Checked:
-- Baseline statutory entitlement (Art. 7(1)(c)): €600
-- If carrier invokes Article 7(2)(c) (arrival delay under 4 hours): 50% reduction applies, making eligible amount €300.
-Eligible Amount Submitted for Verification: ${eligibleCompensationRange}
+Eligible Compensation Entitlement:
+${isUK ? "- Baseline statutory entitlement (UK261 Art. 7(1)(c)): £520\n- If carrier applies Article 7(2)(c) 50% discount for arrival delay between 3h and 4h: £260" : "- Baseline statutory entitlement (Art. 7(1)(c)): €600\n- If carrier applies Article 7(2)(c) 50% discount for arrival delay between 3h and 4h: €300"}
+Submitted Compensation Range: ${eligibleCompensationRange}
 
 Attached Verification Evidence:
-- Operating Carrier Jurisdiction: Confirmed ${flight!.operatingCarrier} is the operating carrier under Regulation (EC) No 261/2004 Art. 3(1)(b) & CJEU Case C-502/18.
+- Operating Carrier Jurisdiction: Confirmed ${flight!.operatingCarrier} is the operating carrier under ${isUK ? "UK261" : "Regulation (EC) No 261/2004 Art. 3(1)(b)"}.
 - Arrival Telemetry: Arrival at ${flight!.destination} delayed by ${Math.floor(flight!.arrivalDelayMinutes / 60)}h ${flight!.arrivalDelayMinutes % 60}m.
-- Dual-Hub Weather Screening: Meteorological telemetry confirms zero active severe thunderstorm or blizzard ground-stop alerts during departure at ${flight!.origin} and arrival at ${flight!.destination}. The carrier's weather defense is not supported by this evidence.
+- Departure Weather Screening: Meteorological telemetry confirms zero active severe thunderstorm or blizzard ground-stop alerts during departure at ${flight!.origin}.
 ${receipt?.txHash ? `- Verified Telegraph Protocol x402 Settlement Receipt: ${receipt.txHash} (${receipt.basescanUrl})` : `- Verification Mode: ${badge} (${badgeNote})`}
 ${weather!.secondaryCrossCheck ? `- Multi-Source Cross-Check: ${weather!.secondaryCrossCheck.details}` : ""}
 
 Please confirm receipt and evaluate this claim within 14 business days.
-(Draft generated by SkyClaim. Draft only, not legal advice.)`;
+(Draft claim template generated by SkyClaim. Template only, not legal advice.)`;
   } else if (verdict === "INELIGIBLE") {
     draftClaimLetter = `To: ${flight!.carrier} Passenger Relations Department
 Subject: Statutory Disruption Screening Assessment under Regulation (EC) No 261/2004
@@ -1002,19 +1011,19 @@ Actual Arrival: ${flight!.actualArrival}
 Arrival Delay at Final Destination: +${Math.floor(flight!.arrivalDelayMinutes / 60)}h ${flight!.arrivalDelayMinutes % 60}m
 
 Statutory Review Finding:
-Under Regulation (EC) No 261/2004 and landmark Court of Justice jurisprudence:
+Under Regulation (EC) No 261/2004 Article 3(1)(b):
 ${!flight!.isOperatingCarrierEUUK ? `1. Operating Carrier Jurisdictional Exclusion:
-Under Article 3(1)(b) and CJEU Case C-502/18 (CS and Others v České aerolinie), flights departing from third countries (USA) to the European Union are ONLY covered if operated by a Community (EU/UK) carrier. 
+Under Article 3(1)(b), flights departing from third countries (USA) to the European Union are ONLY covered if operated by an EU Community carrier. 
 Because this flight was operated by ${flight!.operatingCarrier} (a non-EU carrier), EU261 does not apply, even if booked or codeshared under an EU airline code.` : ""}
 ${flight!.arrivalDelayMinutes < 180 ? `2. Statutory Arrival Delay Threshold:
 Under Sturgeon v Condor (Joined Cases C-402/07 & C-432/07), passenger compensation rights activate only when arrival delay at the final destination is 3 hours or greater. Arrival delay of ${Math.floor(flight!.arrivalDelayMinutes / 60)}h ${flight!.arrivalDelayMinutes % 60}m is below the mandatory threshold.` : ""}
 
 Evaluation & Determination:
-- Statutory Compensation Entitlement: €0 (Ineligible under Art. 3(1)(b) / Sturgeon).
-- Carrier Weather Defense Status: Meteorological query bypassed to preserve protocol budget ($0 spent).
+- Statutory Compensation Entitlement: €0 (Ineligible under Art. 3(1)(b)).
+- Carrier Weather Defense Status: Meteorological query bypassed due to operating carrier jurisdiction exclusion under Art. 3(1)(b).
 - Recommendation: Claim closed without dispute filing. No statutory compensation is legally payable.
 
-(Assessment generated by SkyClaim. Draft only, not legal advice.)`;
+(Assessment template generated by SkyClaim. Template only, not legal advice.)`;
   } else if (verdict === "INSUFFICIENT_EVIDENCE") {
     draftClaimLetter = `To: SkyClaim Evidentiary Review Desk
 Subject: Telemetry Discrepancy Notice · Evidentiary Review Required for ${flight!.flightNumber} (${flight!.origin} → ${flight!.destination})
@@ -1024,18 +1033,18 @@ Operating Carrier: ${flight!.operatingCarrier}
 Arrival Delay: +${Math.floor(flight!.arrivalDelayMinutes / 60)}h ${flight!.arrivalDelayMinutes % 60}m
 
 Evidentiary Finding:
-Primary Telegraph intelligence purchase and secondary NWS station feed yielded conflicting observations:
+Primary Telegraph intelligence purchase and secondary station feed yielded conflicting observations:
 - Primary Telegraph Telemetry: ${weather!.stormDetails}
 - Secondary Station Cross-Check: ${weather!.secondaryCrossCheck.details}
 
 Determination:
-Automated claim filing suspended due to telemetry discrepancy between data sources. Under EU261 and UK261 evidentiary standards, conflicting meteorological evidence requires manual reconciliation before submission to the carrier.
+Automated claim template generation suspended due to telemetry discrepancy between data sources. Under EU261 and UK261 evidentiary standards, conflicting meteorological evidence requires manual reconciliation before submission to the carrier.
 
-(Notice generated by SkyClaim. Draft only, not legal advice.)`;
+(Notice generated by SkyClaim. Template only, not legal advice.)`;
   } else {
     // FAIL_CLOSED_WEATHER: Contested Claim Workflow
     draftClaimLetter = `To: ${flight!.operatingCarrier} Passenger Claims Department
-Subject: CONTESTED CLAIM NOTICE · Statutory Compensation under Regulation (EC) No 261/2004 (Article 5(3) Challenge)
+Subject: CONTESTED CLAIM TEMPLATE · Statutory Compensation under Regulation (EC) No 261/2004 (Article 5(3) Inquiry)
 
 Passenger Flight: ${flight!.flightNumber} (${flight!.origin} → ${flight!.destination})
 Operating Carrier: ${flight!.operatingCarrier} (EU Community Carrier)
@@ -1046,21 +1055,21 @@ Actual Arrival: ${flight!.actualArrival}
 Arrival Delay at Final Destination: +${Math.floor(flight!.arrivalDelayMinutes / 60)}h ${flight!.arrivalDelayMinutes % 60}m
 
 Statutory Assessment & Article 5(3) Contest Notice:
-While automated telemetry identified an active meteorological condition (${weather!.stormDetails}), the passenger hereby contests any summary claim denial under Article 5(3) of Regulation (EC) No 261/2004.
+While automated telemetry identified an active meteorological alert at departure (${weather!.stormDetails}), the passenger hereby requests that the carrier substantiate any summary defense under Article 5(3) of Regulation (EC) No 261/2004.
 
-Legal Grounds under Court of Justice Case Law (Wallentin-Hermann v Alitalia C-549/07):
-1. Meteorological conditions do not constitute an automatic blanket defense. The carrier must prove that the specific adverse weather directly affected the aircraft executing flight ${flight!.flightNumber}.
-2. The carrier must substantiate that the delay could not have been avoided even if all reasonable measures had been taken (including timely rerouting, aircraft substitution, or crew repositioning).
-3. The passenger requests documented evidence of whether other flights operated from ${flight!.origin} during the departure window.
+Legal Grounds under Court of Justice Case Law (Case C-549/07 Wallentin-Hermann):
+1. Under Article 5(3), the operating air carrier bears the burden of proving that the cancellation or delay was caused by extraordinary circumstances which could not have been avoided even if all reasonable measures had been taken.
+2. The carrier is requested to confirm that the specific weather condition directly affected this aircraft and that all reasonable measures were deployed to avoid the delay.
+3. The passenger inquires whether other commercial flights departed from ${flight!.origin} during the scheduled window.
 
-Statutory Compensation Claim Range: ${eligibleCompensationRange}
+Statutory Compensation Baseline: ${eligibleCompensationRange}
 Attached Telemetry:
 - Departure Weather: ${weather!.departureWeather}
-- Arrival Weather: ${weather!.arrivalWeather}
+- Destination Arrival: ${weather!.arrivalWeather}
 - Cross-Check Audit: ${weather!.secondaryCrossCheck.details}
 
-Please provide the carrier's formal Article 5(3) justification with flight log evidence within 14 business days.
-(Contested notice generated by SkyClaim. Draft only, not legal advice.)`;
+Please provide the carrier's formal Article 5(3) substantiation within 14 business days.
+(Contested claim template generated by SkyClaim. Template only, not legal advice.)`;
   }
 
   const budget = getBudgetSnapshot();
@@ -1077,7 +1086,7 @@ Please provide the carrier's formal Article 5(3) justification with flight log e
     verdictRationale,
     recommendation,
     recommendationText,
-    statutoryRegulation: "EU261",
+    statutoryRegulation: statutoryReg,
     statutoryDelayBasis: "Arrival delay at final destination (CJEU Sturgeon v Condor standard)",
     eligibleCompensationRange,
     compensationNote,
@@ -1109,22 +1118,22 @@ export const INITIAL_LEDGER: PublicLedgerEntry[] = [
     id: "LEDGER-LIVE-001",
     flightNumber: "BA178",
     carrier: "British Airways",
-    operatingCarrier: "British Airways (UK/EU Operating Metal)",
+    operatingCarrier: "British Airways (UK Licensed Operating Metal)",
     marketingCarrier: "British Airways (BA)",
     route: "JFK → LHR",
     delayText: "+3h 42m arrival delay",
     verdict: "ELIGIBLE_FOR_CLAIM",
     recommendation: "DRAFT_CLAIM_READY",
-    recommendationText: "Eligible for claim review (€300–€600 to be checked under Art. 7(2)).",
-    compensationRange: "€300 – €600",
+    recommendationText: "Eligible for statutory review under UK261 (£260–£520).",
+    compensationRange: "£260 – £520",
     costUsd: 0.01,
-    txHash: "0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9",
+    txHash: "0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145",
     signalHash: "0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9",
-    basescanUrl: "https://sepolia.basescan.org/tx/0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9",
+    basescanUrl: "https://sepolia.basescan.org/tx/0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145",
     minerName: "PREFLIGHT Infrastructure Signals (ID: 20260828)",
-    timestamp: "8 mins ago",
+    timestamp: "2026-11-22T06:49:12Z",
     badge: "LIVE",
-    badgeNote: "Live on-chain x402 purchase settled on Base Sepolia. Dual-station METAR verified.",
+    badgeNote: "Live on-chain x402 purchase settled on Base Sepolia ($0.01 USDC). Departure weather clear.",
   },
   {
     id: "LEDGER-LIVE-002",
@@ -1136,38 +1145,59 @@ export const INITIAL_LEDGER: PublicLedgerEntry[] = [
     delayText: "+4h 10m arrival delay",
     verdict: "FAIL_CLOSED_WEATHER",
     recommendation: "HIGH_REJECTION_RISK",
-    recommendationText: "Weather risk detected at hub. Contested claim draft ready.",
-    compensationRange: "€300 – €600 (Contested Art. 5(3))",
+    recommendationText: "Weather risk detected at hub. Contested claim template ready.",
+    compensationRange: "€600 (subject to Art. 5(3) defense)",
     costUsd: 0.01,
-    txHash: "0xba23f2fdc54173f0a5f2ce08b22e9efb1b4f46060be3361028d4f3774104c444",
+    txHash: "0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18",
     signalHash: "0xba23f2fdc54173f0a5f2ce08b22e9efb1b4f46060be3361028d4f3774104c444",
-    basescanUrl: "https://sepolia.basescan.org/tx/0xba23f2fdc54173f0a5f2ce08b22e9efb1b4f46060be3361028d4f3774104c444",
+    basescanUrl: "https://sepolia.basescan.org/tx/0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18",
     minerName: "PREFLIGHT Infrastructure Signals (ID: 20260828)",
-    timestamp: "18 mins ago",
+    timestamp: "2026-11-22T06:49:57Z",
     badge: "LIVE",
-    badgeNote: "Live on-chain x402 purchase settled on Base Sepolia. Weather defense flagged.",
+    badgeNote: "Live on-chain x402 purchase settled on Base Sepolia ($0.01 USDC). Departure weather alert flagged.",
     isContested: true,
   },
   {
     id: "LEDGER-LIVE-003",
     flightNumber: "VS004",
     carrier: "Virgin Atlantic",
-    operatingCarrier: "Virgin Atlantic (UK/EU Operating Metal)",
+    operatingCarrier: "Virgin Atlantic (UK Operating Metal)",
     marketingCarrier: "Virgin Atlantic (VS)",
     route: "JFK → LHR",
     delayText: "+3h 15m arrival delay",
     verdict: "ELIGIBLE_FOR_CLAIM",
     recommendation: "DRAFT_CLAIM_READY",
-    recommendationText: "Arrival delay 3h 15m. Clear departure & arrival corridors.",
-    compensationRange: "€300 – €600",
+    recommendationText: "Arrival delay 3h 15m. Clear departure corridor.",
+    compensationRange: "£260 – £520",
     costUsd: 0.01,
-    txHash: "0x0e4caede1b9c7d7f5b5117e11f1c5d149c73cace14062bc04f419c44172771bb",
+    txHash: "0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002",
     signalHash: "0x0e4caede1b9c7d7f5b5117e11f1c5d149c73cace14062bc04f419c44172771bb",
-    basescanUrl: "https://sepolia.basescan.org/tx/0x0e4caede1b9c7d7f5b5117e11f1c5d149c73cace14062bc04f419c44172771bb",
+    basescanUrl: "https://sepolia.basescan.org/tx/0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002",
     minerName: "PREFLIGHT Infrastructure Signals (ID: 20260828)",
-    timestamp: "32 mins ago",
+    timestamp: "2026-11-22T06:45:36Z",
     badge: "LIVE",
-    badgeNote: "Live on-chain x402 purchase settled on Base Sepolia.",
+    badgeNote: "Live on-chain x402 purchase settled on Base Sepolia ($0.01 USDC).",
+  },
+  {
+    id: "LEDGER-LIVE-004",
+    flightNumber: "Operational Status JFK",
+    carrier: "FAA National Airspace System",
+    operatingCarrier: "TxLens FAA Live Feed",
+    marketingCarrier: "Telegraph Node Router",
+    route: "JFK Terminal Area",
+    delayText: "Normal Operations (0m delay)",
+    verdict: "ELIGIBLE_FOR_CLAIM",
+    recommendation: "DRAFT_CLAIM_READY",
+    recommendationText: "FAA status confirmed: no ground stops or delays at JFK.",
+    compensationRange: "N/A (Operational Disruption Probe)",
+    costUsd: 0.01,
+    txHash: "0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45",
+    signalHash: "0xc9733ebf907242e7c88f0fadeac24bd2faeaf85998dfd4ce054b8ac08c52f775",
+    basescanUrl: "https://sepolia.basescan.org/tx/0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45",
+    minerName: "TxLens (ID: 9002)",
+    timestamp: "2026-11-23T12:37:47Z",
+    badge: "LIVE",
+    badgeNote: "Live x402 purchase on TRAVEL_DISRUPTION_GENERAL ($0.01 USDC).",
   },
   {
     id: "LEDGER-FIX-001",
@@ -1176,15 +1206,15 @@ export const INITIAL_LEDGER: PublicLedgerEntry[] = [
     operatingCarrier: "Delta Air Lines (Non-EU Metal ex-USA)",
     marketingCarrier: "Air France / Delta Air Lines (Codeshare AF3600)",
     route: "JFK → CDG",
-    delayText: "+1h 05m arrival delay",
+    delayText: "+3h 30m arrival delay",
     verdict: "INELIGIBLE",
     recommendation: "NO_PURCHASE_BELOW_THRESHOLD",
-    recommendationText: "Operating carrier: Delta (not EU/UK) → not covered by EU261. Below 3h threshold.",
+    recommendationText: "Operating carrier: Delta Air Lines (non-EU metal ex-USA) → excluded under Art. 3(1)(b).",
     compensationRange: "€0",
     costUsd: 0.00,
-    timestamp: "45 mins ago",
+    timestamp: "Preset Fixture",
     badge: "FIXTURE",
-    badgeNote: "Preset test fixture: Non-EU operating carrier exclusion & delay < 3h ($0 spent)",
+    badgeNote: "Preset test fixture: Non-EU operating carrier exclusion under Art. 3(1)(b) ($0 spent)",
   },
   {
     id: "LEDGER-FIX-002",
@@ -1196,12 +1226,12 @@ export const INITIAL_LEDGER: PublicLedgerEntry[] = [
     delayText: "+4h 10m arrival delay",
     verdict: "FAIL_CLOSED_WEATHER",
     recommendation: "HIGH_REJECTION_RISK",
-    recommendationText: "Severe winter blizzard ground stop. Carrier holds Art. 5(3) defense. Contested draft generated.",
-    compensationRange: "€300 – €600 (Contested Art. 5(3))",
+    recommendationText: "Severe winter blizzard ground stop. Carrier holds Art. 5(3) defense. Contested template generated.",
+    compensationRange: "€600 (subject to Art. 5(3) defense)",
     costUsd: 0.00,
-    timestamp: "1 hour ago",
+    timestamp: "Preset Fixture",
     badge: "FIXTURE",
-    badgeNote: "Preset test fixture: blizzard ground stop simulation. Contested claim workflow.",
+    badgeNote: "Preset test fixture: Blizzard alert at departure hub. Contested claim template generated.",
     isContested: true,
   },
 ];

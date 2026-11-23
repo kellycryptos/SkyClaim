@@ -1,4 +1,4 @@
-const assert = require("assert");
+import assert from "assert";
 
 async function runTests() {
   console.log("=== SKYCLAIM: ZERO-ENV SANDBOX CI/CD TEST SUITE ===");
@@ -22,7 +22,8 @@ async function runTests() {
   const res1 = await verifyFlightDisruption("BA178", "2026-11-22", true);
   assert.strictEqual(res1.verdict, "ELIGIBLE_FOR_CLAIM", "BA178 must be ELIGIBLE_FOR_CLAIM");
   assert.strictEqual(res1.badge, "FIXTURE", "Preset must carry FIXTURE badge");
-  assert(res1.eligibleCompensationRange.includes("€300"), "Compensation must note €300 - €600 Art 7(2) range");
+  assert(res1.eligibleCompensationRange.includes("€300") || res1.eligibleCompensationRange.includes("£260"), "Compensation must note statutory range");
+  assert(res1.statutoryRegulation === "EU261" || res1.statutoryRegulation === "UK261", "Statutory regulation must be EU261 or UK261");
   assert.strictEqual(res1.flight.arrivalDelayMinutes, 222, "Arrival delay must be 222 min (3h 42m)");
   assert.strictEqual(res1.flight.operatingCarrier, "British Airways", "Operating carrier must be British Airways");
   assert.strictEqual(res1.flight.isOperatingCarrierEUUK, true, "Operating carrier must be EU/UK");
@@ -33,8 +34,8 @@ async function runTests() {
   assert(res1.draftClaimLetter.includes("BA178"), "Claim letter must contain flight number");
   console.log(`  ✓ BA178 passed: ${res1.verdict} (${res1.eligibleCompensationRange}) [${res1.badge}]`);
 
-  // 3. Scenario 2: Minor Delay & Non-EU Operating Carrier (Hypothetical DL401 JFK -> CDG)
-  console.log("[3/6] Testing Scenario 2: Minor Delay & Operating Carrier Check (DL401 JFK -> CDG)...");
+  // 3. Scenario 2: Non-EU Operating Carrier Check (Hypothetical DL401 JFK -> CDG)
+  console.log("[3/6] Testing Scenario 2: Operating Metal Check (DL401 JFK -> CDG)...");
   const res2 = await verifyFlightDisruption("DL401", "2026-11-22", true);
   assert.strictEqual(res2.verdict, "INELIGIBLE", "DL401 must be INELIGIBLE");
   assert.strictEqual(res2.badge, "FIXTURE", "Preset must carry FIXTURE badge");
@@ -44,10 +45,10 @@ async function runTests() {
     res2.flight.operatingCarrierExclusionReason?.includes("not covered by EU261"),
     "Must explain non-EU operating metal exclusion under Art. 3(1)(b)"
   );
-  assert.strictEqual(res2.flight.arrivalDelayMinutes, 65, "Arrival delay must be 65 min (1h 05m)");
+  assert.strictEqual(res2.flight.arrivalDelayMinutes, 210, "Arrival delay must be 210 min (3h 30m)");
   assert.strictEqual(res2.totalCostUsd, 0, "Cost must be $0.00");
   assert(res2.draftClaimLetter.includes("non-EU carrier"), "Assessment must explain non-EU carrier exclusion");
-  console.log(`  ✓ DL401 passed: ${res2.verdict} (Operating carrier: Delta not EU/UK & delay < 3h) [${res2.badge}]`);
+  console.log(`  ✓ DL401 passed: ${res2.verdict} (Operating carrier: Delta not EU metal ex-USA under Art. 3(1)(b)) [${res2.badge}]`);
 
   // 4. Scenario 3: Delay with Weather Risk (Hypothetical AF112 ORD -> CDG)
   console.log("[4/6] Testing Scenario 3: Weather Defense / Contested Claim (AF112 ORD -> CDG)...");
@@ -55,15 +56,16 @@ async function runTests() {
   assert.strictEqual(res3.verdict, "FAIL_CLOSED_WEATHER", "AF112 must trigger FAIL_CLOSED_WEATHER");
   assert.strictEqual(res3.badge, "FIXTURE", "Preset must carry FIXTURE badge");
   assert.strictEqual(res3.flight.operatingCarrier, "Air France", "Operating carrier must be Air France");
+  assert.strictEqual(res3.statutoryRegulation, "EU261", "Statutory regulation must be EU261");
   assert.strictEqual(res3.weather.hasSevereDepartureAlert, true, "Departure blizzard alert must be flagged");
   assert.strictEqual(res3.weather.bothCorridorsClear, false, "Corridor must not be marked clear");
   assert(
-    res3.eligibleCompensationRange.includes("€300") && res3.eligibleCompensationRange.includes("Contested"),
-    "Compensation must show contested statutory range rather than dead €0"
+    res3.eligibleCompensationRange.includes("€600"),
+    "Compensation must show statutory baseline €600 with Art. 5(3) condition"
   );
   assert(
-    res3.draftClaimLetter.includes("CONTESTED CLAIM NOTICE"),
-    "Draft claim letter must be a specialized contested claim challenge under Art. 5(3)"
+    res3.draftClaimLetter.includes("CONTESTED CLAIM TEMPLATE"),
+    "Draft claim letter must be a specialized contested claim template under Art. 5(3)"
   );
   console.log(`  ✓ AF112 passed: ${res3.verdict} (${res3.eligibleCompensationRange}) [${res3.badge}]`);
 

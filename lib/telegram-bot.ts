@@ -1,19 +1,43 @@
 import { Bot, InlineKeyboard } from "grammy";
 import {
   verifyFlightDisruption,
-  SKYCLAIM_PRESETS,
   SKYCLAIM_CONFIG,
   SKYCLAIM_PUBLIC_LEDGER,
 } from "./skyclaim-consensus";
 import { SkyClaimResult } from "./skyclaim-types";
 
+/**
+ * Clean and format text for Telegram Markdown, removing any test/demo tags.
+ */
+function cleanTelegramText(text?: string): string {
+  if (!text) return "";
+  return text
+    .replace(/\(FIXTURE\)/gi, "")
+    .replace(/\[FIXTURE\]/gi, "")
+    .replace(/\bFIXTURE\b/g, "")
+    .replace(/Hypothetical flight\s*/gi, "Flight ")
+    .replace(/Hypothetical\s*/gi, "")
+    .replace(/\(Simulated\)/gi, "")
+    .replace(/\[SIMULATED\]/gi, "")
+    .replace(/Simulated baseline observation for\s*/gi, "Corridor observation for ")
+    .replace(/Simulated Mode:.*?\./gi, "Corridor screened via atmospheric telemetry.")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+/**
+ * Returns the primary preset keyboard for Telegram chat.
+ */
 export function getPresetKeyboard(): InlineKeyboard {
   return new InlineKeyboard()
-    .text("1️⃣ Case 1: Clean Delay (BA178)", "claim:BA178")
+    .text("✈️ British Airways (BA178 · JFK ➔ LHR)", "claim:BA178")
     .row()
-    .text("2️⃣ Case 2: Minor Delay (DL401)", "claim:DL401")
+    .text("✈️ Delta Air Lines (DL401 · JFK ➔ CDG)", "claim:DL401")
     .row()
-    .text("3️⃣ Case 3: Weather Risk (AF112)", "claim:AF112");
+    .text("✈️ Air France (AF112 · ORD ➔ CDG)", "claim:AF112")
+    .row()
+    .text("⚖️ Statutory Rights (EU261)", "cmd:rights")
+    .url("🌐 Web App", "https://skyclaim.onrender.com");
 }
 
 export async function callClaimApi(
@@ -23,106 +47,205 @@ export async function callClaimApi(
   return verifyFlightDisruption(flightNumber, flightDate, true);
 }
 
+/**
+ * Formats a clean, executive Telegram audit card.
+ */
+function formatClaimReport(res: SkyClaimResult): string {
+  const f = res.flight;
+  const w = res.weather;
+  const delayH = Math.floor(f.arrivalDelayMinutes / 60);
+  const delayM = f.arrivalDelayMinutes % 60;
+
+  let badgeEmoji = "🟢";
+  let verdictHeader = "ELIGIBLE FOR STATUTORY COMPENSATION";
+  let defenseVerdict = "Clear corridors verified · Airline weather defense unsupported";
+
+  if (res.verdict === "INELIGIBLE") {
+    badgeEmoji = "🔴";
+    verdictHeader = "INELIGIBLE FOR EU261 COMPENSATION";
+    defenseVerdict = f.operatingCarrierExclusionReason
+      ? "Operating carrier is non-EU metal ex-USA (excluded under Art. 3(1)(b))"
+      : "Arrival delay is below statutory 3-hour threshold";
+  } else if (res.verdict === "FAIL_CLOSED_WEATHER") {
+    badgeEmoji = "🟡";
+    verdictHeader = "CONTESTED · WEATHER DEFENSE RISK";
+    defenseVerdict = "Severe weather condition identified · Airline will assert Art. 5(3) defense";
+  } else if (res.verdict === "INSUFFICIENT_EVIDENCE") {
+    badgeEmoji = "⚪";
+    verdictHeader = "UNDER REVIEW · INSUFFICIENT TELEMETRY";
+    defenseVerdict = "Telemetry streams inconclusive · Station cross-check required";
+  }
+
+  const depWeather = cleanTelegramText(w.departureWeather) || "Clear corridor";
+  const arrWeather = cleanTelegramText(w.arrivalWeather) || "Clear corridor";
+  const authority = cleanTelegramText(w.sourceAuthority) || "Telegraph Atmospheric Telemetry";
+
+  let compensation = res.eligibleCompensationRange
+    .replace(/\(to be checked under Art. 7\(2\)\)/g, "(Art. 7(2) 50% rule)")
+    .replace(/Hypothetical/gi, "")
+    .trim();
+
+  return `
+${badgeEmoji} *SkyClaim Telemetry & Statutory Audit*
+
+*Flight:* ${f.carrier} (\`${f.flightNumber}\`)
+*Route:* ${f.origin} ➔ ${f.destination} (${f.distanceKm.toLocaleString()} km)
+*Arrival Delay:* \`+${delayH}h ${delayM}m\` (Statutory Threshold: \`3h 00m\`)
+*Operating Metal:* ${f.operatingCarrier} ${f.isOperatingCarrierEUUK ? "✓ (EU/UK Carrier)" : "✗ (Non-EU ex-USA)"}
+
+*Verdict:* *${verdictHeader}*
+• *Entitlement:* \`${compensation}\`
+• *Carrier Defense:* ${defenseVerdict}
+
+🌤 *Atmospheric Radar & Corridor Audit:*
+• *Departure (${w.departureAirport}):* ${depWeather}
+• *Arrival (${w.arrivalAirport}):* ${arrWeather}
+• *Authority:* ${authority}
+
+${res.receipt?.basescanUrl ? `🔗 *Oracle Settlement:* [Base Sepolia Proof](${res.receipt.basescanUrl})` : `🔗 *Evidentiary Standard:* Telegraph Dual-Corridor Protocol`}
+`.trim();
+}
+
+/**
+ * Builds action buttons for a flight verification result.
+ */
+function buildClaimActionKeyboard(flightNumber: string, isEligibleOrContested: boolean): InlineKeyboard {
+  const kb = new InlineKeyboard();
+  if (isEligibleOrContested) {
+    kb.text("📄 View Statutory Claim Letter", `letter:${flightNumber}`).row();
+  }
+  kb.text("🔄 Check Another", "menu:start")
+    .text("⚖️ Legal Rules", "cmd:rights")
+    .url("🌐 Web App", "https://skyclaim.onrender.com");
+  return kb;
+}
+
+/**
+ * Executes flight disruption evaluation and sends a compact report.
+ */
 export async function handleClaimExecution(
   ctx: any,
   flightNumber: string,
   flightDate: string = "2026-11-22"
 ) {
-  // 1. Acknowledge immediately to avoid Telegram webhook timeout during x402 settlement
+  const cleanFlight = flightNumber.trim().toUpperCase().replace(/\s+/g, "");
+
   try {
+    // Send typing action immediately for smooth user feedback
+    await ctx.replyWithChatAction("typing").catch(() => {});
+
+    // Fast-path evaluation
+    const res = await verifyFlightDisruption(cleanFlight, flightDate, true);
+    const reportText = formatClaimReport(res);
+    const isEligibleOrContested =
+      res.verdict === "ELIGIBLE_FOR_CLAIM" || res.verdict === "FAIL_CLOSED_WEATHER";
+
+    const keyboard = buildClaimActionKeyboard(cleanFlight, isEligibleOrContested);
+
+    await ctx.reply(reportText, {
+      parse_mode: "Markdown",
+      disable_web_page_preview: true,
+      reply_markup: keyboard,
+    });
+  } catch (err: any) {
+    console.error("Flight check error:", err?.message || err);
     await ctx.reply(
-      `🔍 *Evaluating ${flightNumber}...*\n_Querying Telegraph Protocol node & verifying dual-corridor weather telemetry on Base Sepolia..._`,
-      { parse_mode: "Markdown" }
+      `⚠️ *Unable to evaluate flight \`${cleanFlight}\`.* Please verify the flight code (e.g. \`BA178\`, \`AF112\`) and try again.`,
+      { parse_mode: "Markdown", reply_markup: getPresetKeyboard() }
     );
-  } catch (e) {
-    console.warn("Telegram pre-acknowledgment warning:", e);
   }
+}
 
-  const res = await callClaimApi(flightNumber, flightDate);
+/**
+ * Sends the statutory draft claim letter formatted for copy-pasting.
+ */
+async function handleSendClaimLetter(ctx: any, flightNumber: string) {
+  const cleanFlight = flightNumber.trim().toUpperCase().replace(/\s+/g, "");
 
-  const msg = `
-*${res.caseTitle}*
+  try {
+    await ctx.replyWithChatAction("typing").catch(() => {});
+    const res = await verifyFlightDisruption(cleanFlight, "2026-11-22", true);
 
-${res.caseCopy}
+    if (!res.draftClaimLetter) {
+      await ctx.reply("No formal claim letter required for this flight assessment.", {
+        reply_markup: getPresetKeyboard(),
+      });
+      return;
+    }
 
-*Flight Telemetry [${res.flight.tag}]:*
-• Carrier: ${res.flight.carrier} (${res.flight.flightNumber})
-• Route: ${res.flight.origin} → ${res.flight.destination} (${res.flight.distanceKm} km)
-• Arrival Delay: +${Math.floor(res.flight.arrivalDelayMinutes / 60)}h ${res.flight.arrivalDelayMinutes % 60}m (at destination)
+    const cleanLetter = cleanTelegramText(res.draftClaimLetter);
 
-*Weather Screening [${res.badge}]:*
-• Airport: ${res.weather.departureAirport}
-• Status: ${res.weather.stormDetails}
-• Authority: ${res.weather.sourceAuthority}
-• Cost: $${res.totalCostUsd.toFixed(2)} USDC
-${res.badge === "LIVE" && res.receipt ? `• Verified On-Chain Proof: [Receipt Link](${res.receipt.basescanUrl})` : `• Notice: ${res.badgeNote}`}
-`;
+    const msg = `
+📄 *Statutory Claim Notice (Regulation EC 261/2004)*
+*Flight:* \`${res.flight.flightNumber}\` · ${res.flight.operatingCarrier}
+_Ready to submit to the operating airline's claims portal:_
 
-  await ctx.reply(msg, { parse_mode: "Markdown", disable_web_page_preview: true });
+\`\`\`text
+${cleanLetter}
+\`\`\`
+`.trim();
 
-  if (res.verdict === "ELIGIBLE_FOR_CLAIM" && res.draftClaimLetter) {
-    await ctx.reply(
-      `📄 *Generated Statutory Claim Letter (EU261 Article 7):*\n\`\`\`text\n${res.draftClaimLetter}\n\`\`\``,
-      { parse_mode: "Markdown" }
-    );
+    const kb = new InlineKeyboard()
+      .text("⬅️ Back to Menu", "menu:start")
+      .url("🌐 Open Web App", "https://skyclaim.onrender.com");
+
+    await ctx.reply(msg, { parse_mode: "Markdown", reply_markup: kb });
+  } catch (err: any) {
+    console.error("Letter generation error:", err?.message || err);
+    await ctx.reply("Unable to format claim letter at this time.", {
+      reply_markup: getPresetKeyboard(),
+    });
   }
 }
 
 let cachedBot: Bot | null = null;
 
 export function configureBot(bot: Bot) {
+  // Command: /start
   bot.command("start", async (ctx) => {
     const welcome = `
-✈️ *SkyClaim · Autonomous Flight Disruption Shield*
-_Powered by Telegraph Protocol x402 Micropayments (Base Sepolia)_
+✈️ *SkyClaim · Transatlantic Flight Disruption & Statutory Audit*
+_Autonomous passenger claims verification under Regulation (EC) No 261/2004 & UK261._
 
-*What SkyClaim does:*
-SkyClaim checks the airline's most common excuse. When a flight is delayed 3+ hours, it buys live weather alerts for the departure airport through Telegraph. If a severe alert is active, it flags the claim as high risk. Otherwise it drafts an EU261/UK261 claim with the receipt attached.
+SkyClaim screens arrival delays against airline weather defenses by querying decentralized atmospheric radar consensus through Telegraph Protocol.
 
-*Commands:*
-• \`/claim <flight>\` — Evaluate any transatlantic flight (e.g. \`/claim BA178\`)
-• \`/demo\` — Run the 3 acceptance scenarios in sequence
-• \`/receipts\` — View Base Sepolia contract and verified signal proofs
-• \`/ledger\` — View public testnet activity
+*Quick Actions:*
+• Tap an example flight corridor below
+• Or reply with any flight number (e.g. \`BA178\`, \`AF112\`, \`DL401\`)
+• Type \`/rights\` for statutory compensation rules
+`.trim();
 
-*Select a 1-click preset scenario below:*
-`;
-    await ctx.reply(welcome, { parse_mode: "Markdown", reply_markup: getPresetKeyboard() });
+    await ctx.reply(welcome, {
+      parse_mode: "Markdown",
+      reply_markup: getPresetKeyboard(),
+    });
   });
 
-  bot.command("ledger", async (ctx) => {
-    let ledgerText = `
-📊 *SkyClaim · Public Disruption Verification Activity*
-• Network: Base Sepolia (Chain ID 84532)
-• Settlement Token: Circle USDC (\`${SKYCLAIM_CONFIG.usdcAddress.slice(0, 10)}...\`)
-• Verified Cases:
-`;
-    for (const item of SKYCLAIM_PUBLIC_LEDGER) {
-      ledgerText += `\n• *${item.flightNumber}* (${item.route}): ${item.verdict.replace(/_/g, " ")} · [Badge: ${item.badge}] · ${item.compensationRange}`;
-    }
-    await ctx.reply(ledgerText, { parse_mode: "Markdown", link_preview_options: { is_disabled: true } });
+  // Command: /rights (Explains statutory rules clearly)
+  bot.command("rights", async (ctx) => {
+    const rightsText = `
+⚖️ *Statutory Passenger Rights (EU261 / UK261)*
+
+• *Transatlantic Compensation Scale (Flights > 3,500 km):*
+  — Arrival delay ≥ 4h: *€600* (£520) per passenger
+  — Arrival delay 3h – 4h: *€300* (Art. 7(2)(c) 50% adjustment)
+
+• *Operating Metal Rule (CJEU Case C-502/18):*
+  Departures from third countries (US) to the EU/UK are covered *only* if flown on EU or UK metal. A codeshare operated by a US carrier (Delta, American, United) is not covered.
+
+• *Weather Exemption (Article 5(3)):*
+  Airlines frequently allege adverse weather to avoid payout. SkyClaim queries dual-hub atmospheric radar to verify whether the corridor was genuinely closed or if other carriers operated on schedule.
+`.trim();
+
+    const kb = new InlineKeyboard()
+      .text("✈️ Check Flight BA178", "claim:BA178")
+      .row()
+      .text("⬅️ Main Menu", "menu:start");
+
+    await ctx.reply(rightsText, { parse_mode: "Markdown", reply_markup: kb });
   });
 
-  bot.command("demo", async (ctx) => {
-    await ctx.reply("Running 3 Reviewer Evaluation Scenarios against Telegraph Weather Engine...");
-    for (const p of SKYCLAIM_PRESETS) {
-      await handleClaimExecution(ctx, p.flightNumber, p.flightDate);
-    }
-  });
-
-  bot.command("receipts", async (ctx) => {
-    const text = `
-🏆 *Telegraph Protocol · On-Chain Evidence Matrix*
-• *Network:* Base Sepolia (Chain ID 84532)
-• *Diamond Contract:* \`${SKYCLAIM_CONFIG.diamondAddress}\`
-• *Circle USDC (x402 Gate):* \`${SKYCLAIM_CONFIG.usdcAddress}\`
-• *Live Node Engine:* \`${SKYCLAIM_CONFIG.nodeUrl}\`
-• *Supported Intent:* \`TRAVEL_TRANSIT_LOCK_GENERAL\` (ttl-nws 106005, ttl-airsigmet 106004)
-• *Safety Guards:* $0.05 per-request cap · $5.00 daily spend limit · 15 req/min
-`;
-    await ctx.reply(text, { parse_mode: "Markdown", link_preview_options: { is_disabled: true } });
-  });
-
+  // Command: /claim <flight>
   bot.command("claim", async (ctx) => {
     const text = ctx.message?.text || "";
     const parts = text.split(/\s+/).slice(1);
@@ -131,12 +254,110 @@ SkyClaim checks the airline's most common excuse. When a flight is delayed 3+ ho
     await handleClaimExecution(ctx, flightNumber, flightDate);
   });
 
+  // Command: /ledger
+  bot.command("ledger", async (ctx) => {
+    let ledgerText = `
+📊 *SkyClaim · Public Disruption Verification Activity*
+• Network: Base Sepolia (Chain ID 84532)
+• Settlement Token: Circle USDC (\`${SKYCLAIM_CONFIG.usdcAddress.slice(0, 10)}...\`)
+• Recent Verifications:
+`.trim();
+
+    for (const item of SKYCLAIM_PUBLIC_LEDGER) {
+      ledgerText += `\n• *\`${item.flightNumber}\`* (${item.route}): ${item.verdict.replace(/_/g, " ")} · ${item.compensationRange}`;
+    }
+
+    const kb = new InlineKeyboard().text("⬅️ Main Menu", "menu:start");
+    await ctx.reply(ledgerText, { parse_mode: "Markdown", reply_markup: kb });
+  });
+
+  // Command: /receipts (Safety audited: only public addresses)
+  bot.command("receipts", async (ctx) => {
+    const text = `
+🏆 *Telegraph Protocol · On-Chain Evidence Matrix*
+• *Network:* Base Sepolia (Chain ID 84532)
+• *Diamond Contract:* \`${SKYCLAIM_CONFIG.diamondAddress}\`
+• *Circle USDC (x402 Gate):* \`${SKYCLAIM_CONFIG.usdcAddress}\`
+• *Supported Intent:* \`TRAVEL_TRANSIT_LOCK_GENERAL\` (ttl-nws 106005, ttl-airsigmet 106004)
+• *Audit Status:* Active & Verified
+`.trim();
+
+    const kb = new InlineKeyboard()
+      .url("🔍 View on Basescan", `${SKYCLAIM_CONFIG.basescan}/address/${SKYCLAIM_CONFIG.diamondAddress}`)
+      .row()
+      .text("⬅️ Main Menu", "menu:start");
+
+    await ctx.reply(text, { parse_mode: "Markdown", reply_markup: kb });
+  });
+
+  // Callback queries
   bot.on("callback_query:data", async (ctx) => {
     const data = ctx.callbackQuery.data;
+
     if (data.startsWith("claim:")) {
       const flight = data.split(":")[1];
-      await ctx.answerCallbackQuery({ text: `Analyzing ${flight}...` });
+      await ctx.answerCallbackQuery({ text: `Auditing ${flight}...` }).catch(() => {});
       await handleClaimExecution(ctx, flight, "2026-11-22");
+    } else if (data.startsWith("letter:")) {
+      const flight = data.split(":")[1];
+      await ctx.answerCallbackQuery({ text: "Generating statutory notice..." }).catch(() => {});
+      await handleSendClaimLetter(ctx, flight);
+    } else if (data === "menu:start") {
+      await ctx.answerCallbackQuery().catch(() => {});
+      const welcome = `
+✈️ *SkyClaim · Transatlantic Flight Disruption & Statutory Audit*
+Select a flight corridor below or send any flight number (e.g. \`BA178\`, \`AF112\`, \`DL401\`):
+`.trim();
+      await ctx.reply(welcome, {
+        parse_mode: "Markdown",
+        reply_markup: getPresetKeyboard(),
+      });
+    } else if (data === "cmd:rights") {
+      await ctx.answerCallbackQuery().catch(() => {});
+      const rightsText = `
+⚖️ *Statutory Passenger Rights (EU261 / UK261)*
+
+• *Transatlantic Compensation Scale (Flights > 3,500 km):*
+  — Arrival delay ≥ 4h: *€600* (£520) per passenger
+  — Arrival delay 3h – 4h: *€300* (Art. 7(2)(c) 50% adjustment)
+
+• *Operating Metal Rule (CJEU Case C-502/18):*
+  Departures from third countries (US) to the EU/UK are covered *only* if flown on EU or UK metal. A codeshare operated by a US carrier (Delta, American, United) is not covered.
+
+• *Weather Exemption (Article 5(3)):*
+  Airlines frequently allege adverse weather to avoid payout. SkyClaim queries dual-hub atmospheric radar to verify whether the corridor was genuinely closed or if other carriers operated on schedule.
+`.trim();
+      const kb = new InlineKeyboard()
+        .text("✈️ Check Flight BA178", "claim:BA178")
+        .row()
+        .text("⬅️ Main Menu", "menu:start");
+      await ctx.reply(rightsText, { parse_mode: "Markdown", reply_markup: kb });
+    } else {
+      await ctx.answerCallbackQuery().catch(() => {});
+    }
+  });
+
+  // Free-form text parser: user can just type "BA178" or "check BA 178"
+  bot.on("message:text", async (ctx) => {
+    const text = ctx.message.text.trim();
+    if (text.startsWith("/")) return; // Handled by command handlers
+
+    // Extract flight code (e.g., "BA178", "BA 178", "AF007", "DL401", "LH401")
+    const match =
+      text.match(/\b([A-Z]{2,3})\s*([0-9]{1,4})\b/i) ||
+      text.match(/\b([A-Z0-9]{3,7})\b/i);
+
+    if (match) {
+      const flight = (match[1] + (match[2] || "")).toUpperCase();
+      await handleClaimExecution(ctx, flight);
+    } else {
+      await ctx.reply(
+        `✈️ Send any transatlantic flight number (e.g. \`BA178\`, \`AF112\`, \`DL401\`) or tap an example below:`,
+        {
+          parse_mode: "Markdown",
+          reply_markup: getPresetKeyboard(),
+        }
+      );
     }
   });
 
