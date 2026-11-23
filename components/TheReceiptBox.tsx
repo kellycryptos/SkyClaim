@@ -41,18 +41,18 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
           {/* Track Summary Badges */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="rounded-xl border border-[#1E293B] bg-[#161F33] p-3.5">
-              <span className="text-[10px] font-mono font-medium text-[#94A3B8] uppercase tracking-wider">Tracks & Missions</span>
-              <p className="mt-1 text-sm font-semibold text-[#F8FAFC]">Track 03 (M15) &amp; Solana Priority</p>
+              <span className="text-[10px] font-mono font-medium text-[#94A3B8] uppercase tracking-wider">Competition Track</span>
+              <p className="mt-1 text-sm font-semibold text-[#F8FAFC]">Track 03: Apps &amp; Agents</p>
             </div>
             <div className="rounded-xl border border-[#1E293B] bg-[#161F33] p-3.5">
-              <span className="text-[10px] font-mono font-medium text-[#94A3B8] uppercase tracking-wider">Target Focus</span>
-              <p className="mt-1 text-sm font-semibold text-[#F8FAFC]">Consumer Auto &amp; Institutional Settlement</p>
+              <span className="text-[10px] font-mono font-medium text-[#94A3B8] uppercase tracking-wider">Commercial Mission</span>
+              <p className="mt-1 text-sm font-semibold text-[#F8FAFC]">Mission 15: Consumer Auto</p>
             </div>
             <div className="rounded-xl border border-[#1E293B] bg-[#161F33] p-3.5">
-              <span className="text-[10px] font-mono font-medium text-[#94A3B8] uppercase tracking-wider">Settlement Rails</span>
+              <span className="text-[10px] font-mono font-medium text-[#94A3B8] uppercase tracking-wider">Settlement Layer</span>
               <p className="mt-1 text-sm font-mono font-bold text-emerald-400 flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                Dual: Base Sepolia + Solana Pay.sh
+                x402 (Base Sepolia USDC)
               </p>
             </div>
           </div>
@@ -66,29 +66,54 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
               </span>
             </div>
             <div className="divide-y divide-[#1E293B] text-xs">
-              {/* Solana Settlement Row */}
+              {/* Telegram Bot Row */}
               <div className="p-3.5 flex items-start justify-between gap-4 bg-blue-950/20">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white">Solana Institutional Settlement Rail</span>
-                    <span className="rounded bg-purple-500/10 px-1.5 py-0.5 text-[10px] font-mono text-purple-400 border border-purple-500/20">
-                      Solana Devnet / Mainnet
+                    <span className="font-semibold text-white">Telegram Disruption Bot</span>
+                    <span className="rounded bg-blue-500/10 px-1.5 py-0.5 text-[10px] font-mono text-blue-400 border border-blue-500/20">
+                      Mobile &amp; Terminal Simulator
                     </span>
                   </div>
                   <p className="mt-0.5 text-[#94A3B8]">
-                    Pre-authorization compliance &amp; RWA reserve attestation settled via Pay.sh and Solana SVM x402 client.
+                    Multi-surface consumer verification bot on Telegram. Instant terminal simulation: <code className="text-blue-300">npm run bot:sim</code>
                   </p>
-                  <p className="mt-1 font-mono text-[11px] text-emerald-400 break-all">
-                    Tx: 5wK4c1xY8pPjq3Rt7MvBn9XkL2mZa4dF6gH8jK1nQ3sT5vW7yZ9aB2cD4eF6gH8j (Devnet USDC)
+                  <p className="mt-1 font-mono text-[11px] text-emerald-400">
+                    Handle: @SkyClaimBot · 0-Config Evaluator Simulator ready
                   </p>
                 </div>
                 <a
-                  href="https://solscan.io/tx/5wK4c1xY8pPjq3Rt7MvBn9XkL2mZa4dF6gH8jK1nQ3sT5vW7yZ9aB2cD4eF6gH8j?cluster=devnet"
+                  href="https://t.me/SkyClaimBot"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium font-mono text-xs"
+                >
+                  @SkyClaimBot <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+              {/* Institutional Pre-Settlement Assurance Feature Row */}
+              <div className="p-3.5 flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-white">Institutional Assurance (Feature)</span>
+                    <span className="rounded bg-purple-500/10 px-1.5 py-0.5 text-[10px] font-mono text-purple-400 border border-purple-500/20">
+                      Live GLEIF API + SVM Client
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[#94A3B8]">
+                    Enterprise compliance firewall: live GLEIF entity resolution and @x402/svm client architecture.
+                  </p>
+                  <p className="mt-1 font-mono text-[11px] text-slate-400">
+                    Endpoint: api.gleif.org · Test Suite: npm run test:solana
+                  </p>
+                </div>
+                <a
+                  href="https://api.gleif.org"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1 text-purple-400 hover:text-purple-300 shrink-0 mt-1 font-medium font-mono text-xs"
                 >
-                  Solscan <ExternalLink className="h-3 w-3" />
+                  GLEIF API <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
               {/* Row 1 */}
