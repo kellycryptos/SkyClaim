@@ -142,14 +142,17 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
                     </span>
                   </div>
                   <p className="mt-0.5 text-[#94A3B8]">
-                    Buys TRAVEL_TRANSIT_LOCK_GENERAL &amp; STORM_ALERT over x402 on Base Sepolia ($0.01 USDC). Dual-hub screened with FAA/NOAA METAR cross-check.
+                    Buys TRAVEL_TRANSIT_LOCK_GENERAL &amp; TRAVEL_DISRUPTION_GENERAL over x402 on Base Sepolia ($0.01 USDC). Departure corridor screened with FAA/NOAA METAR cross-check.
                   </p>
                   <p className="mt-1 font-mono text-[11px] text-emerald-400 break-all">
-                    Live Tx: 0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9 · Miner: PREFLIGHT (ID: 20260828)
+                    Live Tx: 0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145 · Miner: PREFLIGHT (ID: 20260828)
+                  </p>
+                  <p className="mt-0.5 font-mono text-[10px] text-slate-500 break-all">
+                    Telegraph Signal Hash: 0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9
                   </p>
                 </div>
                 <a
-                  href="https://sepolia.basescan.org/tx/0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9"
+                  href="https://sepolia.basescan.org/tx/0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium font-mono text-xs"

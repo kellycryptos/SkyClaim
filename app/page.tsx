@@ -36,22 +36,22 @@ const DEFAULT_BA178_RESULT: SkyClaimResult = {
   caseNumber: 1,
   caseTitle: "BA178 · British Airways",
   caseCopy:
-    "Hypothetical flight BA178 (New York JFK → London LHR). Operating carrier: British Airways (UK/EU carrier). Arrival delay: 3h 42m (FIXTURE). Weather at departure and arrival: clean corridors (FIXTURE). Airline's weather defense is not supported by evidence. Eligible compensation to be checked under EU261: €300 to €600 (subject to Article 7(2) 50% rule for 3h–4h arrival delays on flights > 3,500 km). Draft claim ready.",
+    "Hypothetical flight BA178 (New York JFK → London LHR). Operating carrier: British Airways (UK carrier). Arrival delay: 3h 42m (FIXTURE). Departure weather: clear corridor (FIXTURE). Airline's weather defense is not supported by evidence. Eligible compensation under UK261: £260 to £520 (subject to Article 7(2) 50% rule for 3h–4h arrival delays on flights > 3,500 km). Draft claim template ready.",
   badge: "FIXTURE",
   badgeNote:
-    "Preset benchmark fixture: hypothetical schedule, arrival delay, and dual-corridor weather observations are deterministic test vectors.",
+    "Preset benchmark fixture: hypothetical schedule, arrival delay, and departure weather observations are deterministic test vectors.",
   verdict: "ELIGIBLE_FOR_CLAIM",
   verdictRationale:
-    "Arrival delay at London Heathrow is 3h 42m (exceeds 3h statutory threshold). Dual-hub weather screening confirmed zero active severe alerts at JFK departure and LHR arrival. Operating carrier is British Airways (UK/EU Community metal). Under EU261 Article 7(2)(c), long-haul flights (> 3,500 km) with arrival delays between 3 and 4 hours may be subject to a 50% reduction (€300 vs €600).",
+    "Arrival delay at London Heathrow is 3h 42m (exceeds 3h statutory threshold). Departure weather screening confirmed zero active severe alerts at JFK departure. Operating carrier is British Airways (UK licensed metal). Under UK261 Article 7(2)(c), long-haul flights (> 3,500 km) with arrival delays between 3 and 4 hours are subject to a 50% reduction (£260 vs £520).",
   recommendation: "DRAFT_CLAIM_READY",
   recommendationText:
-    "Draft Claim Ready — Operating carrier is British Airways (UK/EU). Airline weather excuse unsupported. Eligible for carrier review.",
-  statutoryRegulation: "EU261",
+    "Draft Claim Ready — Operating carrier is British Airways (UK carrier). Airline weather excuse unsupported. Eligible for carrier review.",
+  statutoryRegulation: "UK261",
   statutoryDelayBasis:
-    "Arrival delay at final destination (CJEU Sturgeon v Condor standard)",
-  eligibleCompensationRange: "€300 – €600 (to be checked under Art. 7(2))",
+    "Arrival delay at final destination (CJEU Sturgeon v Condor standard as retained law)",
+  eligibleCompensationRange: "£260 – £520 (UK261 Art. 7(2) 50% discount for 3h–4h delay)",
   compensationNote:
-    "Statutory arrival delay is 3h 42m. Under Article 7(2)(c), if arrival delay is under 4 hours on flights > 3,500 km, carrier may reduce compensation by 50% down to €300.",
+    "Statutory arrival delay is 3h 42m. Under UK261 Article 7(2)(c), if arrival delay is under 4 hours on flights > 3,500 km, carrier may reduce compensation by 50% down to £260 (full compensation is £520).",
   flight: {
     flightNumber: "BA178",
     isHypothetical: true,
@@ -80,10 +80,10 @@ const DEFAULT_BA178_RESULT: SkyClaimResult = {
     arrivalWeather: "EGLL VFR (Clear, visibility 9999m) · Normal instrument approaches active.",
     hasSevereArrivalAlert: false,
     bothCorridorsClear: true,
-    coverageNote: "Dual-hub screening confirmed clean corridors at both JFK departure and LHR arrival.",
+    coverageNote: "Departure corridor screening confirmed clean conditions at JFK; destination operations normal.",
     hasSevereStormAlert: false,
     stormDetails:
-      "No active severe weather alerts at New York JFK departure corridor or London Heathrow arrival.",
+      "No active severe weather alerts at New York JFK departure corridor.",
     sourceAuthority: "ttl-nws & PREFLIGHT Infrastructure Signals Telemetry",
     secondaryCrossCheck: {
       source: "aviationweather.gov METAR",
@@ -125,22 +125,22 @@ Scheduled Arrival: 06:15 UTC
 Actual Arrival: 09:57 UTC
 Arrival Delay at Final Destination: +3h 42m
 
-Pursuant to Regulation (EC) 261/2004 and Court of Justice case law (Sturgeon v Condor, Joined Cases C-402/07 & C-432/07), passenger is entitled to statutory compensation for arrival delay exceeding 3 hours on a flight over 3,500 km.
+Pursuant to UK261 (Air Passenger Rights SI 2019/278) and Court of Justice case law (Sturgeon v Condor, Joined Cases C-402/07 & C-432/07), passenger is entitled to statutory compensation for arrival delay exceeding 3 hours on a flight over 3,500 km.
 
-Eligible Compensation Range to be Checked:
-- Baseline statutory entitlement (Art. 7(1)(c)): €600
-- If carrier invokes Article 7(2)(c) (arrival delay under 4 hours): 50% reduction applies, making eligible amount €300.
-Eligible Amount Submitted for Verification: €300 – €600 (to be checked under Art. 7(2))
+Eligible Compensation Entitlement:
+- Baseline statutory entitlement (UK261 Art. 7(1)(c)): £520
+- Under Article 7(2)(c) (arrival delay under 4 hours on flights > 3,500 km): 50% discount applies, making eligible amount £260.
+Eligible Amount Submitted for Verification: £260 – £520
 
 Attached Verification Evidence:
-- Operating Carrier Jurisdiction: Confirmed British Airways is operating carrier under Regulation (EC) No 261/2004 Art. 3(1)(b).
+- Operating Carrier Jurisdiction: Confirmed British Airways is a UK licensed operating carrier.
 - Arrival Telemetry: Arrival at London LHR delayed by 3h 42m (Scheduled 06:15 UTC · Actual 09:57 UTC).
-- Dual-Hub Weather Screening: Meteorological telemetry confirms zero active severe thunderstorm or blizzard ground-stop alerts during departure at New York JFK and arrival at London LHR. The carrier's weather defense is not supported by this evidence.
+- Departure Weather Screening: Meteorological telemetry confirms zero active severe thunderstorm or blizzard ground-stop alerts during departure at New York JFK. The carrier's weather defense is not supported by this evidence.
 - Verification Mode: FIXTURE (Preset test fixture: hypothetical schedule, arrival delay, and weather observations are deterministic test vectors.)
 - Multi-Source Cross-Check: aviationweather.gov METAR (Consensus verified: KJFK LIFR, EGLL VFR).
 
 Please confirm receipt and evaluate this claim within 14 business days.
-(Draft generated by SkyClaim. Draft only, not legal advice.)`,
+(Draft claim template generated by SkyClaim. Template only, not legal advice.)`,
   budgetGuard: {
     perRequestCapUsd: 0.05,
     dailySpendCapUsd: 5.0,
@@ -897,7 +897,7 @@ export default function SkyClaimHome() {
                       <span className="text-xs">{claim.weather.departureWeather}</span>
                     </div>
                     <p className="text-[11px] text-[#94A3B8] font-sans pl-2.5">
-                      {claim.weather.coverageNote || "Dual-hub screening confirmed clean corridors at departure and arrival."}
+                      {claim.weather.coverageNote || "Departure corridor screening confirmed clean conditions at departure hub."}
                     </p>
                   </div>
 

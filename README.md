@@ -1,15 +1,15 @@
 # SkyClaim · Autonomous Flight Disruption Verifier (Telegraph Protocol Season II)
 
-> **SkyClaim checks the airline's most common excuses before they can stall your claim.** When a transatlantic flight is delayed 3+ hours, SkyClaim verifies dual-hub meteorological conditions (departure and arrival corridors) via Telegraph Protocol, validates the operating carrier metal under EU261/UK261 rules, and generates instant statutory claim dossiers with cryptographic settlement receipts. Draft only, not legal advice. Testnet on Base Sepolia.
+> **SkyClaim checks the airline's most common excuses before they can stall your claim.** When a transatlantic flight is delayed 3+ hours, SkyClaim verifies departure airport meteorological conditions and operational disruption telemetry via Telegraph Protocol, validates the operating carrier metal under UK261 and EU261 rules, and generates statutory claim dossiers with cryptographic settlement receipts. Draft template only, not legal advice. Testnet on Base Sepolia.
 
 ---
 
 ## ⚡ Positioning & Purpose
 
-- **Supported Scope:** Same-day US departures to Europe on EU and UK operating carriers (e.g. British Airways, Air France, Virgin Atlantic, Lufthansa departing JFK, ORD, BOS).
-- **Operating Metal Enforcement:** Ex-US departures under EU261 Regulation (EC) 261/2004 Art. 3(1)(b) & CJEU Case C-502/18 (*CS and Others v České aerolinie*) only apply if the **operating carrier** is an EU/UK airline. A transatlantic codeshare marketed by Air France but flown on Delta metal is strictly excluded. SkyClaim separates marketing codeshares from operating metal to prevent false positives.
-- **Dual-Hub Weather Telemetry:** Transatlantic delays routinely stem from either departure weather or destination congestion. SkyClaim purchases corridor intelligence covering both hubs and runs a secondary station cross-check (`aviationweather.gov` / NOAA station feeds).
-- **Contested Claim Workflow:** When an airline asserts weather under Article 5(3), SkyClaim flags the claim with a warning badge as **`CONTESTED CLAIM`** (€300–€600 eligible range) rather than a dead €0. Under CJEU Case C-549/07 (*Wallentin-Hermann v Alitalia*), weather alerts do not excuse an airline if other flights operated or reasonable measures were omitted.
+- **Supported Scope:** Same-day US departures to Europe on UK and EU operating carriers (e.g. British Airways, Virgin Atlantic, Air France, Lufthansa departing JFK, ORD, BOS).
+- **Operating Metal Enforcement:** Ex-US departures under EU261 Regulation (EC) 261/2004 Art. 3(1)(b) only apply if the **operating air carrier** is an EU Community carrier (and under UK261 SI 2019/278, if operated by a UK carrier). A transatlantic codeshare marketed by Air France or British Airways but flown on US metal (e.g. Delta or American Airlines) is excluded. SkyClaim checks operating metal before spending protocol budget to prevent false claims.
+- **Departure Weather & Operational Disruption Telemetry:** Transatlantic delays frequently cite weather excuses. SkyClaim purchases departure corridor telemetry (`TRAVEL_TRANSIT_LOCK_GENERAL` and `TRAVEL_DISRUPTION_GENERAL`) via live Telegraph miners and runs a secondary station cross-check against NOAA/FAA METAR feeds (`aviationweather.gov`).
+- **Contested Claim Template:** When an airline asserts weather under Article 5(3), SkyClaim flags the claim as **`FAIL_CLOSED_WEATHER`** with a contested template rather than a false positive or an absolute €0 dead-end. Under established CJEU case law (*Case C-549/07 Wallentin-Hermann*), an extraordinary circumstances defense under Article 5(3) requires the carrier to prove that the circumstances could not have been avoided even if all reasonable measures had been taken.
 - **Settlement Network:** Settles gasless EIP-712 / x402 micro-payments on **Base Sepolia (Chain ID: 84532)** in Circle USDC ($0.01 USDC / check, capped at $0.05 / call, $5.00 daily spend).
 
 ---
@@ -30,46 +30,48 @@ SkyClaim strictly enforces honest data boundaries. Every result displays exactly
 
 Reviewers can verify all 3 deterministic cases in 1-click on the web UI or terminal simulator:
 
-1. **CASE 1: CLEAN DELAY (Hypothetical `BA178` JFK → LHR)**
-   - Route & Operating Carrier: New York JFK → London LHR (5,550 km) · Operating metal: **British Airways** (UK/EU carrier)
+1. **CASE 1: CLEAN DELAY UNDER UK261 (Hypothetical `BA178` JFK → LHR)**
+   - Route & Operating Carrier: New York JFK → London LHR (5,550 km) · Operating metal: **British Airways** (UK carrier arriving in the UK)
    - Arrival Delay: 3h 42m at destination (Flight data: `FIXTURE`)
-   - Weather Telemetry: Clear departure corridor at JFK and normal arrivals at LHR (`FIXTURE`)
+   - Weather Telemetry: Clear departure corridor at JFK (`FIXTURE`)
+   - Statutory Regime: **UK261** (The Air Passenger Rights and Air Travel Organisers' Licensing Regulations 2019)
    - Statutory Verdict: **`ELIGIBLE_FOR_CLAIM`**
-   - Statutory Compensation to be Checked: **€300 – €600** (Flight distance > 3,500 km. Under EU261 Article 7(2)(c), if arrival delay is between 3 and 4 hours, statutory compensation of €600 may be discounted by 50% to €300. Draft claim ready).
+   - Statutory Compensation to be Checked: **£260 – £520** (Flight distance > 3,500 km. Under UK261 Article 7(2)(c), if arrival delay is between 3 and 4 hours, statutory compensation of £520 is discounted by 50% to £260. Draft claim template ready).
    - Badge: **`FIXTURE`** (Zero-cost test vector)
 
-2. **CASE 2: MINOR DELAY & NON-EU OPERATING METAL (Hypothetical `DL401` JFK → CDG)**
+2. **CASE 2: NON-EU OPERATING METAL EXCLUSION (Hypothetical `DL401` JFK → CDG)**
    - Route & Carriers: New York JFK → Paris CDG (5,835 km) · Marketing: Air France / Delta · Operating metal: **Delta Air Lines**
-   - Arrival Delay: 1h 05m at destination (Flight data: `FIXTURE`)
-   - Operating Metal Rule: Under EU261 Art. 3(1)(b) & CJEU Case C-502/18, flights departing third countries are only covered if operated by EU/UK metal. Delta operating metal is excluded regardless of codeshare.
+   - Arrival Delay: 3h 30m at destination (Flight data: `FIXTURE`, exceeds the 3-hour statutory threshold)
+   - Operating Metal Rule: Under EU261 Art. 3(1)(b), flights departing third countries (USA) are only covered if operated by an EU Community carrier. Delta operating metal is excluded regardless of codeshare.
    - Statutory Verdict: **`INELIGIBLE`** (€0 eligible compensation, $0 spent, telemetry bypassed)
    - Badge: **`FIXTURE`**
 
-3. **CASE 3: DELAY WITH WEATHER RISK (Hypothetical `AF112` ORD → CDG)**
-   - Route & Operating Carrier: Chicago ORD → Paris CDG (6,670 km) · Operating metal: **Air France** (EU carrier)
-   - Arrival Delay: 4h 10m at destination (Flight data: `FIXTURE`)
-   - Weather at Departure: Severe blizzard ground-stop alert active at ORD hub (`FIXTURE`)
+3. **CASE 3: EXTRAORDINARY WEATHER CIRCUMSTANCES DEFENSE (Hypothetical `AF112` ORD → CDG)**
+   - Route & Operating Carrier: Chicago ORD → Paris CDG (6,670 km) · Operating metal: **Air France** (EU carrier arriving in the EU)
+   - Arrival Delay: 4h 10m at destination (Flight data: `FIXTURE`, delay exceeds 4 hours)
+   - Weather at Departure: Severe blizzard ground-stop alert active at Chicago ORD departure hub (`FIXTURE`)
+   - Statutory Regime: **EU261** (Regulation (EC) No 261/2004)
    - Statutory Verdict: **`FAIL_CLOSED_WEATHER`** (Warning badge: `CONTESTED WEATHER DEFENSE`)
-   - Compensation Range: **€300 – €600 (Contested Art. 5(3))** — Generates a specialized Contested Claim Notice challenging whether other carriers operated from ORD or whether reasonable measures were omitted (*Wallentin-Hermann* standard).
+   - Statutory Baseline & Contest Workflow: **€600 (Subject to Art. 5(3) defense)** — Generates a specialized Contested Claim Template requesting carrier substantiation under *Case C-549/07 Wallentin-Hermann* that the disruption could not have been avoided even if all reasonable measures had been taken.
    - Badge: **`FIXTURE`**
 
 ---
 
 ## 🏆 Protocol Receipt Box & Sponsor Verification Matrix
 
-SkyClaim operates against live Telegraph Protocol smart contracts and decentralized nodes on Base Sepolia:
+SkyClaim operates against live Telegraph Protocol smart contracts and decentralized nodes on Base Sepolia. Every on-chain transaction hash below has been confirmed on Base Sepolia RPC and BaseScan:
 
 | Protocol Component | Network / Environment | Identifier / Address | Verification Link |
 | :--- | :--- | :--- | :--- |
 | **Telegraph Diamond Contract** | Base Sepolia (`84532`) | `0x5a2324aA18613FAD4e44bDF0d6c73Ec1f6D87ff8` | [Basescan Explorer](https://sepolia.basescan.org/address/0x5a2324aA18613FAD4e44bDF0d6c73Ec1f6D87ff8) |
 | **Circle USDC (x402 Gate)** | Base Sepolia (`84532`) | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` | [Basescan Explorer](https://sepolia.basescan.org/token/0x036CbD53842c5426634e7929541eC2318f3dCF7e) |
 | **Live Node Engine** | HTTP Node Rail | `http://13.237.89.59:7044` | [Healthz Endpoint](http://13.237.89.59:7044/miner-dispatcher/healthz) · [Miners Index](http://13.237.89.59:7044/engine/v1/subnets) |
-| **Live On-Chain Run 1 (JFK Corridor)** | Base Sepolia (`84532`) | Tx: `0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9) · Miner: PREFLIGHT (`20260828`) |
-| **Live On-Chain Run 2 (ORD Corridor)** | Base Sepolia (`84532`) | Tx: `0xba23f2fdc54173f0a5f2ce08b22e9efb1b4f46060be3361028d4f3774104c444` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xba23f2fdc54173f0a5f2ce08b22e9efb1b4f46060be3361028d4f3774104c444) · Miner: PREFLIGHT (`20260828`) |
-| **Live On-Chain Run 3 (JFK Corridor)** | Base Sepolia (`84532`) | Tx: `0x0e4caede1b9c7d7f5b5117e11f1c5d149c73cace14062bc04f419c44172771bb` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0x0e4caede1b9c7d7f5b5117e11f1c5d149c73cace14062bc04f419c44172771bb) · Miner: PREFLIGHT (`20260828`) |
-| **Verified Live x402 Purchase** | Base Sepolia (`84532`) | Tx: `0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db) · Signal: `0xc65b056a...` ($0.01 USDC) |
-| **Active Supply Miner (PREFLIGHT)** | `TRAVEL_TRANSIT_LOCK_GENERAL` | Miner `PREFLIGHT Infrastructure Signals` (`20260828`) | Real-time METAR & Transit Lock Telemetry ($0.01 USDC) |
-| **Secondary Station Cross-Check** | FAA / NOAA METAR | `aviationweather.gov/api/data/metar` | Dual-corridor validation preventing single-source oracle risk |
+| **Live On-Chain Settlement 1 (JFK Corridor)** | Base Sepolia (`84532`) | Tx: `0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145) · Signal: `0x3599e217...` · Miner: `a1-preflight` (`20260828`) · Intent: `TRAVEL_TRANSIT_LOCK_GENERAL` ($0.01 USDC) |
+| **Live On-Chain Settlement 2 (ORD Corridor)** | Base Sepolia (`84532`) | Tx: `0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18) · Signal: `0xba23f2fd...` · Miner: `a1-preflight` (`20260828`) · Intent: `TRAVEL_TRANSIT_LOCK_GENERAL` ($0.01 USDC) |
+| **Live On-Chain Settlement 3 (JFK Corridor)** | Base Sepolia (`84532`) | Tx: `0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002) · Signal: `0x0e4caede...` · Miner: `a1-preflight` (`20260828`) · Intent: `TRAVEL_TRANSIT_LOCK_GENERAL` ($0.01 USDC) |
+| **Live On-Chain Settlement 4 (FAA Operational Status)** | Base Sepolia (`84532`) | Tx: `0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45) · Signal: `0xc9733ebf...` · Miner: `TxLens` (`9002`) · Intent: `TRAVEL_DISRUPTION_GENERAL` ($0.01 USDC) |
+| **Verified Live x402 Micropayment** | Base Sepolia (`84532`) | Tx: `0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db) · Block 62567078 ($0.01 USDC) |
+| **Secondary Station Cross-Check** | FAA / NOAA METAR | `aviationweather.gov/api/data/metar` | Ground station METAR feed cross-check against Telegraph telemetry |
 
 ---
 
@@ -96,9 +98,9 @@ npm start
 
 ### Review Surface A: Web Terminal
 Open **[http://localhost:3000](http://localhost:3000)**:
-- Click **BA178** to verify Case 1 (`ELIGIBLE_FOR_CLAIM`, British Airways UK/EU operating metal, €300–€600 eligible compensation range under Art. 7(2)).
-- Click **DL401** to verify Case 2 (`INELIGIBLE`, Delta non-EU operating metal excluded under Art. 3(1)(b) & delay < 3h).
-- Click **AF112** to verify Case 3 (`FAIL_CLOSED_WEATHER`, warning badge shown, contested claim draft generated under Art. 5(3)).
+- Click **BA178** to verify Case 1 (`ELIGIBLE_FOR_CLAIM`, British Airways UK carrier, £260–£520 statutory entitlement under UK261).
+- Click **DL401** to verify Case 2 (`INELIGIBLE`, Delta non-EU operating carrier excluded under Art. 3(1)(b) despite 3h 30m delay).
+- Click **AF112** to verify Case 3 (`FAIL_CLOSED_WEATHER`, warning badge shown, contested claim template generated under Art. 5(3)).
 - Scroll to the **Public Disruption Verification Activity Table** to view real completed Telegraph purchases with clickable BaseScan links.
 
 ### Review Surface B: Telegram Bot & Terminal Simulator
@@ -114,7 +116,14 @@ npm run bot
 
 ## ⚠️ Scope & Legal Boundaries
 
-1. **Operating Carrier Standard:** EU261 jurisdiction on flights departing third countries (USA) strictly requires an EU/UK operating carrier (*CJEU Case C-502/18*). Codeshares marketed by EU airlines do not qualify if flown on US metal.
-2. **Statutory Delay Standard:** Under CJEU case law (*Sturgeon v Condor*), EU261 compensation is strictly evaluated on **arrival delay at final destination**, not departure delay. For flights > 3,500 km with arrival delays between 3 and 4 hours, Article 7(2)(c) permits carriers to discount statutory compensation by 50% (€300 vs €600).
-3. **Contested Claims:** Active weather does not provide airlines an automatic pass if other flights operated on schedule. SkyClaim marks these claims as contested rather than dead, equipping passengers with evidence dossiers.
-4. **Draft Only:** SkyClaim produces structured statutory claim drafts and evidence packages. It does not provide formal legal counsel or automated litigation filing.
+1. **Operating Carrier Standard:** Under Regulation (EC) No 261/2004 Article 3(1)(b), flights departing third countries (USA) are only covered if operated by an EU Community carrier (and under UK261 SI 2019/278, if operated by a UK carrier). Codeshares marketed by EU/UK airlines do not qualify if flown on US metal.
+2. **Statutory Delay Standard:** Under Court of Justice jurisprudence (*Joined Cases C-402/07 & C-432/07 Sturgeon v Condor*), statutory delay rights are evaluated on **arrival delay at final destination**, not departure delay. For long-haul flights (> 3,500 km) with arrival delays between 3 and 4 hours, Article 7(2)(c) permits carriers to discount statutory compensation by 50% (£260 under UK261, €300 under EU261).
+3. **Contested Claims:** Under *Case C-549/07 Wallentin-Hermann*, an airline asserting an extraordinary circumstances defense under Article 5(3) must prove that the delay could not have been avoided even if all reasonable measures had been taken. SkyClaim marks these claims as contested rather than dead, providing structured challenge templates for passenger or corporate travel review.
+4. **Draft Template Only:** SkyClaim produces structured statutory claim templates and telemetry packages. It does not provide formal legal counsel or automated litigation representation.
+
+---
+
+## 📖 Technical Documentation
+
+- **Walkthrough Tutorial:** [`TUTORIAL.md`](file:///c:/Users/HP/Downloads/telegraph%20101/TUTORIAL.md) — Comprehensive technical walkthrough explaining statutory flight disruption rules, Telegraph intent routing, and x402 gasless EIP-712 challenge-response payment flows on Base Sepolia.
+- **Protocol Updates Log:** [`UPDATES.md`](file:///c:/Users/HP/Downloads/telegraph%20101/UPDATES.md) — Technical changelog documenting project milestones from initial architecture to live x402 node integration.

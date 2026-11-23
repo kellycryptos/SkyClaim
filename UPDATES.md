@@ -44,4 +44,4 @@ Documenting technical progress, consensus design, and testnet verification for *
   1. `TRAVEL_TRANSIT_LOCK_GENERAL` (`ttl-nws`, Miner `m-106005`): Validates gate arrival telemetry (+4h 00m on AF112 CDG → ORD).
   2. `STORM_ALERT_GENERAL` (`SkyWire MET Norway`, Miner `m-79335`): Detects severe winter blizzard ground stop at Chicago ORD.
 - **Fail-Closed Resolution:** When the two miners diverge (delay confirmed, but storm alert active), SkyClaim refuses to file. It issues an explicit **"DO NOT FILE — High Rejection Risk"** verdict, saving the user from filing a doomed claim while preserving the cryptographic receipts as an appeal dossier.
-- **Public Claim Board:** Deployed the live recovery & protection ledger, tracking total claims audited, €14,450 approved, and a 31.2% fail-closed defense protection rate.
+- **Audit Ledger:** Deployed the live testnet verification ledger tracking automated claims, cryptographic signal hashes, and testnet transaction receipts.

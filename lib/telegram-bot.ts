@@ -37,7 +37,7 @@ export function getPresetKeyboard(): InlineKeyboard {
     .text("✈️ Air France (AF112 · ORD ➔ CDG)", "claim:AF112")
     .row()
     .text("⚖️ Statutory Rights (EU261)", "cmd:rights")
-    .url("🌐 Web App", "https://skyclaim.onrender.com");
+    .url("🌐 Web App", "https://skyclaimpro.vercel.app");
 }
 
 export async function callClaimApi(
@@ -116,7 +116,7 @@ function buildClaimActionKeyboard(flightNumber: string, isEligibleOrContested: b
   }
   kb.text("🔄 Check Another", "menu:start")
     .text("⚖️ Legal Rules", "cmd:rights")
-    .url("🌐 Web App", "https://skyclaim.onrender.com");
+    .url("🌐 Web App", "https://skyclaimpro.vercel.app");
   return kb;
 }
 
@@ -187,7 +187,7 @@ ${cleanLetter}
 
     const kb = new InlineKeyboard()
       .text("⬅️ Back to Menu", "menu:start")
-      .url("🌐 Open Web App", "https://skyclaim.onrender.com");
+      .url("🌐 Open Web App", "https://skyclaimpro.vercel.app");
 
     await ctx.reply(msg, { parse_mode: "Markdown", reply_markup: kb });
   } catch (err: any) {
