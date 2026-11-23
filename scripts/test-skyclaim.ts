@@ -129,7 +129,7 @@ async function runTests() {
   console.log(`  ✓ Miner abstention rule verified: ${resAbstain.verdict} (${resAbstain.eligibleCompensationRange})`);
 
   // 8. Test Safety Guards: Rate Limiter & Budget Caps
-  console.log("[8/8] Testing Anti-Drain Safety Guards (Rate Limiter & Budget Caps)...");
+  console.log("[8/9] Testing Anti-Drain Safety Guards (Rate Limiter & Budget Caps)...");
   const overBudgetTest = checkAndRecordBudget(0.10);
   assert.strictEqual(overBudgetTest.allowed, false, "Must reject request exceeding $0.05 per-request cap");
   assert(overBudgetTest.reason.includes("exceeds per-request budget cap"));
@@ -143,6 +143,25 @@ async function runTests() {
   assert.strictEqual(blockedRl.allowed, false, "16th request must be rate-limited");
   assert(blockedRl.reason.includes("Rate limit"));
   console.log("  ✓ Budget guards passed: $0.05 per-request cap & 15 req/min rate limit verified");
+
+  // 9. Test Non-US Departure & Historical Date Fail-Closed Rules
+  console.log("[9/9] Testing Non-US Departure & Historical Date Fail-Closed Rules...");
+  const resPast = await verifyFlightDisruption("LHR", "2026-11-20", true);
+  assert.strictEqual(
+    resPast.verdict,
+    "INSUFFICIENT_EVIDENCE",
+    "Non-US departure with past date must fail closed to INSUFFICIENT_EVIDENCE"
+  );
+  assert.strictEqual(
+    resPast.eligibleCompensationRange,
+    "€0 (Under Review · Insufficient Historical Telemetry)",
+    "Compensation must be €0 under review"
+  );
+  assert(
+    resPast.verdictRationale.includes("in the past"),
+    "Rationale must note that historical weather cannot be verified on live miners"
+  );
+  console.log(`  ✓ Historical non-US fail-closed verified: ${resPast.verdict} (${resPast.eligibleCompensationRange})`);
 
   console.log("\n=== ALL SKYCLAIM ACCEPTANCE TESTS PASSED DETERMINISTICALLY (100% GREEN) ===");
 }

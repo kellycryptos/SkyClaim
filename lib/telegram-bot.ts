@@ -44,7 +44,7 @@ export async function callClaimApi(
   flightNumber: string,
   flightDate: string = "2026-11-22"
 ): Promise<SkyClaimResult> {
-  return verifyFlightDisruption(flightNumber, flightDate, true);
+  return verifyFlightDisruption(flightNumber, flightDate);
 }
 
 /**
@@ -73,7 +73,11 @@ function formatClaimReport(res: SkyClaimResult): string {
   } else if (res.verdict === "INSUFFICIENT_EVIDENCE") {
     badgeEmoji = "⚪";
     verdictHeader = "UNDER REVIEW · INSUFFICIENT TELEMETRY";
-    defenseVerdict = "Telemetry streams inconclusive · Station cross-check required";
+    defenseVerdict = res.verdictRationale?.includes("past")
+      ? "Historical weather unavailable on live miners · Telemetry streams inconclusive"
+      : res.verdictRationale?.includes("outside")
+      ? "Non-US departure airport unindexed by NWS radar · Live coverage is US-only"
+      : "Telemetry streams inconclusive · Station cross-check required";
   }
 
   const depWeather = cleanTelegramText(w.departureWeather) || "Clear corridor";
@@ -87,9 +91,11 @@ function formatClaimReport(res: SkyClaimResult): string {
 
   return `
 ${badgeEmoji} *SkyClaim Telemetry & Statutory Audit*
+*Data Badge:* \`${res.badge}\`
 
 *Flight:* ${f.carrier} (\`${f.flightNumber}\`)
 *Route:* ${f.origin} ➔ ${f.destination} (${f.distanceKm.toLocaleString()} km)
+*Flight Date:* \`${f.flightDate}\`
 *Arrival Delay:* \`+${delayH}h ${delayM}m\` (Statutory Threshold: \`3h 00m\`)
 *Operating Metal:* ${f.operatingCarrier} ${f.isOperatingCarrierEUUK ? "✓ (EU/UK Carrier)" : "✗ (Non-EU ex-USA)"}
 
@@ -102,7 +108,7 @@ ${badgeEmoji} *SkyClaim Telemetry & Statutory Audit*
 • *Arrival (${w.arrivalAirport}):* ${arrWeather}
 • *Authority:* ${authority}
 
-${res.receipt?.basescanUrl ? `🔗 *Oracle Settlement:* [Base Sepolia Proof](${res.receipt.basescanUrl})` : `🔗 *Evidentiary Standard:* Telegraph Dual-Corridor Protocol`}
+${res.receipt?.txHash ? `🔗 *Oracle Settlement:* [Base Sepolia Proof](${res.receipt.basescanUrl})\n• *Miner:* ${res.receipt.minerName} (ID: ${res.receipt.minerId})\n• *Cost:* $${res.receipt.costUsd || 0.01} USDC\n• *Tx Hash:* \`${res.receipt.txHash}\`` : `🔗 *Evidentiary Standard:* Telegraph Protocol (${res.badge})`}
 `.trim();
 }
 
@@ -126,7 +132,7 @@ function buildClaimActionKeyboard(flightNumber: string, isEligibleOrContested: b
 export async function handleClaimExecution(
   ctx: any,
   flightNumber: string,
-  flightDate: string = "2026-11-22"
+  flightDate: string = "2026-11-23"
 ) {
   const cleanFlight = flightNumber.trim().toUpperCase().replace(/\s+/g, "");
 
@@ -135,7 +141,7 @@ export async function handleClaimExecution(
     await ctx.replyWithChatAction("typing").catch(() => {});
 
     // Fast-path evaluation
-    const res = await verifyFlightDisruption(cleanFlight, flightDate, true);
+    const res = await verifyFlightDisruption(cleanFlight, flightDate);
     const reportText = formatClaimReport(res);
     const isEligibleOrContested =
       res.verdict === "ELIGIBLE_FOR_CLAIM" || res.verdict === "FAIL_CLOSED_WEATHER";
@@ -227,14 +233,14 @@ SkyClaim screens arrival delays against airline weather defenses by querying dec
 ⚖️ *Statutory Passenger Rights (EU261 / UK261)*
 
 • *Transatlantic Compensation Scale (Flights > 3,500 km):*
-  — Arrival delay ≥ 4h: *€600* (£520) per passenger
-  — Arrival delay 3h – 4h: *€300* (Art. 7(2)(c) 50% adjustment)
+  — Arrival delay ≥ 4h: *€600* under EU261 (*£520* under UK261) per passenger
+  — Arrival delay 3h – 4h: *€300* / *£260* (Art. 7(2)(c) 50% adjustment)
 
-• *Operating Metal Rule (CJEU Case C-502/18):*
-  Departures from third countries (US) to the EU/UK are covered *only* if flown on EU or UK metal. A codeshare operated by a US carrier (Delta, American, United) is not covered.
+• *Operating Metal Rule (Art. 3(1)(b)):*
+  Departures from third countries (US) to the EU/UK are covered *only* if flown on EU or UK metal. A flight operated by a US carrier (Delta, American, United) is not covered regardless of ticketing codeshare.
 
 • *Weather Exemption (Article 5(3)):*
-  Airlines frequently allege adverse weather to avoid payout. SkyClaim queries dual-hub atmospheric radar to verify whether the corridor was genuinely closed or if other carriers operated on schedule.
+  Airlines frequently allege adverse weather to avoid payout. SkyClaim queries departure corridor atmospheric radar and airspace disruption telemetry to verify whether the corridor was genuinely closed.
 `.trim();
 
     const kb = new InlineKeyboard()
@@ -245,12 +251,12 @@ SkyClaim screens arrival delays against airline weather defenses by querying dec
     await ctx.reply(rightsText, { parse_mode: "Markdown", reply_markup: kb });
   });
 
-  // Command: /claim <flight>
+  // Command: /claim <flight> [date]
   bot.command("claim", async (ctx) => {
     const text = ctx.message?.text || "";
     const parts = text.split(/\s+/).slice(1);
     const flightNumber = parts[0] || "BA178";
-    const flightDate = parts[1] || "2026-11-22";
+    const flightDate = parts[1] || "2026-11-23";
     await handleClaimExecution(ctx, flightNumber, flightDate);
   });
 
@@ -318,14 +324,14 @@ Select a flight corridor below or send any flight number (e.g. \`BA178\`, \`AF11
 ⚖️ *Statutory Passenger Rights (EU261 / UK261)*
 
 • *Transatlantic Compensation Scale (Flights > 3,500 km):*
-  — Arrival delay ≥ 4h: *€600* (£520) per passenger
-  — Arrival delay 3h – 4h: *€300* (Art. 7(2)(c) 50% adjustment)
+  — Arrival delay ≥ 4h: *€600* under EU261 (*£520* under UK261) per passenger
+  — Arrival delay 3h – 4h: *€300* / *£260* (Art. 7(2)(c) 50% adjustment)
 
-• *Operating Metal Rule (CJEU Case C-502/18):*
-  Departures from third countries (US) to the EU/UK are covered *only* if flown on EU or UK metal. A codeshare operated by a US carrier (Delta, American, United) is not covered.
+• *Operating Metal Rule (Art. 3(1)(b)):*
+  Departures from third countries (US) to the EU/UK are covered *only* if flown on EU or UK metal. A flight operated by a US carrier (Delta, American, United) is not covered regardless of ticketing codeshare.
 
 • *Weather Exemption (Article 5(3)):*
-  Airlines frequently allege adverse weather to avoid payout. SkyClaim queries dual-hub atmospheric radar to verify whether the corridor was genuinely closed or if other carriers operated on schedule.
+  Airlines frequently allege adverse weather to avoid payout. SkyClaim queries departure corridor atmospheric radar and airspace disruption telemetry to verify whether the corridor was genuinely closed.
 `.trim();
       const kb = new InlineKeyboard()
         .text("✈️ Check Flight BA178", "claim:BA178")
@@ -337,22 +343,20 @@ Select a flight corridor below or send any flight number (e.g. \`BA178\`, \`AF11
     }
   });
 
-  // Free-form text parser: user can just type "BA178" or "check BA 178"
+  // Free-form text parser: user can just type "JFK", "BA178", "LHR 2026-11-20"
   bot.on("message:text", async (ctx) => {
     const text = ctx.message.text.trim();
     if (text.startsWith("/")) return; // Handled by command handlers
 
-    // Extract flight code (e.g., "BA178", "BA 178", "AF007", "DL401", "LH401")
-    const match =
-      text.match(/\b([A-Z]{2,3})\s*([0-9]{1,4})\b/i) ||
-      text.match(/\b([A-Z0-9]{3,7})\b/i);
+    const parts = text.split(/\s+/);
+    const flight = parts[0].toUpperCase();
+    const flightDate = parts[1] && /^\d{4}-\d{2}-\d{2}$/.test(parts[1]) ? parts[1] : "2026-11-23";
 
-    if (match) {
-      const flight = (match[1] + (match[2] || "")).toUpperCase();
-      await handleClaimExecution(ctx, flight);
+    if (flight.length >= 3) {
+      await handleClaimExecution(ctx, flight, flightDate);
     } else {
       await ctx.reply(
-        `✈️ Send any transatlantic flight number (e.g. \`BA178\`, \`AF112\`, \`DL401\`) or tap an example below:`,
+        `✈️ Send any transatlantic flight or airport (e.g. \`JFK\`, \`BA178\`, \`LHR 2026-11-20\`) or tap an example below:`,
         {
           parse_mode: "Markdown",
           reply_markup: getPresetKeyboard(),

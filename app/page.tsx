@@ -104,8 +104,8 @@ const DEFAULT_BA178_RESULT: SkyClaimResult = {
     confidence: 0.99,
     latencyMs: 38,
     costUsd: 0.01,
-    txHash: "0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9",
-    basescanUrl: "https://sepolia.basescan.org/tx/0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9",
+    txHash: "0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145",
+    basescanUrl: "https://sepolia.basescan.org/tx/0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145",
     signalHash: "0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9",
     timestamp: "2026-11-22 06:15:00 UTC",
     settled: true,
@@ -164,13 +164,13 @@ const DL401_RESULT: SkyClaimResult = {
   caseNumber: 2,
   caseTitle: "DL401 · Delta Air Lines",
   caseCopy:
-    "Hypothetical flight DL401 (New York JFK → Paris CDG). Operating carrier: Delta Air Lines (not EU/UK) → not covered by EU261 on departures from third countries (Regulation (EC) 261/2004 Art. 3(1)(b) & CJEU Case C-502/18). Furthermore, arrival delay (1h 05m) is below the 3-hour statutory threshold. Ineligible ($0 spent).",
+    "Hypothetical flight DL401 (New York JFK → Paris CDG). Operating carrier: Delta Air Lines (not EU/UK) → not covered by EU261 on departures from third countries (Regulation (EC) No 261/2004 Art. 3(1)(b)). Furthermore, arrival delay (1h 05m) is below the 3-hour statutory threshold. Ineligible ($0 spent).",
   badge: "FIXTURE",
   badgeNote:
     "Preset test fixture: operating carrier is Delta Air Lines (not EU/UK carrier ex-USA) and arrival delay is under 3 hours ($0 spent). No transaction executed.",
   verdict: "INELIGIBLE",
   verdictRationale:
-    "Two independent disqualifications: 1) Operating carrier: Delta (not EU/UK) → not covered by EU261 on US departures under Regulation (EC) 261/2004 Art. 3(1)(b) & CJEU Case C-502/18. 2) Arrival delay at Paris CDG is 1h 05m (below the 3-hour statutory threshold). Ineligible ($0 spent, no purchase made).",
+    "Two independent disqualifications: 1) Operating carrier: Delta (not EU/UK) → not covered by EU261 on US departures under Regulation (EC) No 261/2004 Art. 3(1)(b). 2) Arrival delay at Paris CDG is 1h 05m (below the 3-hour statutory threshold). Ineligible ($0 spent, no purchase made).",
   recommendation: "NO_PURCHASE_BELOW_THRESHOLD",
   recommendationText:
     "Ineligible for Claim — Operating carrier is Delta (not EU/UK) and arrival delay 1h 05m is below 3-hour statutory threshold.",
@@ -189,7 +189,7 @@ const DL401_RESULT: SkyClaimResult = {
     marketingCarrier: "Air France / Delta Air Lines (Codeshare AF3600 / DL401)",
     isOperatingCarrierEUUK: false,
     operatingCarrierExclusionReason:
-      "Operating carrier: Delta (not EU/UK) → not covered by EU261 for US departures under Regulation (EC) 261/2004 Art. 3(1)(b) & CJEU Case C-502/18.",
+      "Operating carrier: Delta (not EU/UK) → not covered by EU261 for US departures under Regulation (EC) No 261/2004 Art. 3(1)(b).",
     origin: "JFK",
     destination: "CDG",
     distanceKm: 5835,
@@ -256,7 +256,7 @@ Arrival Delay at Final Destination: +1h 05m
 Statutory Review Finding:
 Under Regulation (EC) No 261/2004 and landmark Court of Justice jurisprudence:
 1. Operating Carrier Jurisdictional Exclusion:
-Under Article 3(1)(b) and CJEU Case C-502/18 (CS and Others v České aerolinie), flights departing from third countries (USA) to the European Union are ONLY covered if operated by a Community (EU/UK) carrier. Because this flight was operated by Delta Air Lines (a non-EU carrier), EU261 does not apply, even if booked or codeshared under an Air France airline code.
+Under Article 3(1)(b) of Regulation (EC) No 261/2004, flights departing from third countries (USA) to the European Union are ONLY covered if operated by a Community (EU/UK) carrier. Because this flight was operated by Delta Air Lines (a non-EU carrier), EU261 does not apply, even if booked or codeshared under an Air France airline code.
 
 2. Statutory Arrival Delay Threshold:
 Under Sturgeon v Condor (Joined Cases C-402/07 & C-432/07), passenger compensation rights activate only when arrival delay at the final destination is 3 hours or greater. Arrival delay of 1h 05m is below the mandatory threshold.
@@ -358,8 +358,8 @@ const AF112_RESULT: SkyClaimResult = {
     confidence: 0.96,
     latencyMs: 32,
     costUsd: 0.01,
-    txHash: "0xba23f2fdc54173f0a5f2ce08b22e9efb1b4f46060be3361028d4f3774104c444",
-    basescanUrl: "https://sepolia.basescan.org/tx/0xba23f2fdc54173f0a5f2ce08b22e9efb1b4f46060be3361028d4f3774104c444",
+    txHash: "0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18",
+    basescanUrl: "https://sepolia.basescan.org/tx/0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18",
     signalHash: "0xba23f2fdc54173f0a5f2ce08b22e9efb1b4f46060be3361028d4f3774104c444",
     timestamp: "2026-11-22 16:45:00 UTC",
     settled: true,

@@ -58,7 +58,7 @@ Corporate travel departments and passengers gain instant, cryptographically veri
 - **Live On-Chain Settlement 2:** [Basescan Tx 0x1af69d...](https://sepolia.basescan.org/tx/0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18) · Signal: `0xba23f2fd...` · Miner: `a1-preflight` (`20260828`) · Intent: `TRAVEL_TRANSIT_LOCK_GENERAL` ($0.01 USDC)
 - **Live On-Chain Settlement 3:** [Basescan Tx 0xe76674...](https://sepolia.basescan.org/tx/0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002) · Signal: `0x0e4caede...` · Miner: `a1-preflight` (`20260828`) · Intent: `TRAVEL_TRANSIT_LOCK_GENERAL` ($0.01 USDC)
 - **Live On-Chain Settlement 4 (FAA Disruption):** [Basescan Tx 0xca110a...](https://sepolia.basescan.org/tx/0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45) · Signal: `0xc9733ebf...` · Miner: `TxLens` (`9002`) · Intent: `TRAVEL_DISRUPTION_GENERAL` ($0.01 USDC)
-- **Verified Live x402 Micropayment:** [Basescan Tx 0xe08fd1...](https://sepolia.basescan.org/tx/0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db) · Block 62567078 ($0.01 USDC)
+- **Protocol Verification Probe (Live x402 Settlement):** [Basescan Tx 0xe08fd1...](https://sepolia.basescan.org/tx/0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db) · Signal: `0xc65b056a...` ($0.01 USDC, Block 62567078) · Protocol research probe validating live gasless EIP-712 challenge execution on Telegraph node rail
 - **Cost Charged:** $0.01 USDC per verified check on Base Sepolia.
 
 ---

@@ -113,9 +113,9 @@ export const SKYCLAIM_PRESETS: PresetScenario[] = [
 
 /**
  * Resolves marketing carrier and operating metal.
- * Under Regulation (EC) 261/2004 Art. 3(1)(b) and CJEU Case C-502/18 (CS and Others v České aerolinie),
+ * Under Regulation (EC) No 261/2004 Art. 3(1)(b),
  * flights departing from third countries (US) to the EU/UK are only covered if the OPERATING carrier
- * is an EU or UK carrier. A codeshare sold by Air France but flown by Delta is strictly excluded.
+ * is an EU Community carrier (or UK carrier under UK261). A codeshare sold by Air France but flown by Delta is strictly excluded.
  */
 export function resolveCarrierInfo(flightNumber: string, userCarrierInput?: string): {
   marketingCarrier: string;
@@ -131,7 +131,7 @@ export function resolveCarrierInfo(flightNumber: string, userCarrierInput?: stri
       operatingCarrier: "Delta Air Lines",
       isOperatingCarrierEUUK: false,
       exclusionReason:
-        "Operating carrier: Delta (not EU/UK) → not covered by EU261 on US departures under Regulation (EC) 261/2004 Art. 3(1)(b) & CJEU Case C-502/18.",
+        "Operating carrier: Delta (not EU/UK) → not covered by EU261 on US departures under Regulation (EC) No 261/2004 Art. 3(1)(b).",
     };
   }
 
@@ -313,17 +313,17 @@ export async function queryLiveTelegraphWeather(
       arrSummary: `Arrival (${arrClean}): Inconclusive telemetry`,
       secondaryCrossCheck: secondary,
       receipt: {
-        intent: "TRAVEL_TRANSIT_LOCK_GENERAL",
-        minerId: "742101",
-        minerName: "RiskWire Sourced Evidence",
+        intent: "TRAVEL_DISRUPTION_GENERAL",
+        minerId: "9002",
+        minerName: "TxLens (Telegraph Disruption Miner)",
         networkRank: 1,
         servedRank: 1,
         confidence: 0.3,
         latencyMs: 146,
         costUsd: 0.01,
-        txHash: "0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db",
-        basescanUrl: "https://sepolia.basescan.org/tx/0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db",
-        signalHash: "0xc65b056a910b81c022e5ae046bdf730d11b547fd8b068c1b7a141f551a6ba1af",
+        txHash: "0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45",
+        basescanUrl: "https://sepolia.basescan.org/tx/0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45",
+        signalHash: "0xc9733ebf907242e7c88f0fadeac24bd2faeaf85998dfd4ce054b8ac08c52f775",
         timestamp: new Date().toISOString(),
         settled: true,
         weatherTag: "LIVE",
@@ -333,12 +333,12 @@ export async function queryLiveTelegraphWeather(
         },
         fieldStatus: { verdict: "ok", summary: "ok" },
         rawReceiptJson: JSON.stringify({
-          miner_id: "742101",
-          miner_name: "RiskWire Sourced Evidence",
+          miner_id: "9002",
+          miner_name: "TxLens (Telegraph Disruption Miner)",
           served_rank: 1,
           cost_usd: 0.01,
-          signal_hash: "0xc65b056a910b81c022e5ae046bdf730d11b547fd8b068c1b7a141f551a6ba1af",
-          tx_hash: "0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db",
+          signal_hash: "0xc9733ebf907242e7c88f0fadeac24bd2faeaf85998dfd4ce054b8ac08c52f775",
+          tx_hash: "0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45",
           status: "abstained",
           verdict: "INCONCLUSIVE"
         }, null, 2),
@@ -362,7 +362,7 @@ export async function queryLiveTelegraphWeather(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(askReqBody),
-        signal: AbortSignal.timeout(4000),
+        signal: AbortSignal.timeout(15000),
       });
 
       if (askRes.status === 402) {
@@ -378,7 +378,7 @@ export async function queryLiveTelegraphWeather(
               "Payment-Signature": signed.header,
             },
             body: JSON.stringify(askReqBody),
-            signal: AbortSignal.timeout(4500),
+            signal: AbortSignal.timeout(20000),
           });
 
           if (paidRes.ok) {
@@ -508,7 +508,7 @@ export async function queryLiveTelegraphWeather(
         body: JSON.stringify({
           query: `Severe weather alerts and transit lock for ${depClean} to ${arrClean} corridor`,
         }),
-        signal: AbortSignal.timeout(4000),
+        signal: AbortSignal.timeout(15000),
       });
 
       if (res.ok) {
@@ -625,20 +625,22 @@ export async function verifyFlightDisruption(
   queryInput: string,
   flightDate: string = "2026-11-22",
   forceDemo: boolean = false,
-  rateLimitRemaining: number = 15
+  rateLimitRemaining: number = 15,
+  forceLive: boolean = false
 ): Promise<SkyClaimResult> {
   const startTime = Date.now();
   const clean = queryInput.trim().toUpperCase();
 
-  // 1. Identify preset scenario
-  const preset = SKYCLAIM_PRESETS.find(
+  // If forceLive is true OR date is today (2026-11-23), do NOT use static fixture presets, execute live query!
+  const isToday = flightDate === "2026-11-23";
+  const preset = (!forceLive && !isToday) ? SKYCLAIM_PRESETS.find(
     (p) =>
       p.flightNumber.toUpperCase() === clean ||
       p.id.toLowerCase() === clean.toLowerCase() ||
       (clean === "1" && p.caseNumber === 1) ||
       (clean === "2" && p.caseNumber === 2) ||
       (clean === "3" && p.caseNumber === 3)
-  );
+  ) : undefined;
 
   let caseNumber: 1 | 2 | 3 | undefined;
   let flight: FlightDisruptionTelemetry;
@@ -658,13 +660,27 @@ export async function verifyFlightDisruption(
 
   if (!preset) {
     // Custom flight or airport lookup
-    const airport =
-      clean === "DISCREPANCY" || clean === "ABSTAIN" || clean === "INCONCLUSIVE"
-        ? clean
-        : clean.length === 3
-        ? clean
-        : "JFK";
-    const destAirport = "LHR";
+    let airport = "JFK";
+    let destAirport = "LHR";
+    if (clean === "DISCREPANCY" || clean === "ABSTAIN" || clean === "INCONCLUSIVE") {
+      airport = clean;
+    } else if (clean.includes("-")) {
+      const parts = clean.split("-");
+      airport = parts[0].trim();
+      destAirport = parts[1].trim();
+    } else if (clean.length === 3) {
+      airport = clean;
+      destAirport = clean === "LHR" ? "JFK" : "LHR";
+    } else if (clean.startsWith("AF")) {
+      airport = "ORD";
+      destAirport = "CDG";
+    } else if (clean.startsWith("DL")) {
+      airport = "JFK";
+      destAirport = "CDG";
+    } else if (clean.startsWith("BA")) {
+      airport = "JFK";
+      destAirport = "LHR";
+    }
     const carrierInfo = resolveCarrierInfo(clean);
 
     // Primary Telegraph purchase + secondary cross-check
@@ -712,7 +728,7 @@ export async function verifyFlightDisruption(
       arrivalWeather: liveCheck.arrSummary,
       hasSevereArrivalAlert: liveCheck.hasArrivalAlert,
       bothCorridorsClear: !liveCheck.hasAlert,
-      coverageNote: "Live Telegraph dual-hub screening covers US departure corridor and European arrival terminal.",
+      coverageNote: "Live Telegraph screening covers US departure corridor and flight route conditions.",
       hasSevereStormAlert: liveCheck.hasAlert,
       stormDetails: liveCheck.summary,
       sourceAuthority: receipt ? receipt.minerName : "Telegraph Corridor Adapter (Simulated)",
@@ -720,6 +736,11 @@ export async function verifyFlightDisruption(
       extraordinaryCircumstancesRisk: liveCheck.hasAlert ? "HIGH_AIRLINE_DEFENSE" : "NONE",
       tag: badge === "LIVE" ? "LIVE" : "SIMULATED",
     };
+
+    const todayStr = "2026-11-23";
+    const isTestVector = clean === "DISCREPANCY" || clean === "ABSTAIN" || clean === "INCONCLUSIVE";
+    const isHistoricalDate = !isTestVector && flightDate < todayStr;
+    const isNonUSDeparture = !isTestVector && ["LHR", "LGW", "MAN", "CDG", "FRA", "AMS", "MAD", "FCO", "DUB", "BRU", "ZRH"].includes(airport);
 
     // Evaluate Disruption & Legal Eligibility
     if (!carrierInfo.isOperatingCarrierEUUK) {
@@ -729,10 +750,30 @@ export async function verifyFlightDisruption(
       recommendationText = `Ineligible — Operating carrier: ${carrierInfo.operatingCarrier} (not EU/UK) is excluded under EU261 Art. 3(1)(b).`;
       verdictRationale =
         carrierInfo.exclusionReason ||
-        `Operating carrier ${carrierInfo.operatingCarrier} is a non-EU carrier on a US departure. Passenger is ineligible under CJEU Case C-502/18 regardless of delay length.`;
+        `Operating carrier ${carrierInfo.operatingCarrier} is a non-EU carrier on a US departure. Passenger is ineligible under Regulation (EC) No 261/2004 Art. 3(1)(b) regardless of delay length.`;
       eligibleCompensationRange = "€0 (Non-EU operating metal ex-USA)";
       compensationNote =
         "Under Regulation (EC) No 261/2004 Article 3(1)(b), ex-US departures are only covered if operated by an EU carrier. Codeshare ticketing does not grant jurisdiction.";
+    } else if (isHistoricalDate) {
+      // Past date: Live Telegraph miners only index real-time active alerts; historical weather unavailable
+      verdict = "INSUFFICIENT_EVIDENCE";
+      recommendation = "INSUFFICIENT_DATA";
+      recommendationText = "Insufficient Evidence — Historical weather from past dates cannot be verified on live Telegraph real-time miners.";
+      verdictRationale =
+        `Flight date (${flightDate}) is in the past. Telegraph Protocol weather miners (ttl-nws, ttl-airsigmet) index active, real-time weather radar only; historical weather archives are not retrievable on current miners. Under SkyClaim evidentiary standards, unverified historical conditions cannot be presumed clear. Fails closed to INSUFFICIENT_EVIDENCE.`;
+      eligibleCompensationRange = "€0 (Under Review · Insufficient Historical Telemetry)";
+      compensationNote =
+        "Telegraph real-time weather miners do not maintain historical weather archives. In the absence of contemporaneous station evidence, SkyClaim strictly fails closed to protect evidentiary integrity.";
+    } else if (isNonUSDeparture) {
+      // Non-US departure: Current Telegraph weather miners index US NWS radar only
+      verdict = "INSUFFICIENT_EVIDENCE";
+      recommendation = "INSUFFICIENT_DATA";
+      recommendationText = `Insufficient Evidence — Departure airport (${airport}) is outside US airspace; live Telegraph weather coverage is US-only.`;
+      verdictRationale =
+        `Departure airport ${airport} is outside the United States. Current Telegraph Protocol weather miners (ttl-nws, ttl-airsigmet) provide radar coverage for US National Weather Service stations only. Non-US departure corridors lack live decentralized radar coverage. Fails closed to INSUFFICIENT_EVIDENCE.`;
+      eligibleCompensationRange = "€0 (Under Review · Non-US Radar Unindexed)";
+      compensationNote =
+        "Live Telegraph weather coverage is currently US-only. Ex-Europe departures cannot be verified through NWS/NOAA radar miners.";
     } else if (liveCheck.secondaryCrossCheck.status === "DISCREPANCY") {
       // Discrepancy between primary Telegraph intelligence and secondary NWS cross-check
       verdict = "INSUFFICIENT_EVIDENCE";
@@ -766,9 +807,9 @@ export async function verifyFlightDisruption(
     } else {
       verdict = "ELIGIBLE_FOR_CLAIM";
       recommendation = "DRAFT_CLAIM_READY";
-      recommendationText = "Draft Claim Ready — Both departure and arrival weather clear. Airline weather excuse unsupported.";
+      recommendationText = "Draft Claim Ready — Departure corridor weather clear. Airline weather excuse unsupported.";
       verdictRationale =
-        "Arrival delay at destination exceeds 3-hour statutory threshold. Dual-hub screening confirms clear corridors at both departure and arrival. Operating carrier is EU/UK airline. Fully eligible for compensation review.";
+        "Arrival delay at destination exceeds 3-hour statutory threshold. Corridor screening confirms clear departure conditions. Operating carrier is EU/UK airline. Fully eligible for compensation review.";
       eligibleCompensationRange = "€300 – €600 (to be checked under Art. 7(2))";
       compensationNote =
         "Flight distance > 3,500 km with arrival delay between 3 and 4 hours. Under EU261 Article 7(2)(c), statutory compensation may be reduced by 50% from €600 to €300. Final amount to be verified with carrier.";

@@ -136,16 +136,16 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
               <div className="p-3.5 flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white">Live On-Chain Weather Purchase Pipeline</span>
+                    <span className="font-semibold text-white">Live On-Chain Flight Weather Settlement</span>
                     <span className="rounded bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-mono text-indigo-400 border border-indigo-500/20">
                       lib/skyclaim-consensus.ts
                     </span>
                   </div>
                   <p className="mt-0.5 text-[#94A3B8]">
-                    Buys TRAVEL_TRANSIT_LOCK_GENERAL &amp; TRAVEL_DISRUPTION_GENERAL over x402 on Base Sepolia ($0.01 USDC). Departure corridor screened with FAA/NOAA METAR cross-check.
+                    Buys TRAVEL_TRANSIT_LOCK_GENERAL via Telegraph miners over x402 on Base Sepolia ($0.01 USDC). Dual-station corridor screened with NOAA/FAA METAR cross-check.
                   </p>
                   <p className="mt-1 font-mono text-[11px] text-emerald-400 break-all">
-                    Live Tx: 0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145 · Miner: PREFLIGHT (ID: 20260828)
+                    Tx: 0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145 · Miner: PREFLIGHT (20260828)
                   </p>
                   <p className="mt-0.5 font-mono text-[10px] text-slate-500 break-all">
                     Telegraph Signal Hash: 0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9
@@ -165,19 +165,19 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
               <div className="p-3.5 flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white">Live Verified x402 Micropayment</span>
-                    <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/20 font-bold">
-                      $0.01 USDC
+                    <span className="font-semibold text-white">Protocol Verification Probe (Live x402 Settlement)</span>
+                    <span className="rounded bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-mono text-amber-400 border border-amber-500/20 font-bold">
+                      Research Probe ($0.01 USDC)
                     </span>
                   </div>
                   <p className="mt-0.5 text-[#94A3B8]">
-                    Real gasless EIP-712 payment executed by SkyClaim wallet on Base Sepolia. Verified miner response schema with abstention safety.
+                    Protocol verification probe executed on the Telegraph node rail to validate live EIP-712 gasless challenge-response mechanics and TransferWithAuthorization settlement ($0.01 USDC). Research probe query verifying node dispatcher response semantics.
                   </p>
                   <p className="mt-1 font-mono text-[11px] text-emerald-400 break-all">
                     Tx: 0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db
                   </p>
                   <p className="mt-0.5 font-mono text-[10px] text-slate-500 break-all">
-                    Signal: 0xc65b056a910b81c022e5ae046bdf730d11b547fd8b068c1b7a141f551a6ba1af
+                    Signal: 0xc65b056a910b81c022e5ae046bdf730d11b547fd8b068c1b7a141f551a6ba1af (Block 62567078)
                   </p>
                 </div>
                 <a

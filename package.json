@@ -10,6 +10,7 @@
     "test": "npx tsx scripts/test-skyclaim.ts",
     "wallet:check": "npx tsx scripts/check-wallet.ts",
     "purchase:live": "npx tsx scripts/verify-live-purchase.ts",
+    "test:live": "npx tsx scripts/test-evaluator-steps.ts",
     "bot": "npx tsx scripts/telegram-bot.ts",
     "bot:sim": "npx tsx scripts/telegram-bot.ts",
     "lint": "next lint"

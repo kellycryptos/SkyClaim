@@ -112,8 +112,8 @@ Corporate travel management desks save hundreds of hours of doomed dispute labor
   [`0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002`](https://sepolia.basescan.org/tx/0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002) (Signal: `0x0e4caede...`, Miner: `a1-preflight`, $0.01 USDC)
 - **Live On-Chain Settlement 4 (FAA Disruption):**
   [`0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45`](https://sepolia.basescan.org/tx/0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45) (Signal: `0xc9733ebf...`, Miner: `TxLens`, Intent: `TRAVEL_DISRUPTION_GENERAL`, $0.01 USDC)
-- **Verified Live x402 Micropayment:**
-  [`0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db`](https://sepolia.basescan.org/tx/0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db) (Block 62567078, $0.01 USDC)
+- **Protocol Verification Probe (Live x402 Settlement):**
+  [`0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db`](https://sepolia.basescan.org/tx/0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db) (Block 62567078, $0.01 USDC · Protocol research probe verifying live gasless EIP-712 challenge execution on Telegraph node rail)
 - **Test Evidence:**
   - Run `npm test` to verify 100% passing rate across all 3 scenarios and anti-drain budget caps.
 

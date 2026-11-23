@@ -7,18 +7,18 @@
 
 ## 1. The Commercial Problem: Mission 15 (Consumer Automation)
 
-Under European Regulation (EC) No 261/2004 and the UK Air Passenger Rights framework:
-- When a transatlantic flight is delayed $\ge 3$ hours on arrival at its destination, passengers are entitled to **€300, €400, or €600** in statutory cash compensation.
-- **The Airline Excuse:** Under Article 5(3), airlines are legally exempt from compensation if the delay was caused by *"extraordinary circumstances which could not have been avoided even if all reasonable measures had been taken"*. In practice, airlines routinely reject claims by asserting bad weather or air traffic control, knowing individual passengers have no access to historical meteorological data for departure and arrival flight corridors.
+Under European Regulation (EC) No 261/2004 and UK261 (Air Passenger Rights and Air Travel Organisers' Licensing (Amendment) (EU Exit) Regulations 2019):
+- Transatlantic flights (> 3,500 km) delayed $\ge 3$ hours on arrival entitle passengers to statutory compensation: **£260 – £520** under UK261 (for UK carriers like British Airways) or **€300 – €600** under EU261 (for EU carriers like Air France), with a 50% discount applicable under Article 7(2)(c) when arrival delay is between 3 and 4 hours.
+- **The Airline Excuse:** Under Article 5(3), airlines are legally exempt from compensation if the delay was caused by *"extraordinary circumstances which could not have been avoided even if all reasonable measures had been taken"*. In practice, airlines routinely reject claims by asserting bad weather or air traffic control, knowing individual passengers have no access to verified historical meteorological or airspace data.
 
 ### Why Traditional Bots Fail: The Single-Source Flaw
 Most consumer claim tools scrape a flight number and file immediately if the flight was late. If the airline responds citing a ground stop or blizzard, the passenger or corporate travel desk spends 3 to 6 months in a futile regulatory complaint.
 
 **SkyClaim** introduces **Consensus Before Action**:
-1. It validates the **operating carrier metal** first (under CJEU Case C-502/18). Flights departing the USA on non-EU carriers (e.g. Delta) are excluded by law—SkyClaim skips these with **$0 spent**.
-2. It purchases dual-hub meteorological observations via **Telegraph Protocol** (`TRAVEL_TRANSIT_LOCK_GENERAL` and `STORM_ALERT_GENERAL`) for $0.01 USDC.
-3. If weather was clear, it drafts an undeniable claim package citing statutory delay grounds.
-4. If weather alerts were active, it issues a **Contested Claim Notice** under CJEU Case C-549/07 (*Wallentin-Hermann*), shifting the burden of proof to the carrier.
+1. It validates the **operating carrier metal** first. Under Regulation (EC) No 261/2004 Article 3(1)(b), flights departing a third country (like the USA) are covered only if operated by an EU Community carrier (or UK carrier under UK261). Non-EU operating carriers (e.g. Delta Air Lines) are excluded by statute regardless of marketing codeshares—SkyClaim skips these with **$0 spent**.
+2. It purchases verified flight disruption and departure corridor weather observations via **Telegraph Protocol** (`TRAVEL_TRANSIT_LOCK_GENERAL`, `TRAVEL_DISRUPTION_GENERAL`, or `STORM_ALERT_GENERAL`) for $0.01 USDC.
+3. If weather was clear, it drafts an evidentiary claim package citing statutory delay grounds.
+4. If weather alerts were active, it issues a **Contested Claim Notice template** referencing CJEU Case C-549/07 (*Wallentin-Hermann*), requesting carrier documentation that reasonable measures could not have avoided the delay.
 
 ---
 
@@ -33,7 +33,7 @@ Most consumer claim tools scrape a flight number and file immediately if the fli
                                        ▼
                    ┌───────────────────────────────────────┐
                    │  1. Check Operating Metal Eligibility │
-                   │       (CJEU Case C-502/18 Metal)      │
+                   │         (Statutory Scope Check)       │
                    └───────────────────┬───────────────────┘
                          Is EU/UK?     │
                         ┌──────────────┴──────────────┐
@@ -53,9 +53,9 @@ Most consumer claim tools scrape a flight number and file immediately if the fli
                                                                           │
                                                                           ▼
                                                        ┌───────────────────────────────────┐
-                                                       │ 4. Takar Dual-Miner Consensus     │
+                                                       │ 4. Corridor Consensus Screening   │
                                                        │    - Departure Hub Transit Lock   │
-                                                       │    - Arrival Hub Storm Telemetry  │
+                                                       │    - US Departure Storm Telemetry │
                                                        │    - NOAA / METAR Station Feed    │
                                                        └──────────────────┬────────────────┘
                                                                           │
@@ -64,8 +64,8 @@ Most consumer claim tools scrape a flight number and file immediately if the fli
                                          ▼                                                                 ▼
                          ┌───────────────────────────────┐                                 ┌───────────────────────────────┐
                          │      ELIGIBLE_FOR_CLAIM       │                                 │      FAIL_CLOSED_WEATHER      │
-                         │    €300 – €600 Claim Pack     │                                 │    Contested Claim Notice     │
-                         │    (Airline excuse closed)    │                                 │   (Wallentin-Hermann basis)   │
+                         │   £260–£520 / €600 Claim Pack │                                 │    Contested Claim Notice     │
+                         │    (Airline excuse closed)    │                                 │   (Wallentin-Hermann template)│
                          └───────────────────────────────┘                                 └───────────────────────────────┘
 ```
 

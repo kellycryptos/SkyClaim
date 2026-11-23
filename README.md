@@ -1,3 +1,11 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="public/logo-horizontal-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="public/logo-horizontal-light.png">
+    <img alt="SkyClaim" src="public/logo-horizontal-dark.png" width="560">
+  </picture>
+</p>
+
 # SkyClaim · Autonomous Flight Disruption Verifier (Telegraph Protocol Season II)
 
 > **SkyClaim checks the airline's most common excuses before they can stall your claim.** When a transatlantic flight is delayed 3+ hours, SkyClaim verifies departure airport meteorological conditions and operational disruption telemetry via Telegraph Protocol, validates the operating carrier metal under UK261 and EU261 rules, and generates statutory claim dossiers with cryptographic settlement receipts. Draft template only, not legal advice. Testnet on Base Sepolia.
@@ -70,7 +78,7 @@ SkyClaim operates against live Telegraph Protocol smart contracts and decentrali
 | **Live On-Chain Settlement 2 (ORD Corridor)** | Base Sepolia (`84532`) | Tx: `0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18) · Signal: `0xba23f2fd...` · Miner: `a1-preflight` (`20260828`) · Intent: `TRAVEL_TRANSIT_LOCK_GENERAL` ($0.01 USDC) |
 | **Live On-Chain Settlement 3 (JFK Corridor)** | Base Sepolia (`84532`) | Tx: `0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002) · Signal: `0x0e4caede...` · Miner: `a1-preflight` (`20260828`) · Intent: `TRAVEL_TRANSIT_LOCK_GENERAL` ($0.01 USDC) |
 | **Live On-Chain Settlement 4 (FAA Operational Status)** | Base Sepolia (`84532`) | Tx: `0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45) · Signal: `0xc9733ebf...` · Miner: `TxLens` (`9002`) · Intent: `TRAVEL_DISRUPTION_GENERAL` ($0.01 USDC) |
-| **Verified Live x402 Micropayment** | Base Sepolia (`84532`) | Tx: `0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db) · Block 62567078 ($0.01 USDC) |
+| **Protocol Verification Probe (Live x402 Settlement)** | Base Sepolia (`84532`) | Tx: `0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db) · Signal: `0xc65b056a...` ($0.01 USDC, Block 62567078) · Protocol research probe verifying live gasless EIP-712 challenge execution on Telegraph node rail |
 | **Secondary Station Cross-Check** | FAA / NOAA METAR | `aviationweather.gov/api/data/metar` | Ground station METAR feed cross-check against Telegraph telemetry |
 
 ---
