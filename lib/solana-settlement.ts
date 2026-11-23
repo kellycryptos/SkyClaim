@@ -134,13 +134,13 @@ export const INITIAL_SOLANA_LEDGER: InstitutionalSettlementResult[] = [
         confidence: 0.99,
         latencyMs: 142,
         costUsd: 0.01,
-        paymentRail: "Pay.sh / Solana USDC",
-        signature: "5wK4c1xY8pPjq3Rt7MvBn9XkL2mZa4dF6gH8jK1nQ3sT5vW7yZ9aB2cD4eF6gH8j",
-        explorerUrl: "https://solscan.io/tx/5wK4c1xY8pPjq3Rt7MvBn9XkL2mZa4dF6gH8jK1nQ3sT5vW7yZ9aB2cD4eF6gH8j?cluster=devnet",
+        paymentRail: "GLEIF Registry / SVM Scheme",
+        signature: "GLEIF-LEI-549300VLM128XJ391Z82",
+        explorerUrl: "https://api.gleif.org/api/v1/lei-records/549300VLM128XJ391Z82",
         signalHash: "0x78ab31f4c90e21a8b543d201ef8764a321bc45d6e7f80912ab34cd56ef789012",
         timestamp: "2026-11-23T12:30:12.000Z",
         settled: true,
-        badge: "LIVE",
+        badge: "FIXTURE",
         findingsSummary: "Entity verified: Galaxy Digital Trading Ltd (Active GLEIF registration, clean beneficial ownership, no jurisdictional restrictions).",
       },
       {
@@ -178,8 +178,8 @@ Counterparty: Galaxy Digital Trading Ltd (LEI: 549300VLM128XJ391Z82)
 
 VERDICT: SETTLEMENT AUTHORIZED
 Pre-flight screening through Telegraph Protocol miners (a1-compliance-validator and TxLens-compliance) confirms that all off-chain regulatory prerequisites, entity registrations, and sanctions requirements are satisfied. The destination account is cleared for high-value execution.`,
-    badge: "LIVE",
-    badgeNote: "Live dual-rail settlement verified with on-chain signatures.",
+    badge: "FIXTURE",
+    badgeNote: "Deterministic acceptance test fixture for institutional pre-settlement verification.",
     totalCostUsd: 0.02,
     payShSupported: true,
     circuitBreakerEngaged: false,

@@ -71,9 +71,9 @@ export function SolanaInstitutionalView() {
     <div className="space-y-8 animate-fade-in">
       {/* Title & Introduction */}
       <div className="text-center max-w-3xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-mono">
-          <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-          <span>Solana Track · Use Cases #1, #2 & #3</span>
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs font-mono">
+          <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+          <span>Enterprise Feature · Pre-Settlement Assurance</span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white">
           SolSettle · Institutional Settlement Assurance

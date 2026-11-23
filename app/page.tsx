@@ -10,6 +10,7 @@ import { ApiDocsModal } from "@/components/ApiDocsModal";
 import { FaqModal } from "@/components/FaqModal";
 import { SolanaInstitutionalView } from "@/components/SolanaInstitutionalView";
 import { BuilderRoadmapModal } from "@/components/BuilderRoadmapModal";
+import { TelegramModal } from "@/components/TelegramModal";
 import {
   Search,
   Copy,
@@ -26,6 +27,7 @@ import {
   Cpu,
   Github,
   Twitter,
+  Send,
 } from "lucide-react";
 
 // Deterministic acceptance presets
@@ -425,6 +427,7 @@ export default function SkyClaimHome() {
   const [roadmapOpen, setRoadmapOpen] = useState(false);
   const [apiDocsOpen, setApiDocsOpen] = useState(false);
   const [faqOpen, setFaqOpen] = useState(false);
+  const [telegramOpen, setTelegramOpen] = useState(false);
   const [ledger, setLedger] = useState<PublicLedgerEntry[]>(INITIAL_LEDGER);
   const [showRawJson, setShowRawJson] = useState(false);
   const [jsonCopied, setJsonCopied] = useState(false);
@@ -541,7 +544,9 @@ export default function SkyClaimHome() {
 
   const handleNavClick = (item: string) => {
     setActiveNav(item);
-    if (item === "Solana Institutional (SISA)") {
+    if (item === "Telegram Bot") {
+      setTelegramOpen(true);
+    } else if (item === "Solana Institutional (SISA)" || item === "Institutional (Feature)") {
       setEngineMode("solana");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else if (item === "Verifier" || item === "Disruption Shield" || item === "Flight Shield (Consumer)") {
@@ -605,7 +610,7 @@ export default function SkyClaimHome() {
             <button
               onClick={() => {
                 setEngineMode("solana");
-                setActiveNav("Solana Institutional (SISA)");
+                setActiveNav("Institutional (Feature)");
               }}
               className={`px-3 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1.5 ${
                 engineMode === "solana"
@@ -614,17 +619,26 @@ export default function SkyClaimHome() {
               }`}
             >
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>🏛️ Solana SISA</span>
+              <span>🏛️ Institutional (Feature)</span>
             </button>
           </div>
 
-          {/* Right: Network pill, Builder Roadmap & Receipt Box */}
+          {/* Right: Network pill, Telegram Bot, Builder Roadmap & Receipt Box */}
           <div className="flex items-center gap-2 sm:gap-2.5">
             {/* Network pill */}
             <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#111827] border border-[#1E293B] text-[11px] font-mono text-slate-300">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Base + Solana Devnet</span>
+              <span>Base Sepolia (84532) · x402</span>
             </div>
+
+            {/* Telegram Bot button */}
+            <button
+              onClick={() => setTelegramOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#111827] hover:bg-[#161F33] border border-blue-500/30 text-xs font-medium text-blue-300 transition cursor-pointer"
+            >
+              <Send className="h-3.5 w-3.5 text-blue-400" />
+              <span className="hidden sm:inline">Telegram Bot</span>
+            </button>
 
             {/* Builder Roadmap button */}
             <button
@@ -651,7 +665,8 @@ export default function SkyClaimHome() {
           <div className="max-w-6xl mx-auto flex items-center gap-6 overflow-x-auto no-scrollbar text-xs font-medium">
             {[
               { label: "Flight Shield (Consumer)", id: "Disruption Shield" },
-              { label: "Solana Institutional (SISA)", id: "Solana Institutional (SISA)" },
+              { label: "Telegram Bot (@SkyClaimBot)", id: "Telegram Bot" },
+              { label: "Institutional (Feature)", id: "Institutional (Feature)" },
               { label: "Flight Verifier", id: "Verifier" },
               { label: "Disruption Ledger", id: "Claims Ledger" },
               { label: "Builder Roadmap", id: "Builder Roadmap" },
@@ -695,7 +710,7 @@ export default function SkyClaimHome() {
           </p>
 
           {/* Wide search container */}
-          <div className="pt-4 max-w-2xl mx-auto">
+          <div className="pt-4 max-w-2xl mx-auto space-y-3">
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -719,6 +734,21 @@ export default function SkyClaimHome() {
                 {loading ? "Screening..." : "Run Disruption Check"}
               </button>
             </form>
+
+            {/* Telegram quick action */}
+            <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
+              <span>Mobile flier? Try our Telegram Bot:</span>
+              <button
+                type="button"
+                onClick={() => setTelegramOpen(true)}
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 hover:text-blue-300 font-mono transition cursor-pointer"
+              >
+                <Send className="w-3 h-3" />
+                <span>@SkyClaimBot</span>
+              </button>
+              <span className="text-slate-600 hidden sm:inline">·</span>
+              <span className="font-mono text-[11px] text-slate-500 hidden sm:inline">npm run bot:sim</span>
+            </div>
           </div>
         </section>
 
@@ -1453,6 +1483,7 @@ export default function SkyClaimHome() {
       <BuilderRoadmapModal isOpen={roadmapOpen} onClose={() => setRoadmapOpen(false)} />
       <ApiDocsModal isOpen={apiDocsOpen} onClose={() => setApiDocsOpen(false)} />
       <FaqModal isOpen={faqOpen} onClose={() => setFaqOpen(false)} />
+      <TelegramModal isOpen={telegramOpen} onClose={() => setTelegramOpen(false)} />
     </div>
   );
 }

@@ -43,7 +43,7 @@ export interface TelegraphSolanaReceipt {
   confidence: number;
   latencyMs: number;
   costUsd: number;
-  paymentRail: "Pay.sh / Solana USDC" | "Base Sepolia EIP-712";
+  paymentRail: "Pay.sh / Solana USDC" | "Base Sepolia EIP-712" | "GLEIF Registry / SVM Scheme";
   signature?: string;
   explorerUrl?: string;
   signalHash: string;

@@ -1,7 +1,7 @@
 {
   "name": "skyclaim",
   "version": "1.0.0",
-  "description": "Autonomous Flight Claim & Disruption Verifier powered by Telegraph Protocol (H2 Hackathon Mission 15)",
+  "description": "Autonomous Flight Claim & Disruption Verifier powered by Telegraph Protocol (H2 Hackathon Track 03 / Mission 15)",
   "private": true,
   "scripts": {
     "dev": "next dev",
