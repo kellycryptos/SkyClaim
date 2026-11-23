@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { PaperPlaneLogo } from "@/components/PaperPlaneLogo";
 import { X, Code, Terminal, ExternalLink, ShieldAlert, Cpu } from "lucide-react";
 
 interface ApiDocsModalProps {
@@ -16,9 +17,7 @@ export function ApiDocsModal({ isOpen, onClose }: ApiDocsModalProps) {
       <div className="relative w-full max-w-3xl rounded-xl border border-[#1E293B] bg-[#111827] p-6 shadow-2xl">
         <div className="flex items-center justify-between border-b border-[#1E293B] pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600/15 text-blue-400 border border-blue-500/30">
-              <Code className="h-5 w-5" />
-            </div>
+            <PaperPlaneLogo size={36} />
             <div>
               <h2 className="text-base font-bold text-[#F8FAFC] tracking-tight font-mono">
                 SkyClaim API &amp; Telegraph Protocol Docs

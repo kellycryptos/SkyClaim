@@ -126,6 +126,7 @@ async function main() {
             console.log(`    Miner:                ${body.miner_name || body.minerName || "ttl-nws"}`);
             console.log(`    Cost:                 $0.01 USDC`);
             console.log(`    Receipt / Tx Hash:    ${body.tx_hash || body.receipt_hash || body.signal_hash}`);
+            console.log(`    Signal Details:       `, JSON.stringify(body, null, 2));
           } else {
             const errText = await secondRes.text();
             console.log(`      Response body:          ${errText.slice(0, 160)}`);

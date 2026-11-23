@@ -2,6 +2,7 @@
 
 import React from "react";
 import { SKYCLAIM_CONFIG } from "@/lib/skyclaim-consensus";
+import { PaperPlaneLogo } from "@/components/PaperPlaneLogo";
 import { X, ExternalLink, ShieldCheck, CheckCircle2, Layers, Cpu, Terminal } from "lucide-react";
 
 interface TheReceiptBoxProps {
@@ -17,9 +18,7 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
       <div className="relative w-full max-w-3xl rounded-xl border border-[#1E293B] bg-[#111827] p-6 shadow-2xl">
         <div className="flex items-center justify-between border-b border-[#1E293B] pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600/15 text-blue-400 border border-blue-500/30 shadow-inner">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
+            <PaperPlaneLogo size={36} />
             <div>
               <h2 className="text-base font-bold text-[#F8FAFC] tracking-tight font-mono">
                 The Receipt Box &amp; Sponsor Verification Matrix
@@ -137,25 +136,54 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
               <div className="p-3.5 flex items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-white">Weather Intelligence Purchase Pipeline</span>
+                    <span className="font-semibold text-white">Live On-Chain Weather Purchase Pipeline</span>
                     <span className="rounded bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-mono text-indigo-400 border border-indigo-500/20">
                       lib/skyclaim-consensus.ts
                     </span>
                   </div>
                   <p className="mt-0.5 text-[#94A3B8]">
-                    Buys STORM_ALERT_GENERAL over x402 on Base Sepolia ($0.01 USDC). Attaches cryptographic receipt to EU261 claim if delay &ge; 180m and weather is clear.
+                    Buys TRAVEL_TRANSIT_LOCK_GENERAL &amp; STORM_ALERT over x402 on Base Sepolia ($0.01 USDC). Dual-hub screened with FAA/NOAA METAR cross-check.
                   </p>
                   <p className="mt-1 font-mono text-[11px] text-emerald-400 break-all">
-                    Verified Signal: 0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2
+                    Live Tx: 0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9 · Miner: PREFLIGHT (ID: 20260828)
                   </p>
                 </div>
                 <a
-                  href="https://anjoman.ai/dashboard/explore/signals/0x19f108d99be48cfa2a65c0e080c3085815fe0e890429632a3d4209b0a75bead2"
+                  href="https://sepolia.basescan.org/tx/0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium font-mono text-xs"
                 >
-                  Anjoman Proof <ExternalLink className="h-3 w-3" />
+                  Basescan <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+
+              {/* Row 5 */}
+              <div className="p-3.5 flex items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-white">Live Verified x402 Micropayment</span>
+                    <span className="rounded bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/20 font-bold">
+                      $0.01 USDC
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[#94A3B8]">
+                    Real gasless EIP-712 payment executed by SkyClaim wallet on Base Sepolia. Verified miner response schema with abstention safety.
+                  </p>
+                  <p className="mt-1 font-mono text-[11px] text-emerald-400 break-all">
+                    Tx: 0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db
+                  </p>
+                  <p className="mt-0.5 font-mono text-[10px] text-slate-500 break-all">
+                    Signal: 0xc65b056a910b81c022e5ae046bdf730d11b547fd8b068c1b7a141f551a6ba1af
+                  </p>
+                </div>
+                <a
+                  href="https://sepolia.basescan.org/tx/0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium font-mono text-xs"
+                >
+                  Basescan <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
             </div>

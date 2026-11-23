@@ -9,29 +9,29 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "#0B1120",
-        canvas: "#0B1120",
+        background: "#090E1A",
+        obsidian: "#090E1A",
         card: "#111827",
-        elevated: "#161F33",
+        elevated: "#131B2E",
+        inset: "#0B1120",
         border: "#1E293B",
-        "border-subtle": "#263248",
-        slate: {
-          850: "#161F33",
-          900: "#111827",
-          950: "#0B1120",
+        "border-subtle": "rgba(255, 255, 255, 0.08)",
+        electric: {
+          DEFAULT: "#2563EB",
+          hover: "#3B82F6",
         },
-        muted: "#94A3B8",
-        accent: {
-          blue: "#2563EB",
-          "blue-hover": "#1D4ED8",
-          emerald: "#10B981",
-          amber: "#F59E0B",
-          gray: "#64748B",
+        emerald: {
+          DEFAULT: "#10B981",
+          bright: "#34D399",
+        },
+        amber: {
+          DEFAULT: "#F59E0B",
+          bright: "#FBBF24",
         },
       },
       fontFamily: {
         mono: ['var(--font-mono)', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
-        sans: ['var(--font-sans)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Inter', 'sans-serif'],
+        sans: ['var(--font-sans)', 'Inter', 'Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
     },
   },

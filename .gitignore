@@ -30,6 +30,8 @@ wallet.json
 # Local env files (NEVER COMMIT SECRETS)
 .env*
 !.env.example
+.evm*
+*.evm
 
 # Vercel
 .vercel
@@ -44,3 +46,4 @@ next-env.d.ts
 /telegraph-usecases/
 /_exploration_notes/
 /skyclaim-publish/
+/temp_repo/

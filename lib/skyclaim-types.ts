@@ -18,6 +18,8 @@ export interface PublicLedgerEntry {
   id: string;
   flightNumber: string;
   carrier: string;
+  operatingCarrier: string;
+  marketingCarrier?: string;
   route: string;
   delayText: string;
   verdict: ClaimVerdict;
@@ -27,9 +29,12 @@ export interface PublicLedgerEntry {
   costUsd: number;
   txHash?: string;
   basescanUrl?: string;
+  minerName?: string;
+  signalHash?: string;
   timestamp: string;
   badge: DataBadge;
   badgeNote?: string;
+  isContested?: boolean;
 }
 
 export interface TelegraphReceipt {
@@ -37,6 +42,7 @@ export interface TelegraphReceipt {
   minerId: string;
   minerName: string;
   networkRank: number;
+  servedRank?: number;
   confidence: number;
   latencyMs: number;
   costUsd: number;
@@ -46,7 +52,11 @@ export interface TelegraphReceipt {
   timestamp: string;
   settled: boolean;
   weatherTag: WeatherDataTag;
+  paymentMethod?: string;
   rawDetails?: string;
+  rawReceiptJson?: string;
+  findings?: any;
+  fieldStatus?: any;
 }
 
 export interface FlightDisruptionTelemetry {
@@ -54,6 +64,10 @@ export interface FlightDisruptionTelemetry {
   isHypothetical: boolean;
   flightDate: string;
   carrier: string;
+  operatingCarrier: string;
+  marketingCarrier?: string;
+  isOperatingCarrierEUUK: boolean;
+  operatingCarrierExclusionReason?: string;
   origin: string; // e.g. JFK, ORD, BOS (US Departure)
   destination: string; // e.g. LHR, CDG, FRA (Europe)
   distanceKm: number;
@@ -67,12 +81,30 @@ export interface FlightDisruptionTelemetry {
   tag: FlightDataTag;
 }
 
+export interface SecondaryCrossCheck {
+  source: string;
+  status: "CONSISTENT" | "DISCREPANCY" | "BYPASS" | "STATION_REPORT";
+  departureFltCat?: string; // VFR, MVFR, IFR, LIFR
+  arrivalFltCat?: string;
+  details: string;
+  confidence: number;
+}
+
 export interface WeatherScreening {
   departureAirport: string;
-  hasSevereStormAlert: boolean;
+  departureWeather: string;
+  hasSevereDepartureAlert: boolean;
+  arrivalAirport: string;
+  arrivalWeather: string;
+  hasSevereArrivalAlert: boolean;
+  bothCorridorsClear: boolean;
+  coverageNote: string;
+  hasSevereStormAlert: boolean; // Backwards compatible: true if dep OR arr has severe alert
   stormDetails: string;
   sourceAuthority: string;
+  secondaryCrossCheck: SecondaryCrossCheck;
   extraordinaryCircumstancesRisk: "NONE" | "HIGH_AIRLINE_DEFENSE";
+  isInconclusive?: boolean;
   tag: WeatherDataTag;
 }
 
@@ -125,6 +157,10 @@ export interface PresetScenario {
   title: string;
   route: string;
   carrier: string;
+  operatingCarrier: string;
+  marketingCarrier?: string;
+  isOperatingCarrierEUUK: boolean;
+  operatingCarrierExclusionReason?: string;
   arrivalDelayMinutes: number;
   badge: DataBadge;
   expectedVerdict: ClaimVerdict;
