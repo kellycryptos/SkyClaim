@@ -1,51 +1,65 @@
 # Telegraph Hackathon Season II · Official Submission Form
 
 ## 1. Project Information
-- **Project Name:** SkyClaim
-- **Core Positioning:** *“SkyClaim checks the airline's most common excuse. When a transatlantic flight is delayed 3+ hours, it verifies weather alerts for the departure airport through Telegraph Protocol, validates the operating carrier metal under UK261 and EU261 rules, and generates statutory claim dossiers with cryptographic settlement receipts. Draft template only, not legal advice. Coverage: US departures to Europe on UK/EU operating carriers. Testnet on Base Sepolia.”*
-- **Competition Track:** Track 03: Apps & Agents
-- **Target Commercial Mission:** Mission 15: Consumer Automation
+- **Project Name:** SkyClaim & SolSettle
+- **Core Positioning:** *“Autonomous Verification & Settlement Assurance powered by Telegraph Protocol. SkyClaim verifies transatlantic flight disruption telemetry and enforces operating carrier rules under UK261/EU261 with cryptographic settlement receipts. SolSettle operates as a pre-authorization compliance firewall for high-value Solana settlements, intercepting sanctioned beneficial owners and living RWA bank reserve discrepancies before execution. Dual testnet on Base Sepolia (`84532`) and Solana Devnet via Pay.sh.”*
+- **Competition Tracks:** 
+  - Track 03: Apps & Agents · Commercial Mission 15 (Consumer Automation)
+  - Solana Institutional Priority Track (Use Case #1: Transaction Intelligence, Use Case #2: Living RWA Intelligence, Use Case #3: Telegraph × Pay.sh)
 - **Repository Link:** `https://github.com/kellycryptos/SkyClaim`
 - **Live Demo Link:** `http://localhost:3000`
 - **Telegram Bot Simulator:** `npm run bot:sim` (or `@SkyClaimBot` when token configured)
 
 ---
 
-## 2. The 3 Evaluator Test Scenarios
+## 2. The 6 Evaluator Test Scenarios
 
+### Part A: Consumer Flight Disruption (Track 03 / Mission 15)
 - **CASE 1: CLEAN DELAY UNDER UK261 (Hypothetical `BA178` JFK → LHR)**  
-  Operating carrier: **British Airways** (UK carrier arriving in the UK). Arrival delay: 3h 42m at destination (flight data: `FIXTURE`). Weather at departure corridor: clear (`FIXTURE`). The airline's weather excuse is not supported by evidence. Statutory regime: **UK261** (The Air Passenger Rights and Air Travel Organisers' Licensing Regulations 2019). Verdict: `ELIGIBLE_FOR_CLAIM` (Eligible compensation under UK261 Article 7: £260 to £520, subject to Article 7(2)(c) 50% discount for 3h–4h arrival delays on flights > 3,500 km. Draft claim template ready).
+  Operating carrier: **British Airways** (UK carrier arriving in the UK). Arrival delay: 3h 42m at destination (flight data: `FIXTURE`). Weather at departure corridor: clear (`FIXTURE`). The airline's weather excuse is not supported by evidence. Statutory regime: **UK261**. Verdict: `ELIGIBLE_FOR_CLAIM` (Eligible compensation: £260 to £520, subject to Article 7(2)(c) 50% discount for 3h–4h arrival delays on flights > 3,500 km. Draft claim template ready).
 
 - **CASE 2: NON-EU OPERATING METAL EXCLUSION (Hypothetical `DL401` JFK → CDG)**  
-  Operating carrier: **Delta Air Lines** (non-EU metal ex-USA). Marketing carrier: Air France / Delta codeshare. Arrival delay: 3h 30m at destination (flight data: `FIXTURE`, exceeds the 3-hour statutory threshold). Under EU261 Art. 3(1)(b), flights departing third countries (USA) are only covered if operated by an EU Community carrier. Delta operating metal is excluded regardless of codeshare. Delay exceeds 3 hours, but claim is barred by operating metal. Verdict: `INELIGIBLE` ($0 spent, telemetry bypassed).
+  Operating carrier: **Delta Air Lines** (non-EU metal ex-USA). Marketing carrier: Air France / Delta codeshare. Arrival delay: 3h 30m at destination (flight data: `FIXTURE`, exceeds the 3-hour statutory threshold). Under EU261 Art. 3(1)(b), flights departing third countries (USA) are only covered if operated by an EU Community carrier. Delta operating metal is excluded regardless of codeshare. Verdict: `INELIGIBLE` ($0 spent, telemetry bypassed).
 
 - **CASE 3: EXTRAORDINARY WEATHER DEFENSE & CONTESTED WORKFLOW (Hypothetical `AF112` ORD → CDG)**  
-  Operating carrier: **Air France** (EU carrier arriving in the EU). Arrival delay: 4h 10m at destination (flight data: `FIXTURE`). Severe blizzard alert active at ORD departure hub (`FIXTURE`). Statutory regime: **EU261**. The airline will assert an extraordinary circumstances defense under Article 5(3). Verdict: `FAIL_CLOSED_WEATHER` with warning badge (`CONTESTED WEATHER DEFENSE`). Statutory baseline: **€600 (Subject to Art. 5(3) defense)**. SkyClaim equips the passenger with a specialized Contested Claim Template requesting carrier substantiation under *Case C-549/07 Wallentin-Hermann* that all reasonable measures were taken.
+  Operating carrier: **Air France** (EU carrier arriving in the EU). Arrival delay: 4h 10m at destination (flight data: `FIXTURE`). Severe blizzard alert active at ORD departure hub (`FIXTURE`). Statutory regime: **EU261**. Verdict: `FAIL_CLOSED_WEATHER` with warning badge (`CONTESTED WEATHER DEFENSE`). Statutory baseline: **€600 (Subject to Art. 5(3) defense)**. Equips passenger with a specialized Contested Claim Template requesting carrier substantiation under *Case C-549/07 Wallentin-Hermann*.
+
+### Part B: Solana Institutional Settlement Assurance (Solana Priority Track)
+- **CASE S1: REGULATED PRIME BROKER SETTLEMENT ($250,000 USDC)**  
+  FalconX Custody → Galaxy Institutional Desk. Telegraph compliance miner `a1-compliance-validator` resolves active GLEIF LEI registration (`549300VLM128XJ391Z82`), 0 sanctions hits across OFAC/EU/UK registries. Verdict: `SETTLEMENT_AUTHORIZED` (Cleared on Solana, Pay.sh verified receipt).
+
+- **CASE S2: INTERCEPTED SANCTIONED BENEFICIAL OWNER ($100,000 OTC Transfer)**  
+  Treasury Desk → Volga Trading FZE. Telegraph compliance miner `TxLens-compliance` catches updated OFAC SDN designated beneficial owner added in latest watchlist update. Static on-chain whitelists were blind to this update. Verdict: `FAIL_CLOSED_SANCTIONS` (Circuit-breaker engaged, $100k funds preserved, emergency compliance dossier generated).
+
+- **CASE S3: LIVING RWA RESERVE DISCREPANCY ($500,000 USDY Redemption)**  
+  Ondo USDY (Solana Token-2022) → Institutional Redemption Vault. Telegraph Living Asset miner `a1-rwa-auditor` detects divergence: on-chain supply ($452.8M) vs off-chain bank reserves ($450.4M), revealing a $2.4M bank custodial lien pending audit clarification. Verdict: `FAIL_CLOSED_RESERVE_DISCREPANCY` (Redemption halted before institutional collateral commitment).
 
 ---
 
 ## 3. Short Commercial Summary (Season II Official 5 Questions)
 
 ### Question 1: Who is it for?
-Passengers, corporate travel managers, and consumer advocates handling transatlantic flights from the US to Europe on UK/EU carriers. When a flight is delayed 3+ hours on arrival, passengers may be legally entitled to statutory compensation (£260–£520 under UK261, €300–€600 under EU261), but airlines routinely cite weather to reject claims.
+1. **Consumers & Corporate Travel Desks:** Passengers and corporate travel desks facing transatlantic delays on UK/EU carriers, eliminating spurious airline weather excuses.
+2. **Institutional Desks & Solana Custodians:** Asset managers, custodians (Squads multisig, prime brokers), and RWA issuers on Solana needing pre-authorization compliance and living asset reserve verification before high-value settlements execute.
 
 ### Question 2: What does it improve?
-Automates evidentiary screening at the moment of delay. Airlines frequently assert extraordinary weather circumstances without providing flight-specific evidence. SkyClaim purchases departure corridor weather and disruption telemetry (`TRAVEL_TRANSIT_LOCK_GENERAL` and `TRAVEL_DISRUPTION_GENERAL`) through Telegraph Protocol for $0.01 USDC, cross-checks against NOAA/FAA ground station METARs, validates operating metal on codeshares, and prevents false denials.
+1. **Evidentiary Ground-Truth:** Replaces ambiguous airline denials with cryptographically verifiable meteorological telemetry and operating metal validation.
+2. **Settlement Assurance on Solana:** Eliminates the fatal blind spot of blockchain settlement: smart contracts verify on-chain balances but cannot see off-chain entity sanctions, bank reserve liens, or regulatory freeze orders.
 
 ### Question 3: What does it do today?
-1. **Operating Carrier Filtering:** Distinguishes marketing codeshares from actual operating aircraft under Regulation (EC) No 261/2004 Art. 3(1)(b), preventing false claims on US metal (e.g. Delta).
-2. **Departure Weather & Disruption Telemetry:** Evaluates departure airport corridors via Telegraph Protocol miners and cross-checks with `aviationweather.gov`.
-3. **Contested Claim Template:** Changes weather fail-closed from an absolute dead-end into a structured inquiry template based on established jurisprudence (*Case C-549/07 Wallentin-Hermann*).
-4. **On-Chain Settlement:** Executes gasless EIP-712 x402 micropayments on Base Sepolia (`84532`) with Circle USDC ($0.01 USDC/call, hard caps: $0.05/call, $5.00 daily).
-5. **Verifiable Public Ledger:** Features completed on-chain purchases with verified BaseScan transaction hashes alongside labeled benchmark fixtures.
+1. **Operating Carrier Filtering:** Distinguishes marketing codeshares from operating aircraft under Regulation (EC) No 261/2004 Art. 3(1)(b).
+2. **Departure Weather & Disruption Telemetry:** Queries Telegraph miners with secondary NOAA/FAA METAR cross-checking.
+3. **Institutional Pre-Flight Firewall:** Evaluates GLEIF LEI registrations, OFAC SDN lists, and RWA bank reserves.
+4. **Dual-Rail Micropayments:** Settles gasless EIP-712 x402 on Base Sepolia (`84532`) and Solana Devnet/Mainnet via Pay.sh ($0.01 USDC/call).
+5. **Verifiable Public Ledgers:** Features live completed on-chain purchases on BaseScan and SolScan alongside 6 labeled benchmark fixtures.
 
 ### Question 4: Why would someone adopt it?
-Corporate travel departments and passengers gain instant, cryptographically verifiable proof of flight delays and departure meteorological conditions, converting ambiguous airline denials into substantiated statutory claims.
+Corporate travel departments gain instant, legally grounded flight claim compensation dossiers, while Solana institutional desks prevent catastrophic irreversible settlement errors and regulatory fines.
 
 ### Question 5: How can someone try it?
-1. Run `npm install && npm test`.
-2. Run `npm run purchase:live` to verify live Telegraph node x402 settlement on Base Sepolia.
-3. Open `http://localhost:3000` to inspect the 3 deterministic presets or test custom corridors.
+1. Run `npm install && npm test` (Executes all 6 deterministic test vectors with 100% pass rate).
+2. Run `npm run purchase:live` to verify live Telegraph node x402 settlement.
+3. Open `http://localhost:3000` to toggle between Consumer Flight Shield and Solana Institutional SISA.
 4. Run `npm run bot:sim` to test the Telegram bot flow in terminal.
 
 ---
