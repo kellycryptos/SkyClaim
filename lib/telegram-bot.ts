@@ -240,7 +240,7 @@ SkyClaim screens arrival delays against airline weather defenses by querying dec
   Departures from third countries (US) to the EU/UK are covered *only* if flown on EU or UK metal. A flight operated by a US carrier (Delta, American, United) is not covered regardless of ticketing codeshare.
 
 • *Weather Exemption (Article 5(3)):*
-  Airlines frequently allege adverse weather to avoid payout. SkyClaim queries departure corridor atmospheric radar and airspace disruption telemetry to verify whether the corridor was genuinely closed.
+  Airlines frequently allege adverse weather to avoid payout. SkyClaim queries departure corridor METAR station observations and airspace disruption telemetry to verify whether the corridor was genuinely closed.
 `.trim();
 
     const kb = new InlineKeyboard()
@@ -331,7 +331,7 @@ Select a flight corridor below or send any flight number (e.g. \`BA178\`, \`AF11
   Departures from third countries (US) to the EU/UK are covered *only* if flown on EU or UK metal. A flight operated by a US carrier (Delta, American, United) is not covered regardless of ticketing codeshare.
 
 • *Weather Exemption (Article 5(3)):*
-  Airlines frequently allege adverse weather to avoid payout. SkyClaim queries departure corridor atmospheric radar and airspace disruption telemetry to verify whether the corridor was genuinely closed.
+  Airlines frequently allege adverse weather to avoid payout. SkyClaim queries departure corridor METAR station observations and airspace disruption telemetry to verify whether the corridor was genuinely closed.
 `.trim();
       const kb = new InlineKeyboard()
         .text("✈️ Check Flight BA178", "claim:BA178")

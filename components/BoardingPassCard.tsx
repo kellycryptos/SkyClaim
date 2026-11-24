@@ -46,7 +46,7 @@ export function BoardingPassCard({
 
   // Format one-line reason
   const oneLineReason = isEligible
-    ? "Corridor weather verified clear · Airline weather excuse unsupported"
+    ? "No adverse weather at departure in the contemporaneous METAR"
     : isIneligible
     ? "Non-EU operating carrier on US departure (excluded under EU261 Art. 3(1)(b))"
     : "Departure storm alert flagged · Art. 5(3) extraordinary circumstances risk";
