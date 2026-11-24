@@ -124,7 +124,7 @@ export function Header({
           {/* Receipt Box CTA */}
           <button
             onClick={onOpenReceiptBox}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-xs font-semibold text-blue-300 transition shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] cursor-pointer"
+            className="h-8 sm:h-9 flex items-center gap-1.5 px-2.5 sm:px-3 rounded-xl bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-xs font-semibold text-blue-300 transition shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] cursor-pointer"
             title="Open Sponsor Receipt Box Matrix"
           >
             <FileText className="h-3.5 w-3.5 text-blue-400 shrink-0" />
@@ -135,7 +135,7 @@ export function Header({
           {/* Telegram Bot Action */}
           <button
             onClick={onOpenTelegram}
-            className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-medium text-slate-200 transition cursor-pointer"
+            className="h-8 sm:h-9 flex items-center justify-center gap-1.5 px-2.5 sm:px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-medium text-slate-200 transition cursor-pointer"
             title="Open Autonomous Telegram Bot"
           >
             <Send className="h-3.5 w-3.5 text-blue-400 shrink-0" />
@@ -145,7 +145,7 @@ export function Header({
           {/* API Docs Button (Desktop) */}
           <button
             onClick={onOpenApiDocs}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition cursor-pointer hidden lg:block border border-transparent hover:border-white/[0.06]"
+            className="h-8 sm:h-9 w-8 sm:w-9 flex items-center justify-center rounded-xl text-slate-400 hover:text-white hover:bg-white/[0.06] transition cursor-pointer hidden lg:flex border border-transparent hover:border-white/[0.06]"
             title="API & Protocol Documentation"
           >
             <Cpu className="h-4 w-4" />
@@ -154,7 +154,7 @@ export function Header({
           {/* Mobile Menu Toggle Button (Visible on mobile/tablet) */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-1.5 rounded-xl text-slate-300 hover:text-white bg-white/[0.04] border border-white/[0.08] transition cursor-pointer ml-0.5"
+            className="h-8 w-8 flex items-center justify-center rounded-xl text-slate-300 hover:text-white bg-white/[0.04] border border-white/[0.08] transition cursor-pointer ml-0.5"
             aria-label="Toggle navigation menu"
           >
             {mobileMenuOpen ? (
