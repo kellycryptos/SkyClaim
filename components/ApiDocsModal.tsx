@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { PaperPlaneLogo } from "@/components/PaperPlaneLogo";
 import { X, Code, Terminal, ExternalLink, ShieldAlert, Cpu } from "lucide-react";
 
@@ -10,11 +11,23 @@ interface ApiDocsModalProps {
 }
 
 export function ApiDocsModal({ isOpen, onClose }: ApiDocsModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl rounded-xl border border-[#1E293B] bg-[#111827] p-6 shadow-2xl">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+            transition={{ type: "spring", duration: 0.3, bounce: 0 }}
+            className="relative w-full max-w-3xl rounded-2xl border border-white/[0.1] bg-[#0E1526] p-6 shadow-2xl"
+          >
         <div className="flex items-center justify-between border-b border-[#1E293B] pb-4">
           <div className="flex items-center gap-3">
             <PaperPlaneLogo size={36} />
@@ -93,7 +106,9 @@ export function ApiDocsModal({ isOpen, onClose }: ApiDocsModalProps) {
             Close Docs
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

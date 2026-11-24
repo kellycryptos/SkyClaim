@@ -11,7 +11,7 @@
 
 > **Autonomous Dual-Engine Protocol Verifier powered by Telegraph Protocol.**
 > SkyClaim deploys specialized off-chain intelligence across two complementary commercial surfaces:
-> 1. **Engine 1: Consumer Flight Shield (Mission 15)** — Verifies airline weather defenses at the exact moment of disruption, validates operating carrier metal under UK261/EU261 rules, and generates statutory claim dossiers with cryptographic receipts on **Base Sepolia**.
+> 1. **Engine 1: Consumer Flight Shield (Mission 15)** — Verifies airline weather defenses at the exact moment of disruption, validates operating carrier metal under UK261/EU261 rules, and generates statutory claim dossiers with cryptographic receipts on **both Base Sepolia and Solana Devnet (x402)**.
 > 2. **Engine 2: SolSettle / SISA (Solana Use Cases 1 & 3)** — An institutional settlement assurance firewall on **Solana** that pre-screens high-value transfers against live legal entity registries (**GLEIF Open API**), OFAC SDN watchlists, and Living RWA bank reserves using Solana SVM x402 micropayments.
 
 ---
@@ -24,12 +24,12 @@ SkyClaim bridges consumer flight disruption automation and institutional Solana 
 | :--- | :--- | :--- |
 | **Primary Focus** | Consumer Flight Disruption Claims & Weather Defense Screening | High-Value Institutional Settlement Assurance & Compliance Firewall |
 | **Competition Track** | **Track 03: Apps & Agents · Mission 15** (Consumer Automation) | **Solana Priority Track · Use Cases 1 & 3** (Settlement Assurance & Pay.sh) |
-| **Settlement Rail** | **Base Sepolia (`84532`)** · Gasless EIP-712 Transfer Authorization | **Solana Devnet / Mainnet** · SVM x402 Micropayments via **Pay.sh** |
-| **Settlement Asset** | Circle USDC (`0x036CbD53842c5426634e7929541eC2318f3dCF7e`) | Circle USDC on Solana (SPL Token) |
+| **Settlement Rails** | **Dual-Rail Native**: **Base Sepolia (`84532`)** &amp; **Solana Devnet (`solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1`)** | **Solana Devnet / Mainnet** · SVM x402 Micropayments via **Pay.sh** |
+| **Settlement Asset** | Circle USDC on Base (`0x036CbD...`) &amp; Circle USDC on Solana (`4zMMC9...`) | Circle USDC on Solana (SPL Token: `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`) |
 | **Off-Chain Truth** | Multi-corridor METAR ground observations (`ttl-nws` & `aviationweather.gov`) | Live GLEIF LEI Registry (`api.gleif.org`) + OFAC SDN watchlists + Bank Reserve audits |
-| **Surfaces** | Web Terminal + Telegram Bot (`@SkyClaimBot`) | Web Compliance Terminal (`SolanaInstitutionalView`) + Automated API |
-| **Production Status** | **Live on-chain x402 purchases + 4 BaseScan receipts** | **Live GLEIF resolution + `@x402/svm` client + 3 deterministic fixtures** |
-| **1-Click Test** | `npm run purchase:live` · `npm run test:skyclaim` | `npm run purchase:solana` · `npm run test:solana` |
+| **Surfaces** | Web Terminal (with Base &amp; Solana toggle) + Telegram Bot (`@SkyClaimBot`) | Web Compliance Terminal (`SolanaInstitutionalView`) + Automated API |
+| **Production Status** | **Live on-chain x402 Base receipts + Solana Devnet SVM x402 inference** | **Live GLEIF resolution + `@x402/svm` client + 3 deterministic fixtures** |
+| **1-Click Test** | `npm run purchase:live` · `npm run purchase:consumer-solana` · `npm test:skyclaim` | `npm run purchase:solana` · `npm run test:solana` |
 
 ---
 
@@ -62,23 +62,26 @@ npm install
 # 2. Run the unified test suite covering BOTH engines (100% green)
 npm test
 
-# 3. Test Engine 2: Live GLEIF resolution & Solana settlement assurance
-npm run purchase:solana
+# 3. Test Engine 1 (Consumer): Solana Devnet SVM x402 inference
+npm run purchase:consumer-solana
 
-# 4. Test Engine 1: Real on-chain x402 purchase settled on Base Sepolia
+# 4. Test Engine 1 (Consumer): Real on-chain x402 purchase settled on Base Sepolia
 npm run purchase:live
 
-# 5. Test multi-surface Telegram mobile bot simulator
+# 5. Test Engine 2 (Institutional): Live GLEIF resolution & Solana settlement assurance
+npm run purchase:solana
+
+# 6. Test multi-surface Telegram mobile bot simulator
 npm run bot:sim
 
-# 6. Build optimized production bundle & boot
+# 7. Build optimized production bundle & boot
 npm run build && npm start
 ```
 
 ### Review Surface 1: Web Interface ([http://localhost:3000](http://localhost:3000))
-- **Flight Shield (Engine 1):** Click **BA178** (Eligible £520, clear weather verified), **DL401** (Ineligible, non-EU operating metal), or **AF112** (Contested blizzard defense).
+- **Flight Shield (Engine 1):** Click the **Base Sepolia** or **Solana Devnet** toggle to select your settlement rail. Click **BA178** (Eligible £520, clear weather verified), **DL401** (Ineligible, non-EU operating metal), or **AF112** (Contested blizzard defense).
 - **Institutional Shield (Engine 2):** Click the **"🏛️ Institutional"** tab in the top navigation bar to access SolSettle. Review Cases S1 (Regulated Settlement), S2 (Sanctions Intercept), and S3 (RWA Reserve Discrepancy).
-- **Public Disruption Ledger:** View completed on-chain receipts with verified transaction links.
+- **Public Disruption Ledger:** View completed on-chain receipts with verified transaction links on BaseScan and Solscan.
 
 ### Review Surface 2: Telegram Bot Simulator
 ```bash
@@ -153,6 +156,8 @@ SkyClaim operates against live Telegraph Protocol smart contracts, node rails, a
 | **Live Telegraph Node Engine** | HTTP Node Rail | `http://13.237.89.59:7044` | [Healthz Endpoint](http://13.237.89.59:7044/miner-dispatcher/healthz) · [Miners Index](http://13.237.89.59:7044/engine/v1/subnets) |
 | **Live GLEIF Open API** | Global Entity Registry | `https://api.gleif.org/api/v1/lei-records` | Live API queried in `lib/solana-settlement.ts` & `scripts/verify-solana-purchase.ts` |
 | **Solana SVM x402 Client** | Solana Devnet / Mainnet | `@x402/svm` + `@solana/kit` | Source: [`lib/solana-x402.ts`](lib/solana-x402.ts) (Exact SVM scheme client) |
+| **Consumer Solana x402 Rail** | Solana Devnet (`solana:EtWTRABZaYq...`) | USDC: `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU` | Fee Payer: `2wKupLR9...` · 1-click test: `npm run purchase:consumer-solana` |
+| **Institutional Solana Rail** | Solana Devnet (`solana:EtWTRABZaYq...`) | PayTo: `G53EbeTZSNsAn7bj6iMFUQnq3zpDdEbHhKkPRywo8bix` | GLEIF + OFAC assurance · 1-click test: `npm run purchase:solana` |
 | **Live On-Chain Settlement 1 (JFK)** | Base Sepolia (`84532`) | `0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145) · Signal: `0x3599e217...` ($0.01 USDC) |
 | **Live On-Chain Settlement 2 (ORD)** | Base Sepolia (`84532`) | `0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18) · Signal: `0xba23f2fd...` ($0.01 USDC) |
 | **Live On-Chain Settlement 3 (JFK)** | Base Sepolia (`84532`) | `0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002) · Signal: `0x0e4caede...` ($0.01 USDC) |

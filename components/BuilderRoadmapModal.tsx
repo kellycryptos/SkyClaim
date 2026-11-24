@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2, Clock, Cpu, ShieldCheck, ArrowRight, Sparkles, Terminal, Code } from "lucide-react";
 
 interface BuilderRoadmapModalProps {
@@ -7,11 +10,23 @@ interface BuilderRoadmapModalProps {
 }
 
 export function BuilderRoadmapModal({ isOpen, onClose }: BuilderRoadmapModalProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-[#090E1A] border border-[#1E293B] rounded-2xl shadow-2xl p-6 sm:p-8 text-slate-100">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+            transition={{ type: "spring", duration: 0.3, bounce: 0 }}
+            className="relative w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-[#090E1A] border border-white/[0.1] rounded-2xl shadow-2xl p-6 sm:p-8 text-slate-100"
+          >
         {/* Header */}
         <div className="flex items-center justify-between pb-6 border-b border-[#1E293B]">
           <div className="space-y-1">
@@ -183,7 +198,9 @@ export function BuilderRoadmapModal({ isOpen, onClose }: BuilderRoadmapModalProp
             Close Roadmap
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 import {
   Clock,
   ShieldAlert,
@@ -178,18 +179,20 @@ export function DelayThresholdGauge({ claim }: DelayThresholdGaugeProps) {
           />
 
           {/* Active Flight Delay Fill Bar */}
-          <div
-            className={`h-full rounded-full transition-all duration-700 relative ${
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${currentPercent}%` }}
+            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            className={`h-full rounded-full relative ${
               isEligible
                 ? "bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 shadow-md shadow-emerald-500/30"
                 : isWeatherRisk
                 ? "bg-gradient-to-r from-blue-500 via-amber-400 to-amber-500 shadow-md shadow-amber-500/30"
                 : "bg-slate-500"
             }`}
-            style={{ width: `${currentPercent}%` }}
           >
             <span className="absolute right-0 top-0 bottom-0 w-2 bg-white rounded-full opacity-90 animate-pulse" />
-          </div>
+          </motion.div>
 
           {/* 3-Hour Statutory Line Needle */}
           <div

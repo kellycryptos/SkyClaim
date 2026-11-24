@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Validate request input
     const body = await req.json().catch(() => ({}));
-    let { flightNumber, flightDate = "2026-11-20", forceDemo = false } = body;
+    let { flightNumber, flightDate = "2026-11-20", forceDemo = false, network = "base" } = body;
 
     if (!flightNumber || typeof flightNumber !== "string") {
       return NextResponse.json(
@@ -61,7 +61,9 @@ export async function POST(req: NextRequest) {
       flightNumber,
       flightDate,
       Boolean(forceDemo),
-      rateLimit.remaining
+      rateLimit.remaining,
+      false,
+      network === "solana" ? "solana" : "base"
     );
 
     return NextResponse.json(result, {

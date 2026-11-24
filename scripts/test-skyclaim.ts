@@ -78,8 +78,14 @@ async function runTests() {
   assert(fixtureRows.length >= 2, "Ledger must preserve benchmark fixture rows labeled as FIXTURE");
 
   for (const liveRow of liveRows) {
-    assert(liveRow.txHash && liveRow.txHash.startsWith("0x"), "Live row must have valid txHash");
-    assert(liveRow.basescanUrl && liveRow.basescanUrl.includes("basescan.org"), "Live row must link to BaseScan");
+    assert(
+      liveRow.txHash && (liveRow.txHash.startsWith("0x") || liveRow.network === "solana" || liveRow.txHash.length >= 32),
+      "Live row must have valid txHash"
+    );
+    assert(
+      liveRow.basescanUrl && (liveRow.basescanUrl.includes("basescan.org") || liveRow.basescanUrl.includes("solscan.io")),
+      "Live row must link to valid explorer (BaseScan or SolScan)"
+    );
     assert(liveRow.minerName && liveRow.minerName.length > 0, "Live row must name verified miner");
     assert.strictEqual(liveRow.costUsd, 0.01, "Live row must reflect $0.01 USDC x402 cost");
   }

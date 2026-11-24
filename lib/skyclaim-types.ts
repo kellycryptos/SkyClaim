@@ -29,6 +29,8 @@ export interface PublicLedgerEntry {
   costUsd: number;
   txHash?: string;
   basescanUrl?: string;
+  explorerUrl?: string;
+  network?: "base" | "solana";
   minerName?: string;
   signalHash?: string;
   timestamp: string;
@@ -48,6 +50,9 @@ export interface TelegraphReceipt {
   costUsd: number;
   txHash: string;
   basescanUrl: string;
+  explorerUrl?: string;
+  network?: "base" | "solana";
+  solanaSignature?: string;
   signalHash: string;
   timestamp: string;
   settled: boolean;

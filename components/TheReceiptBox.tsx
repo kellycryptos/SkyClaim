@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SKYCLAIM_CONFIG } from "@/lib/skyclaim-consensus";
 import { PaperPlaneLogo } from "@/components/PaperPlaneLogo";
 import { X, ExternalLink, ShieldCheck, CheckCircle2, Layers, Cpu, Terminal } from "lucide-react";
@@ -11,11 +12,23 @@ interface TheReceiptBoxProps {
 }
 
 export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="relative w-full max-w-3xl rounded-xl border border-[#1E293B] bg-[#111827] p-6 shadow-2xl">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+            transition={{ type: "spring", duration: 0.3, bounce: 0 }}
+            className="relative w-full max-w-3xl rounded-2xl border border-white/[0.1] bg-[#0E1526] p-6 shadow-2xl"
+          >
         <div className="flex items-center justify-between border-b border-[#1E293B] pb-4">
           <div className="flex items-center gap-3">
             <PaperPlaneLogo size={36} />
@@ -52,7 +65,7 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
               <span className="text-[10px] font-mono font-medium text-[#94A3B8] uppercase tracking-wider">Settlement Layer</span>
               <p className="mt-1 text-sm font-mono font-bold text-emerald-400 flex items-center gap-1.5">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                x402 (Base Sepolia USDC)
+                x402 (Base &amp; Solana USDC)
               </p>
             </div>
           </div>
@@ -239,6 +252,32 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
                   Basescan <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
+
+              {/* Row 6: Solana SVM x402 Rail (Consumer & Institutional) */}
+              <div className="p-3.5 flex items-start justify-between gap-4 bg-[#14F195]/5">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-white">Solana SVM x402 Inference Rail (Consumer &amp; Institutional)</span>
+                    <span className="rounded bg-[#14F195]/15 px-1.5 py-0.5 text-[10px] font-mono text-[#14F195] border border-[#14F195]/30 font-bold">
+                      @x402/svm &middot; @solana/kit
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-[#94A3B8]">
+                    Native Solana Devnet x402 payments (CAIP-2: <code className="text-white">solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1</code>) with Circle USDC (<code className="text-white">4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU</code>). Node-delegated fee payer eliminates caller SOL requirements.
+                  </p>
+                  <p className="mt-1 font-mono text-[11px] text-[#14F195] break-all">
+                    Verification: <code className="text-white">npm run purchase:consumer-solana</code> &middot; Institutional: <code className="text-white">npm run verify:solana</code>
+                  </p>
+                </div>
+                <a
+                  href="https://solscan.io/token/4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU?cluster=devnet"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-1 text-[#14F195] hover:underline shrink-0 mt-1 font-medium font-mono text-xs"
+                >
+                  Solscan <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             </div>
           </div>
 
@@ -262,7 +301,9 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
             Close Matrix
           </button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

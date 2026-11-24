@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion } from "framer-motion";
 import {
   SOLANA_SETTLEMENT_PRESETS,
   INITIAL_SOLANA_LEDGER,
@@ -97,8 +98,10 @@ export function SolanaInstitutionalView() {
           {SOLANA_SETTLEMENT_PRESETS.map((preset) => {
             const isSelected = selectedPresetId === preset.id;
             return (
-              <button
+              <motion.button
                 key={preset.id}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
                 onClick={() => setSelectedPresetId(preset.id)}
                 className={`text-left p-3.5 rounded-xl border transition cursor-pointer flex flex-col justify-between space-y-2 ${
                   isSelected
@@ -131,7 +134,7 @@ export function SolanaInstitutionalView() {
                   <span>${preset.amountUsd.toLocaleString()} {preset.tokenSymbol}</span>
                   <span className="text-blue-400">Click to evaluate →</span>
                 </div>
-              </button>
+              </motion.button>
             );
           })}
         </div>

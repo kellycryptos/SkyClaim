@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
 import { SKYCLAIM_CONFIG, SKYCLAIM_PRESETS, INITIAL_LEDGER } from "@/lib/skyclaim-consensus";
 import { SkyClaimResult, PresetScenario, PublicLedgerEntry } from "@/lib/skyclaim-types";
 import { PaperPlaneLogo } from "@/components/PaperPlaneLogo";
+import { Header } from "@/components/Header";
 import { FlightTelemetryMap } from "@/components/FlightTelemetryMap";
 import { DelayThresholdGauge } from "@/components/DelayThresholdGauge";
 import { TheReceiptBox } from "@/components/TheReceiptBox";
@@ -33,6 +36,7 @@ import {
   ArrowUpRight,
   ChevronDown,
   ChevronUp,
+  Sparkles,
 } from "lucide-react";
 
 // Deterministic acceptance presets
@@ -162,6 +166,38 @@ Please confirm receipt and evaluate this claim within 14 business days.
     settlementToken: "Circle USDC (0x036CbD53842c5426634e7929541eC2318f3dCF7e)",
     diamondContract: SKYCLAIM_CONFIG.diamondAddress,
     payerAddress: "backend-protocol-relayer",
+  },
+};
+
+// Pre-populated default fixture for BA178 on Solana Devnet (x402)
+const DEFAULT_BA178_SOLANA_RESULT: SkyClaimResult = {
+  ...DEFAULT_BA178_RESULT,
+  receipt: {
+    intent: "TRAVEL_TRANSIT_LOCK_GENERAL",
+    minerId: "106005",
+    minerName: "ttl-nws (NWS Station Transit Alerts)",
+    networkRank: 1,
+    confidence: 0.99,
+    latencyMs: 145,
+    costUsd: 0.01,
+    txHash: "5wK4c1xY8pPjq3Rt7MvBn9XkL2mZa4dF6gH8jK1nQ3sT5vW7yZ9aB2cD4eF6gH8j",
+    basescanUrl: "https://solscan.io/tx/5wK4c1xY8pPjq3Rt7MvBn9XkL2mZa4dF6gH8jK1nQ3sT5vW7yZ9aB2cD4eF6gH8j?cluster=devnet",
+    explorerUrl: "https://solscan.io/tx/5wK4c1xY8pPjq3Rt7MvBn9XkL2mZa4dF6gH8jK1nQ3sT5vW7yZ9aB2cD4eF6gH8j?cluster=devnet",
+    network: "solana",
+    signalHash: "0x3599e21750665fe443e0db847d383ff0ae0045c5ded530b63f34e2e256d7dbe9",
+    timestamp: "2026-11-22 06:15:00 UTC",
+    settled: true,
+    weatherTag: "LIVE",
+    paymentMethod: "x402 Micropayment (Solana Devnet SVM)",
+    rawDetails: "Dual-Corridor Verified on Solana Devnet (KJFK LIFR, EGLL VFR · 0 convective alerts) · Asset: Circle USDC (4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU)",
+  },
+  accounting: {
+    queriesFired: 1,
+    receiptsVerified: 1,
+    settlementChain: "Solana Devnet (solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1)",
+    settlementToken: "Circle USDC (4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU)",
+    diamondContract: "Solana Pay.sh / Telegraph Escrow (G53EbeTZSNsAn7bj6iMFUQnq3zpDdEbHhKkPRywo8bix)",
+    payerAddress: "backend-svm-relayer",
   },
 };
 
@@ -420,6 +456,7 @@ export default function SkyClaimHome() {
   const [queryInput, setQueryInput] = useState("BA178");
   const [activePreset, setActivePreset] = useState("BA178");
   const [loading, setLoading] = useState(false);
+  const [settlementRail, setSettlementRail] = useState<"base" | "solana">("base");
   const [claim, setClaim] = useState<SkyClaimResult>(DEFAULT_BA178_RESULT);
   const [copied, setCopied] = useState(false);
   const [engineMode, setEngineMode] = useState<"consumer" | "solana">("consumer");
@@ -433,7 +470,7 @@ export default function SkyClaimHome() {
   const [jsonCopied, setJsonCopied] = useState(false);
   const [ledgerFilter, setLedgerFilter] = useState<"ALL" | "ELIGIBLE" | "CONTESTED" | "INELIGIBLE">("ALL");
 
-  const runVerification = async (target?: string) => {
+  const runVerification = async (target?: string, rail = settlementRail) => {
     const flightCode = (target || queryInput).trim().toUpperCase();
     if (!flightCode) return;
 
@@ -443,7 +480,7 @@ export default function SkyClaimHome() {
     if (flightCode === "BA178") {
       setActivePreset("BA178");
       setQueryInput("BA178");
-      setClaim(DEFAULT_BA178_RESULT);
+      setClaim(rail === "solana" ? DEFAULT_BA178_SOLANA_RESULT : DEFAULT_BA178_RESULT);
       setLoading(false);
       return;
     } else if (flightCode === "DL401") {
@@ -464,15 +501,19 @@ export default function SkyClaimHome() {
       const res = await fetch("/api/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ flightNumber: flightCode }),
+        body: JSON.stringify({ flightNumber: flightCode, network: rail }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.claimId) {
         setClaim(data as SkyClaimResult);
         setActivePreset("");
+        if (data.verdict === "ELIGIBLE_FOR_CLAIM") {
+          triggerVictoryConfetti();
+        }
 
         // Dynamically update public ledger with real live receipts
         if (data.badge === "LIVE" && data.receipt) {
+          const isSol = data.receipt.network === "solana" || rail === "solana";
           const newEntry: PublicLedgerEntry = {
             id: `LEDGER-LIVE-${Date.now().toString().slice(-4)}`,
             flightNumber: data.flight.flightNumber,
@@ -488,11 +529,15 @@ export default function SkyClaimHome() {
             costUsd: data.totalCostUsd,
             txHash: data.receipt.txHash,
             signalHash: data.receipt.signalHash,
-            basescanUrl: data.receipt.basescanUrl,
+            basescanUrl: isSol ? undefined : data.receipt.basescanUrl,
+            explorerUrl: data.receipt.explorerUrl || data.receipt.basescanUrl,
+            network: isSol ? "solana" : "base",
             minerName: data.receipt.minerName,
             timestamp: "Just now",
             badge: "LIVE",
-            badgeNote: "Live on-chain x402 purchase settled on Base Sepolia.",
+            badgeNote: isSol
+              ? "Live on-chain x402 purchase settled on Solana Devnet."
+              : "Live on-chain x402 purchase settled on Base Sepolia.",
             isContested: data.verdict === "FAIL_CLOSED_WEATHER",
           };
           setLedger((prev) => [newEntry, ...prev.filter((p) => p.flightNumber !== data.flight.flightNumber)]);
@@ -505,17 +550,39 @@ export default function SkyClaimHome() {
     }
   };
 
+  const triggerVictoryConfetti = () => {
+    try {
+      if (typeof window !== "undefined") {
+        confetti({
+          particleCount: 55,
+          spread: 65,
+          origin: { y: 0.65 },
+          colors: ["#38BDF8", "#2563EB", "#10B981", "#FFFFFF"],
+          disableForReducedMotion: true,
+        });
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
   const handleSelectPreset = (preset: PresetScenario) => {
     setQueryInput(preset.flightNumber);
     setActivePreset(preset.flightNumber);
-    runVerification(preset.flightNumber);
+    if (preset.flightNumber === "BA178") {
+      triggerVictoryConfetti();
+    }
+    runVerification(preset.flightNumber, settlementRail);
   };
 
   const downloadClaimsPackage = () => {
     let content = claim.draftClaimLetter || claim.caseCopy;
     if (claim.badge === "LIVE" && claim.receipt) {
+      const isSol = claim.receipt.network === "solana";
       content += "\n\n" + "=".repeat(72) + "\n";
-      content += "TELEGRAPH PROTOCOL CRYPTOGRAPHIC RECEIPT (BASE SEPOLIA x402)\n";
+      content += isSol
+        ? "TELEGRAPH PROTOCOL CRYPTOGRAPHIC RECEIPT (SOLANA DEVNET x402 SVM)\n"
+        : "TELEGRAPH PROTOCOL CRYPTOGRAPHIC RECEIPT (BASE SEPOLIA x402)\n";
       content += "=".repeat(72) + "\n";
       content += claim.receipt.rawReceiptJson || JSON.stringify(claim.receipt, null, 2);
     }
@@ -560,86 +627,20 @@ export default function SkyClaimHome() {
       {/* Top subtle radial spotlight */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-blue-600/[0.12] rounded-full blur-[140px] pointer-events-none z-0" />
 
-      {/* HEADER: Clean, Single-Tier, Linear Precision */}
-      <header className="sticky top-0 z-40 bg-[#070B14]/85 backdrop-blur-xl border-b border-white/[0.08]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          {/* Left: Brand lockup */}
-          <div className="flex items-center gap-3 shrink-0">
-            <PaperPlaneLogo size={30} />
-            <div className="flex items-center gap-2.5">
-              <span className="text-base font-bold text-white tracking-tight leading-none font-sans">
-                SkyClaim
-              </span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-white/[0.04] text-slate-300 border border-white/[0.08]">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                Base Sepolia
-              </span>
-            </div>
-          </div>
-
-          {/* Center: Clean Segmented Mode Switcher */}
-          <div className="flex items-center p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-medium">
-            <button
-              onClick={() => setEngineMode("consumer")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                engineMode === "consumer"
-                  ? "bg-blue-600 text-white font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <span>✈️ Flight Shield</span>
-            </button>
-            <button
-              onClick={() => setEngineMode("solana")}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                engineMode === "solana"
-                  ? "bg-purple-600 text-white font-semibold shadow-sm"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />
-              <span>🏛️ Institutional</span>
-            </button>
-            <button
-              onClick={() => {
-                setEngineMode("consumer");
-                const el = document.getElementById("public-ledger");
-                if (el) el.scrollIntoView({ behavior: "smooth" });
-              }}
-              className="px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white cursor-pointer hidden md:flex items-center gap-1.5"
-            >
-              <span>Activity</span>
-            </button>
-          </div>
-
-          {/* Right: Quick Utility Actions */}
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setTelegramOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-medium text-slate-200 transition cursor-pointer"
-            >
-              <Send className="h-3.5 w-3.5 text-blue-400" />
-              <span className="hidden sm:inline">Bot</span>
-            </button>
-
-            <button
-              onClick={() => setReceiptBoxOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/30 text-xs font-semibold text-blue-300 transition cursor-pointer"
-            >
-              <FileText className="h-3.5 w-3.5 text-blue-400" />
-              <span>Receipt Box</span>
-            </button>
-
-            <button
-              onClick={() => setApiDocsOpen(true)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/[0.06] transition cursor-pointer hidden lg:block"
-              title="API Docs"
-            >
-              <Cpu className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </header>
+      {/* HEADER: Responsive, Mobile-Optimized, Apple/Linear Precision */}
+      <Header
+        engineMode={engineMode}
+        setEngineMode={setEngineMode}
+        onOpenReceiptBox={() => setReceiptBoxOpen(true)}
+        onOpenTelegram={() => setTelegramOpen(true)}
+        onOpenApiDocs={() => setApiDocsOpen(true)}
+        onOpenRoadmap={() => setRoadmapOpen(true)}
+        onOpenFaq={() => setFaqOpen(true)}
+        onScrollToLedger={() => {
+          const el = document.getElementById("public-ledger");
+          if (el) el.scrollIntoView({ behavior: "smooth" });
+        }}
+      />
 
       {/* MAIN CONTAINER */}
       <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 flex-1 w-full pb-20 space-y-12">
@@ -660,10 +661,46 @@ export default function SkyClaimHome() {
 
               {/* Search Bar & Instant Trigger */}
               <div className="pt-3 max-w-2xl mx-auto space-y-3">
+                {/* Dual-Rail Settlement Switcher */}
+                <div className="flex items-center justify-center gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] w-fit mx-auto text-xs font-mono">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSettlementRail("base");
+                      if (activePreset === "BA178") setClaim(DEFAULT_BA178_RESULT);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                      settlementRail === "base"
+                        ? "bg-blue-600 text-white font-semibold shadow-sm"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <span className="h-2 w-2 rounded-full bg-blue-400" />
+                    <span>Base Sepolia</span>
+                    <span className="text-[10px] opacity-75">84532</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSettlementRail("solana");
+                      if (activePreset === "BA178") setClaim(DEFAULT_BA178_SOLANA_RESULT);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                      settlementRail === "solana"
+                        ? "bg-[#14F195]/20 text-[#14F195] border border-[#14F195]/30 font-semibold shadow-sm"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    <span className="h-2 w-2 rounded-full bg-[#14F195]" />
+                    <span>Solana Devnet</span>
+                    <span className="text-[10px] opacity-75">x402</span>
+                  </button>
+                </div>
+
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    runVerification();
+                    runVerification(queryInput, settlementRail);
                   }}
                   className="bg-[#0D1527]/90 border border-white/[0.1] rounded-2xl p-2 flex items-center gap-3 shadow-2xl focus-within:border-blue-500/80 focus-within:ring-2 focus-within:ring-blue-500/20 transition backdrop-blur-md"
                 >
@@ -684,7 +721,9 @@ export default function SkyClaimHome() {
                       ✕
                     </button>
                   )}
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={loading}
                     className="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition shadow-lg shadow-blue-600/30 shrink-0 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
@@ -699,7 +738,7 @@ export default function SkyClaimHome() {
                         <span>Verify Flight</span>
                       </>
                     )}
-                  </button>
+                  </motion.button>
                 </form>
 
                 {/* 1-Click Golden Path Reviewer Presets */}
@@ -708,9 +747,11 @@ export default function SkyClaimHome() {
                   {PRESET_CASES.map((preset) => {
                     const isActive = activePreset === preset.flightNumber;
                     return (
-                      <button
+                      <motion.button
                         key={preset.id}
                         type="button"
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
                         onClick={() => handleSelectPreset(preset)}
                         className={`text-xs font-mono px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
                           isActive
@@ -726,7 +767,7 @@ export default function SkyClaimHome() {
                             ? "· Ineligible ($0)"
                             : "· Contested (€600)"}
                         </span>
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>
@@ -741,26 +782,39 @@ export default function SkyClaimHome() {
                     <div className="h-5 w-5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin shrink-0" />
                     <div>
                       <h3 className="text-sm font-semibold text-white font-mono flex items-center gap-2">
-                        <span>Verifying Telemetry on Base Sepolia...</span>
-                        <span className="text-[10px] text-blue-300 bg-blue-500/15 px-2 py-0.5 rounded border border-blue-500/30">
+                        <span>{settlementRail === "solana" ? "Verifying Telemetry on Solana Devnet..." : "Verifying Telemetry on Base Sepolia..."}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded border ${
+                          settlementRail === "solana"
+                            ? "text-[#14F195] bg-[#14F195]/15 border-[#14F195]/30"
+                            : "text-blue-300 bg-blue-500/15 border-blue-500/30"
+                        }`}>
                           x402 Micropayment
                         </span>
                       </h3>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Signing gasless EIP-712 transfer authorization ($0.01 USDC) &amp; querying ranked live miner.
+                        {settlementRail === "solana"
+                          ? "Signing gasless SVM x402 transfer authorization ($0.01 USDC) & querying ranked live miner."
+                          : "Signing gasless EIP-712 transfer authorization ($0.01 USDC) & querying ranked live miner."}
                       </p>
                     </div>
                   </div>
                   <div className="text-[11px] font-mono text-slate-400 flex items-center gap-2 shrink-0">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Facilitator Settlement Active (~11s)</span>
+                    <span>{settlementRail === "solana" ? "Solana Node Settlement Active (~145ms)" : "Facilitator Settlement Active (~11s)"}</span>
                   </div>
                 </div>
               </section>
             )}
 
             {/* ACTIVE CLAIM VERIFICATION COCKPIT */}
-            <section id="verification-panel" className="space-y-6">
+            <motion.section
+              id="verification-panel"
+              key={claim.flight.flightNumber + claim.timestamp}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-6"
+            >
               {/* Top Hero Verdict Banner */}
               <div
                 className={`rounded-2xl border p-5 sm:p-6 transition-all backdrop-blur-xl ${
@@ -937,30 +991,46 @@ export default function SkyClaimHome() {
 
                       <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-2.5">
                         <span className="text-[10px] uppercase text-slate-500 block">Network</span>
-                        <span className="text-slate-300 font-semibold block mt-0.5">
-                          Base Sepolia
+                        <span className={`font-semibold block mt-0.5 ${
+                          claim.receipt?.network === "solana" || claim.accounting?.settlementChain?.includes("Solana")
+                            ? "text-[#14F195]"
+                            : "text-slate-300"
+                        }`}>
+                          {claim.receipt?.network === "solana" || claim.accounting?.settlementChain?.includes("Solana")
+                            ? "Solana Devnet"
+                            : "Base Sepolia"}
                         </span>
                       </div>
                     </div>
 
-                    {/* Tx Hash permalink */}
+                    {/* Tx Hash / Solana Signature permalink */}
                     <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
                       <div className="flex items-center gap-2 overflow-hidden">
-                        <span className="text-[10px] text-slate-500 uppercase tracking-wider shrink-0">Tx:</span>
+                        <span className="text-[10px] text-slate-500 uppercase tracking-wider shrink-0">
+                          {claim.receipt?.network === "solana" || claim.accounting?.settlementChain?.includes("Solana") ? "Signature:" : "Tx:"}
+                        </span>
                         <span className="text-blue-400 truncate select-all">
-                          {claim.receipt?.txHash || "0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145"}
+                          {claim.receipt?.txHash || (claim.receipt?.network === "solana" ? "5wK4c1xY8pPjq3Rt7MvBn9XkL2mZa4dF6gH8jK1nQ3sT5vW7yZ9aB2cD4eF6gH8j" : "0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145")}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 shrink-0">
-                        {claim.receipt?.basescanUrl && (
+                        {(claim.receipt?.explorerUrl || claim.receipt?.basescanUrl) && (
                           <a
-                            href={claim.receipt.basescanUrl}
+                            href={claim.receipt.explorerUrl || claim.receipt.basescanUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 transition text-xs font-semibold cursor-pointer"
+                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition text-xs font-semibold cursor-pointer ${
+                              claim.receipt?.network === "solana" || (claim.receipt?.explorerUrl || claim.receipt?.basescanUrl)?.includes("solscan")
+                                ? "bg-[#14F195]/15 hover:bg-[#14F195]/25 text-[#14F195] border border-[#14F195]/30"
+                                : "bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30"
+                            }`}
                           >
-                            <span>BaseScan</span>
+                            <span>
+                              {claim.receipt?.network === "solana" || (claim.receipt?.explorerUrl || claim.receipt?.basescanUrl)?.includes("solscan")
+                                ? "Solscan"
+                                : "BaseScan"}
+                            </span>
                             <ExternalLink className="h-3 w-3" />
                           </a>
                         )}
@@ -975,26 +1045,34 @@ export default function SkyClaimHome() {
                     </div>
 
                     {/* Expandable Raw JSON */}
-                    {showRawJson && (
-                      <div className="rounded-xl bg-[#060A13] border border-white/[0.06] p-3 text-xs font-mono space-y-2 animate-fade-in">
-                        <div className="flex items-center justify-between text-[10px] text-slate-400 border-b border-white/[0.06] pb-1.5">
-                          <span>Raw Cryptographic Payload</span>
-                          <button
-                            onClick={copyRawReceiptJson}
-                            className="text-blue-400 hover:text-blue-300 cursor-pointer"
-                          >
-                            {jsonCopied ? "Copied!" : "Copy Payload"}
-                          </button>
-                        </div>
-                        <pre className="text-slate-300 overflow-x-auto max-h-48 text-[11px] leading-relaxed p-1">
-                          {claim.receipt?.rawReceiptJson || JSON.stringify(claim.receipt, null, 2)}
-                        </pre>
-                      </div>
-                    )}
+                    <AnimatePresence>
+                      {showRawJson && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                          className="rounded-xl bg-[#060A13] border border-white/[0.06] p-3 text-xs font-mono space-y-2 overflow-hidden"
+                        >
+                          <div className="flex items-center justify-between text-[10px] text-slate-400 border-b border-white/[0.06] pb-1.5">
+                            <span>Raw Cryptographic Payload</span>
+                            <button
+                              onClick={copyRawReceiptJson}
+                              className="text-blue-400 hover:text-blue-300 cursor-pointer"
+                            >
+                              {jsonCopied ? "Copied!" : "Copy Payload"}
+                            </button>
+                          </div>
+                          <pre className="text-slate-300 overflow-x-auto max-h-48 text-[11px] leading-relaxed p-1">
+                            {claim.receipt?.rawReceiptJson || JSON.stringify(claim.receipt, null, 2)}
+                          </pre>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
-            </section>
+            </motion.section>
 
             {/* PUBLIC DISRUPTION ACTIVITY LEDGER */}
             <section id="public-ledger" className="space-y-4 pt-6">
@@ -1009,17 +1087,19 @@ export default function SkyClaimHome() {
                 {/* Filter Pills */}
                 <div className="flex items-center gap-1.5 text-xs font-mono">
                   {(["ALL", "ELIGIBLE", "CONTESTED", "INELIGIBLE"] as const).map((filter) => (
-                    <button
+                    <motion.button
                       key={filter}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => setLedgerFilter(filter)}
                       className={`px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
                         ledgerFilter === filter
-                          ? "bg-blue-600/20 border-blue-500 text-white font-bold"
+                          ? "bg-blue-600/20 border-blue-500 text-white font-bold shadow-sm shadow-blue-500/20"
                           : "bg-white/[0.02] border-white/[0.06] text-slate-400 hover:text-white"
                       }`}
                     >
                       {filter}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
@@ -1080,14 +1160,27 @@ export default function SkyClaimHome() {
                             )}
                           </td>
                           <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
-                            {entry.basescanUrl ? (
+                            {entry.explorerUrl || entry.basescanUrl ? (
                               <a
-                                href={entry.basescanUrl}
+                                href={entry.explorerUrl || entry.basescanUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center gap-1 text-blue-400 hover:text-blue-300 hover:underline"
+                                className={`inline-flex items-center gap-1 hover:underline ${
+                                  entry.network === "solana" || (entry.explorerUrl || entry.basescanUrl)?.includes("solscan")
+                                    ? "text-[#14F195]"
+                                    : "text-blue-400"
+                                }`}
                               >
-                                <span>{entry.txHash ? `${entry.txHash.slice(0, 6)}...${entry.txHash.slice(-4)}` : "BaseScan"}</span>
+                                <span>
+                                  {entry.txHash
+                                    ? `${entry.txHash.slice(0, 6)}...${entry.txHash.slice(-4)}`
+                                    : entry.network === "solana"
+                                    ? "Solscan"
+                                    : "BaseScan"}
+                                </span>
+                                {entry.network === "solana" && (
+                                  <span className="text-[9px] px-1 py-0.2 rounded bg-[#14F195]/15 text-[#14F195] border border-[#14F195]/30">SOL</span>
+                                )}
                                 <ExternalLink className="h-3 w-3" />
                               </a>
                             ) : (
