@@ -9,6 +9,8 @@ import { PaperPlaneLogo } from "@/components/PaperPlaneLogo";
 import { Header } from "@/components/Header";
 import { FlightTelemetryMap } from "@/components/FlightTelemetryMap";
 import { DelayThresholdGauge } from "@/components/DelayThresholdGauge";
+import { BoardingPassCard } from "@/components/BoardingPassCard";
+import { DepartureBoardPresets } from "@/components/DepartureBoardPresets";
 import { TheReceiptBox } from "@/components/TheReceiptBox";
 import { ApiDocsModal } from "@/components/ApiDocsModal";
 import { FaqModal } from "@/components/FaqModal";
@@ -58,7 +60,7 @@ const DEFAULT_BA178_RESULT: SkyClaimResult = {
     "Arrival delay at London Heathrow is 3h 42m (exceeds 3h statutory threshold). Departure weather screening confirmed zero active severe alerts at JFK departure. Operating carrier is British Airways (UK licensed metal). Under UK261 Article 7(2)(c), long-haul flights (> 3,500 km) with arrival delays between 3 and 4 hours are subject to a 50% reduction (£260 vs £520).",
   recommendation: "DRAFT_CLAIM_READY",
   recommendationText:
-    "Draft Claim Ready — Operating carrier is British Airways (UK carrier). Airline weather excuse unsupported. Eligible for carrier review.",
+    "Draft Claim Ready — No adverse weather at departure in the METAR checked at 07:51Z (British Airways UK261 claim ready).",
   statutoryRegulation: "UK261",
   statutoryDelayBasis:
     "Arrival delay at final destination (CJEU Sturgeon v Condor standard as retained law)",
@@ -208,16 +210,16 @@ const DL401_RESULT: SkyClaimResult = {
   caseNumber: 2,
   caseTitle: "DL401 · Delta Air Lines",
   caseCopy:
-    "Hypothetical flight DL401 (New York JFK → Paris CDG). Operating carrier: Delta Air Lines (not EU/UK) → not covered by EU261 on departures from third countries (Regulation (EC) No 261/2004 Art. 3(1)(b)). Furthermore, arrival delay (1h 05m) is below the 3-hour statutory threshold. Ineligible ($0 spent).",
+    "Hypothetical flight DL401 (New York JFK → Paris CDG). Operating carrier: Delta Air Lines (not EU/UK) → not covered by EU261 on departures from third countries (Regulation (EC) No 261/2004 Art. 3(1)(b)). Even though arrival delay is 3h 30m, non-EU operating metal is excluded on US departures. Ineligible ($0 spent).",
   badge: "FIXTURE",
   badgeNote:
-    "Preset test fixture: operating carrier is Delta Air Lines (not EU/UK carrier ex-USA) and arrival delay is under 3 hours ($0 spent). No transaction executed.",
+    "Preset test fixture: arrival delay is 3h 30m, but operating carrier is Delta Air Lines (non-EU metal ex-USA). Ineligible under Art. 3(1)(b) ($0 spent). No transaction executed.",
   verdict: "INELIGIBLE",
   verdictRationale:
-    "Two independent disqualifications: 1) Operating carrier: Delta (not EU/UK) → not covered by EU261 on US departures under Regulation (EC) No 261/2004 Art. 3(1)(b). 2) Arrival delay at Paris CDG is 1h 05m (below the 3-hour statutory threshold). Ineligible ($0 spent, zero protocol micro-transactions).",
+    "Disqualification under EU261 Art. 3(1)(b): Operating carrier Delta Air Lines is a non-EU carrier on a US departure. Passenger is ineligible under Regulation (EC) No 261/2004 Art. 3(1)(b) regardless of 3h 30m arrival delay or Air France codeshare ticketing.",
   recommendation: "NO_PURCHASE_BELOW_THRESHOLD",
   recommendationText:
-    "Ineligible for Claim — Operating carrier is Delta (not EU/UK) and arrival delay 1h 05m is below 3-hour statutory threshold.",
+    "Ineligible for Claim — Operating carrier is Delta Air Lines (non-EU metal ex-USA) under EU261 Art. 3(1)(b).",
   statutoryRegulation: "EU261",
   statutoryDelayBasis:
     "Arrival delay at final destination (CJEU Sturgeon v Condor standard)",
@@ -452,10 +454,17 @@ Please provide the carrier's formal Article 5(3) justification with flight log e
   },
 };
 
+const LOADING_STEPS = [
+  "Checking statutory jurisdiction & operating metal...",
+  "Purchasing cryptographic weather telemetry via x402...",
+  "Evaluating CJEU Art. 5(3) consensus & building verdict...",
+];
+
 export default function SkyClaimHome() {
   const [queryInput, setQueryInput] = useState("BA178");
   const [activePreset, setActivePreset] = useState("BA178");
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
   const [settlementRail, setSettlementRail] = useState<"base" | "solana">("base");
   const [claim, setClaim] = useState<SkyClaimResult>(DEFAULT_BA178_RESULT);
   const [copied, setCopied] = useState(false);
@@ -475,34 +484,56 @@ export default function SkyClaimHome() {
     if (!flightCode) return;
 
     setLoading(true);
+    setLoadingStep(0);
 
-    // Fast-path deterministic presets
+    // Fast-path deterministic presets with silky stepped progress
     if (flightCode === "BA178") {
       setActivePreset("BA178");
       setQueryInput("BA178");
-      setClaim(rail === "solana" ? DEFAULT_BA178_SOLANA_RESULT : DEFAULT_BA178_RESULT);
-      setLoading(false);
+      setLoadingStep(1);
+      setTimeout(() => {
+        setLoadingStep(2);
+        setTimeout(() => {
+          setClaim(rail === "solana" ? DEFAULT_BA178_SOLANA_RESULT : DEFAULT_BA178_RESULT);
+          triggerVictoryConfetti();
+          setLoading(false);
+        }, 180);
+      }, 180);
       return;
     } else if (flightCode === "DL401") {
       setActivePreset("DL401");
       setQueryInput("DL401");
-      setClaim(DL401_RESULT);
-      setLoading(false);
+      setLoadingStep(1);
+      setTimeout(() => {
+        setLoadingStep(2);
+        setTimeout(() => {
+          setClaim(DL401_RESULT);
+          setLoading(false);
+        }, 180);
+      }, 180);
       return;
     } else if (flightCode === "AF112") {
       setActivePreset("AF112");
       setQueryInput("AF112");
-      setClaim(AF112_RESULT);
-      setLoading(false);
+      setLoadingStep(1);
+      setTimeout(() => {
+        setLoadingStep(2);
+        setTimeout(() => {
+          setClaim(AF112_RESULT);
+          setLoading(false);
+        }, 180);
+      }, 180);
       return;
     }
 
     try {
+      setLoadingStep(1);
       const res = await fetch("/api/claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ flightNumber: flightCode, network: rail }),
       });
+      setLoadingStep(2);
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.claimId) {
         setClaim(data as SkyClaimResult);
@@ -650,19 +681,59 @@ export default function SkyClaimHome() {
           </div>
         ) : (
           <>
-            {/* HERO & SEARCH SECTION */}
-            <section className="text-center pt-12 pb-4 max-w-3xl mx-auto space-y-4">
-              <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-                Autonomous Flight Disruption Shield
-              </h1>
-              <p className="text-sm sm:text-base text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                Instant statutory delay verification (EU261 &amp; UK261) backed by autonomous cryptographic weather telemetry.
-              </p>
+            {/* ── HERO & SEARCH SECTION ── */}
+            <section className="relative pt-8 sm:pt-14 pb-4 max-w-4xl mx-auto text-center space-y-6">
+              {/* Route Arc Background Graphic */}
+              <div className="absolute inset-0 -top-6 pointer-events-none flex items-center justify-center opacity-35 overflow-hidden">
+                <svg viewBox="0 0 800 240" className="w-full max-w-3xl h-48" preserveAspectRatio="xMidYMid meet">
+                  <defs>
+                    <linearGradient id="hero-route-arc" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#22D3EE" stopOpacity="0.85" />
+                      <stop offset="50%" stopColor="#67E8F9" stopOpacity="0.95" />
+                      <stop offset="100%" stopColor="#34D399" stopOpacity="0.85" />
+                    </linearGradient>
+                    <filter id="hero-route-glow">
+                      <feDropShadow dx="0" dy="0" stdDeviation="3.5" floodColor="#22D3EE" floodOpacity="0.75" />
+                    </filter>
+                  </defs>
+                  {/* Thin Curved Route Arc between two airport dots */}
+                  <path
+                    d="M 140 180 Q 400 35 660 180"
+                    fill="none"
+                    stroke="url(#hero-route-arc)"
+                    strokeWidth="1.8"
+                    strokeDasharray="4 6"
+                    filter="url(#hero-route-glow)"
+                  />
+                  {/* Origin Dot (JFK) */}
+                  <circle cx="140" cy="180" r="5" fill="#22D3EE" />
+                  <circle cx="140" cy="180" r="11" fill="none" stroke="#22D3EE" strokeWidth="0.8" strokeOpacity="0.4" />
+                  <text x="140" y="204" fill="#94A3B8" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+                    JFK
+                  </text>
+                  {/* Destination Dot (LHR) */}
+                  <circle cx="660" cy="180" r="5" fill="#34D399" />
+                  <circle cx="660" cy="180" r="11" fill="none" stroke="#34D399" strokeWidth="0.8" strokeOpacity="0.4" />
+                  <text x="660" y="204" fill="#94A3B8" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+                    LHR
+                  </text>
+                </svg>
+              </div>
 
-              {/* Search Bar & Instant Trigger */}
-              <div className="pt-3 max-w-2xl mx-auto space-y-3">
-                {/* Dual-Rail Settlement Switcher */}
-                <div className="flex items-center justify-center gap-1.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] w-fit mx-auto text-xs font-mono">
+              {/* Headline & Subline */}
+              <div className="relative z-10 space-y-3.5">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
+                  Check the airline&apos;s excuse before you file.
+                </h1>
+                <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                  Instant statutory delay verification (EU261 &amp; UK261) backed by autonomous cryptographic weather telemetry.
+                </p>
+              </div>
+
+              {/* Rail Switcher & Flight Search Input */}
+              <div className="relative z-10 pt-2 max-w-2xl mx-auto space-y-4">
+                {/* Small Segmented Rail Switcher near input */}
+                <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] text-xs font-mono">
                   <button
                     type="button"
                     onClick={() => {
@@ -671,14 +742,15 @@ export default function SkyClaimHome() {
                     }}
                     className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                       settlementRail === "base"
-                        ? "bg-blue-600 text-white font-semibold shadow-sm"
+                        ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold"
                         : "text-slate-400 hover:text-white"
                     }`}
                   >
-                    <span className="h-2 w-2 rounded-full bg-blue-400" />
+                    <span className="h-2 w-2 rounded-full bg-cyan-400" />
                     <span>Base Sepolia</span>
-                    <span className="text-[10px] opacity-75">84532</span>
+                    <span className="text-[10px] text-slate-500">84532</span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => {
@@ -687,30 +759,31 @@ export default function SkyClaimHome() {
                     }}
                     className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                       settlementRail === "solana"
-                        ? "bg-[#14F195]/20 text-[#14F195] border border-[#14F195]/30 font-semibold shadow-sm"
+                        ? "bg-[#14F195]/20 text-[#14F195] border border-[#14F195]/40 font-semibold"
                         : "text-slate-400 hover:text-white"
                     }`}
                   >
                     <span className="h-2 w-2 rounded-full bg-[#14F195]" />
                     <span>Solana Devnet</span>
-                    <span className="text-[10px] opacity-75">x402</span>
+                    <span className="text-[10px] text-slate-500">x402</span>
                   </button>
                 </div>
 
+                {/* One Large Rounded Search Bar */}
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     runVerification(queryInput, settlementRail);
                   }}
-                  className="bg-[#0D1527]/90 border border-white/[0.1] rounded-2xl p-2 flex items-center gap-3 shadow-2xl focus-within:border-blue-500/80 focus-within:ring-2 focus-within:ring-blue-500/20 transition backdrop-blur-md"
+                  className="bg-[#0A0F1F] border border-white/[0.12] rounded-2xl p-2 flex items-center gap-3 shadow-2xl focus-within:border-cyan-400/80 focus-within:ring-2 focus-within:ring-cyan-400/20 transition"
                 >
                   <Search className="h-5 w-5 text-slate-400 ml-3 shrink-0" />
                   <input
                     type="text"
                     value={queryInput}
                     onChange={(e) => setQueryInput(e.target.value)}
-                    placeholder="Search flight number (e.g. BA178)..."
-                    className="bg-transparent border-none text-white text-sm sm:text-base font-mono focus:outline-none w-full placeholder-slate-500 tracking-wide"
+                    placeholder="Enter flight code (e.g. BA178, DL401, AF112)..."
+                    className="bg-transparent border-none text-white text-base font-mono focus:outline-none w-full placeholder-slate-500 tracking-wide"
                   />
                   {queryInput && (
                     <button
@@ -726,351 +799,77 @@ export default function SkyClaimHome() {
                     whileTap={{ scale: 0.98 }}
                     type="submit"
                     disabled={loading}
-                    className="bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition shadow-lg shadow-blue-600/30 shrink-0 cursor-pointer disabled:opacity-50 flex items-center gap-1.5"
+                    className="bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-sm px-6 py-3 rounded-xl transition shadow-lg shadow-cyan-500/25 shrink-0 cursor-pointer disabled:opacity-50 flex items-center gap-2"
                   >
                     {loading ? (
                       <>
-                        <span className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                        <span>Verifying...</span>
+                        <span className="h-4 w-4 rounded-full border-2 border-black border-t-transparent animate-spin" />
+                        <span>Checking...</span>
                       </>
                     ) : (
-                      <>
-                        <span>Verify Flight</span>
-                      </>
+                      <span>Check flight</span>
                     )}
                   </motion.button>
                 </form>
-
-                {/* 1-Click Golden Path Reviewer Presets */}
-                <div className="flex items-center justify-center gap-2 pt-1 flex-wrap">
-                  <span className="text-xs text-slate-500 font-mono hidden sm:inline">Presets:</span>
-                  {PRESET_CASES.map((preset) => {
-                    const isActive = activePreset === preset.flightNumber;
-                    return (
-                      <motion.button
-                        key={preset.id}
-                        type="button"
-                        whileHover={{ scale: 1.03 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => handleSelectPreset(preset)}
-                        className={`text-xs font-mono px-3 py-1.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1.5 ${
-                          isActive
-                            ? "bg-blue-600/20 border-blue-500 text-white font-semibold shadow-sm shadow-blue-500/20 ring-1 ring-blue-500/50"
-                            : "bg-white/[0.03] border-white/[0.08] text-slate-400 hover:text-white hover:bg-white/[0.06]"
-                        }`}
-                      >
-                        <span className="font-bold">{preset.flightNumber}</span>
-                        <span className="text-[11px] text-slate-500">
-                          {preset.flightNumber === "BA178"
-                            ? "· £520 Eligible"
-                            : preset.flightNumber === "DL401"
-                            ? "· Ineligible ($0)"
-                            : "· Contested (€600)"}
-                        </span>
-                      </motion.button>
-                    );
-                  })}
-                </div>
               </div>
             </section>
 
-            {/* LOADING STATE INDICATOR */}
+            {/* ── PRESETS: DEPARTURE-BOARD STRIP ── */}
+            <section className="max-w-4xl mx-auto">
+              <DepartureBoardPresets
+                presets={PRESET_CASES}
+                activePreset={activePreset}
+                onSelectPreset={handleSelectPreset}
+              />
+            </section>
+
+            {/* ── PROGRESS BAR (When loading) ── */}
             {loading && (
-              <section className="rounded-2xl border border-blue-500/40 bg-blue-950/20 p-5 shadow-xl animate-fade-in">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-5 w-5 rounded-full border-2 border-blue-400 border-t-transparent animate-spin shrink-0" />
-                    <div>
-                      <h3 className="text-sm font-semibold text-white font-mono flex items-center gap-2">
-                        <span>{settlementRail === "solana" ? "Verifying Telemetry on Solana Devnet..." : "Verifying Telemetry on Base Sepolia..."}</span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded border ${
-                          settlementRail === "solana"
-                            ? "text-[#14F195] bg-[#14F195]/15 border-[#14F195]/30"
-                            : "text-blue-300 bg-blue-500/15 border-blue-500/30"
-                        }`}>
-                          x402 Micropayment
-                        </span>
-                      </h3>
-                      <p className="text-xs text-slate-400 mt-0.5">
-                        {settlementRail === "solana"
-                          ? "Signing gasless SVM x402 transfer authorization ($0.01 USDC) & querying ranked live miner."
-                          : "Signing gasless EIP-712 transfer authorization ($0.01 USDC) & querying ranked live miner."}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-[11px] font-mono text-slate-400 flex items-center gap-2 shrink-0">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>{settlementRail === "solana" ? "Solana Node Settlement Active (~145ms)" : "Facilitator Settlement Active (~11s)"}</span>
-                  </div>
+              <section className="max-w-4xl mx-auto rounded-2xl border border-cyan-500/30 bg-[#0A0F1F] p-4 shadow-xl space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-cyan-400 font-semibold flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-cyan-400 animate-ping" />
+                    {LOADING_STEPS[loadingStep]}
+                  </span>
+                  <span className="text-slate-400">Step {loadingStep + 1} of 3</span>
+                </div>
+                <div className="w-full h-1.5 bg-white/[0.08] rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full bg-cyan-400"
+                    initial={{ width: "15%" }}
+                    animate={{ width: `${((loadingStep + 1) / 3) * 100}%` }}
+                    transition={{ duration: 0.2 }}
+                  />
                 </div>
               </section>
             )}
 
-            {/* ACTIVE CLAIM VERIFICATION COCKPIT */}
+            {/* ── RESULT: BOARDING-PASS CARD & EVIDENCE ── */}
             <motion.section
               id="verification-panel"
               key={claim.flight.flightNumber + claim.timestamp}
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-6"
+              className="space-y-8 max-w-4xl mx-auto"
             >
-              {/* Top Hero Verdict Banner */}
-              <div
-                className={`rounded-2xl border p-5 sm:p-6 transition-all backdrop-blur-xl ${
-                  isEligible
-                    ? "bg-[#0A1A14]/80 border-emerald-500/30 shadow-2xl shadow-emerald-500/10"
-                    : isContested
-                    ? "bg-[#1C1408]/80 border-amber-500/30 shadow-2xl shadow-amber-500/10"
-                    : "bg-[#0D1527]/80 border-white/[0.08] shadow-2xl"
-                }`}
-              >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                  {/* Left: Verdict and entitlement */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2.5 flex-wrap">
-                      <span
-                        className={`text-xs font-mono font-bold px-3 py-1 rounded-full border inline-flex items-center gap-1.5 uppercase ${
-                          isEligible
-                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40"
-                            : isContested
-                            ? "bg-amber-500/15 text-amber-400 border-amber-500/40"
-                            : "bg-slate-700/30 text-slate-400 border-slate-700/50"
-                        }`}
-                      >
-                        {isEligible && <ShieldCheck className="h-3.5 w-3.5" />}
-                        {isContested && <AlertTriangle className="h-3.5 w-3.5" />}
-                        {isIneligible && <Clock className="h-3.5 w-3.5" />}
-                        <span>
-                          {isEligible
-                            ? "Eligible for Statutory Claim"
-                            : isContested
-                            ? "Contested Claim (Airline Weather Defense)"
-                            : "Ineligible for Claim"}
-                        </span>
-                      </span>
+              <BoardingPassCard
+                claim={claim}
+                onCopyLetter={copyDraftLetter}
+                onDownloadPackage={downloadClaimsPackage}
+                letterCopied={copied}
+              />
 
-                      {claim.badge === "LIVE" ? (
-                        <span className="text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 inline-flex items-center gap-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          LIVE ON-CHAIN
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-mono font-semibold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/30">
-                          BENCHMARK FIXTURE
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-baseline gap-3 pt-1">
-                      <span className="text-3xl sm:text-4xl font-extrabold font-mono tracking-tight text-white tabular-nums">
-                        {claim.eligibleCompensationRange}
-                      </span>
-                      <span className="text-xs text-slate-400 font-mono">
-                        {isEligible
-                          ? "Statutory Payout (Art. 7)"
-                          : isContested
-                          ? "Contested Range"
-                          : "$0 spent"}
-                      </span>
-                    </div>
-
-                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
-                      {claim.verdictRationale}
-                    </p>
-                  </div>
-
-                  {/* Right: 1-Click Fast Actions */}
-                  <div className="flex flex-row lg:flex-col gap-2.5 shrink-0">
-                    <button
-                      onClick={copyDraftLetter}
-                      className="flex-1 lg:flex-initial flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-semibold text-white transition cursor-pointer"
-                    >
-                      {copied ? (
-                        <>
-                          <Check className="h-4 w-4 text-emerald-400" />
-                          <span className="text-emerald-400">Copied Letter</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="h-4 w-4 text-slate-400" />
-                          <span>Copy Claim Letter</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      onClick={downloadClaimsPackage}
-                      className="flex-1 lg:flex-initial flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition shadow-lg shadow-blue-600/30 cursor-pointer"
-                    >
-                      <Download className="h-4 w-4" />
-                      <span>Download Package</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Master 2-Column Split Cockpit */}
+              {/* 2-Column Cockpit: Corridor Map + Delay Threshold Gauge */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-                {/* Column 1: Live HUD Flight Telemetry & Delay Threshold Gauge */}
-                <div className="space-y-6">
-                  {/* Interactive Cockpit HUD Map */}
-                  <FlightTelemetryMap
-                    origin={claim.flight.origin}
-                    destination={claim.flight.destination}
-                    flightNumber={claim.flight.flightNumber}
-                    distanceKm={claim.flight.distanceKm}
-                    carrier={claim.flight.carrier}
-                  />
-
-                  {/* Delay Threshold Gauge with CJEU Sturgeon Mark & Weather Corridors */}
-                  <DelayThresholdGauge claim={claim} />
-                </div>
-
-                {/* Column 2: Formal Passenger Claim Package & Legal Brief */}
-                <div className="space-y-6">
-                  <div className="rounded-2xl border border-white/[0.08] bg-[#0D1527]/90 p-5 sm:p-6 backdrop-blur-xl shadow-2xl space-y-4">
-                    <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-blue-400" />
-                        <h3 className="text-xs font-mono font-semibold text-white uppercase tracking-wider">
-                          Statutory Claim Document (Ready to Send)
-                        </h3>
-                      </div>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        {claim.statutoryRegulation} Jurisdictional Dossier
-                      </span>
-                    </div>
-
-                    {/* Pre-formatted letter in high-contrast box */}
-                    <div className="rounded-xl bg-[#060A13] border border-white/[0.06] p-4 text-xs font-mono text-slate-200 whitespace-pre-wrap max-h-[460px] overflow-y-auto leading-relaxed shadow-inner">
-                      {claim.draftClaimLetter}
-                    </div>
-
-                    {/* Quick legal disclaimer */}
-                    <div className="text-[11px] text-slate-500 font-sans leading-relaxed">
-                      Generated by SkyClaim Autonomous Disruption Shield based on retained Court of Justice jurisprudence (Sturgeon v Condor) and meteorological station records. Draft notice for carrier submission.
-                    </div>
-                  </div>
-
-                  {/* Cryptographic Settlement Drawer */}
-                  <div className="rounded-2xl border border-white/[0.08] bg-[#0D1527]/90 p-5 sm:p-6 backdrop-blur-xl shadow-2xl space-y-4">
-                    <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-                      <div className="flex items-center gap-2">
-                        <Activity className="h-4 w-4 text-blue-400" />
-                        <h3 className="text-xs font-mono font-semibold text-white uppercase tracking-wider">
-                          Cryptographic Settlement Proof
-                        </h3>
-                      </div>
-                      <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                        x402 Micropayment
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-mono">
-                      <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-2.5">
-                        <span className="text-[10px] uppercase text-slate-500 block">Intent</span>
-                        <span className="text-white font-semibold truncate block mt-0.5" title={claim.receipt?.intent}>
-                          {claim.receipt?.intent || "TRANSIT_LOCK"}
-                        </span>
-                      </div>
-
-                      <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-2.5">
-                        <span className="text-[10px] uppercase text-slate-500 block">Miner</span>
-                        <span className="text-white font-semibold truncate block mt-0.5" title={claim.receipt?.minerName}>
-                          {claim.receipt?.minerName || "ttl-nws"}
-                        </span>
-                      </div>
-
-                      <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-2.5">
-                        <span className="text-[10px] uppercase text-slate-500 block">Protocol Cost</span>
-                        <span className="text-emerald-400 font-semibold block mt-0.5">
-                          ${(claim.receipt?.costUsd ?? 0.01).toFixed(2)} USDC
-                        </span>
-                      </div>
-
-                      <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-2.5">
-                        <span className="text-[10px] uppercase text-slate-500 block">Network</span>
-                        <span className={`font-semibold block mt-0.5 ${
-                          claim.receipt?.network === "solana" || claim.accounting?.settlementChain?.includes("Solana")
-                            ? "text-[#14F195]"
-                            : "text-slate-300"
-                        }`}>
-                          {claim.receipt?.network === "solana" || claim.accounting?.settlementChain?.includes("Solana")
-                            ? "Solana Devnet"
-                            : "Base Sepolia"}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Tx Hash / Solana Signature permalink */}
-                    <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <span className="text-[10px] text-slate-500 uppercase tracking-wider shrink-0">
-                          {claim.receipt?.network === "solana" || claim.accounting?.settlementChain?.includes("Solana") ? "Signature:" : "Tx:"}
-                        </span>
-                        <span className="text-blue-400 truncate select-all">
-                          {claim.receipt?.txHash || (claim.receipt?.network === "solana" ? "5wK4c1xY8pPjq3Rt7MvBn9XkL2mZa4dF6gH8jK1nQ3sT5vW7yZ9aB2cD4eF6gH8j" : "0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145")}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 shrink-0">
-                        {(claim.receipt?.explorerUrl || claim.receipt?.basescanUrl) && (
-                          <a
-                            href={claim.receipt.explorerUrl || claim.receipt.basescanUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition text-xs font-semibold cursor-pointer ${
-                              claim.receipt?.network === "solana" || (claim.receipt?.explorerUrl || claim.receipt?.basescanUrl)?.includes("solscan")
-                                ? "bg-[#14F195]/15 hover:bg-[#14F195]/25 text-[#14F195] border border-[#14F195]/30"
-                                : "bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30"
-                            }`}
-                          >
-                            <span>
-                              {claim.receipt?.network === "solana" || (claim.receipt?.explorerUrl || claim.receipt?.basescanUrl)?.includes("solscan")
-                                ? "Solscan"
-                                : "BaseScan"}
-                            </span>
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
-
-                        <button
-                          onClick={() => setShowRawJson(!showRawJson)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 border border-white/[0.08] transition text-xs font-medium cursor-pointer"
-                        >
-                          <span>{showRawJson ? "Hide JSON" : "View JSON"}</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Expandable Raw JSON */}
-                    <AnimatePresence>
-                      {showRawJson && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                          className="rounded-xl bg-[#060A13] border border-white/[0.06] p-3 text-xs font-mono space-y-2 overflow-hidden"
-                        >
-                          <div className="flex items-center justify-between text-[10px] text-slate-400 border-b border-white/[0.06] pb-1.5">
-                            <span>Raw Cryptographic Payload</span>
-                            <button
-                              onClick={copyRawReceiptJson}
-                              className="text-blue-400 hover:text-blue-300 cursor-pointer"
-                            >
-                              {jsonCopied ? "Copied!" : "Copy Payload"}
-                            </button>
-                          </div>
-                          <pre className="text-slate-300 overflow-x-auto max-h-48 text-[11px] leading-relaxed p-1">
-                            {claim.receipt?.rawReceiptJson || JSON.stringify(claim.receipt, null, 2)}
-                          </pre>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
+                <FlightTelemetryMap
+                  origin={claim.flight.origin}
+                  destination={claim.flight.destination}
+                  flightNumber={claim.flight.flightNumber}
+                  distanceKm={claim.flight.distanceKm}
+                  carrier={claim.flight.carrier}
+                />
+                <DelayThresholdGauge claim={claim} />
               </div>
             </motion.section>
 

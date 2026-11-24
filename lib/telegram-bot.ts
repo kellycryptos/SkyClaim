@@ -76,7 +76,7 @@ function formatClaimReport(res: SkyClaimResult): string {
     defenseVerdict = res.verdictRationale?.includes("past")
       ? "Historical weather unavailable on live miners · Telemetry streams inconclusive"
       : res.verdictRationale?.includes("outside")
-      ? "Non-US departure airport unindexed by NWS radar · Live coverage is US-only"
+      ? "Non-US departure airport unindexed by NWS stations · Live coverage is US-only"
       : "Telemetry streams inconclusive · Station cross-check required";
   }
 
@@ -103,7 +103,7 @@ ${badgeEmoji} *SkyClaim Telemetry & Statutory Audit*
 • *Entitlement:* \`${compensation}\`
 • *Carrier Defense:* ${defenseVerdict}
 
-🌤 *Atmospheric Radar & Corridor Audit:*
+🌤 *METAR Observations & Corridor Audit:*
 • *Departure (${w.departureAirport}):* ${depWeather}
 • *Arrival (${w.arrivalAirport}):* ${arrWeather}
 • *Authority:* ${authority}

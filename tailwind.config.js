@@ -9,11 +9,27 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: "#090E1A",
-        obsidian: "#090E1A",
-        card: "#111827",
-        elevated: "#131B2E",
-        inset: "#0B1120",
+        navy: "#0B1226",
+        deep: "#0A0F1F",
+        cyan: {
+          DEFAULT: "#22D3EE",
+          accent: "#22D3EE",
+        },
+        sky: {
+          DEFAULT: "#67E8F9",
+          accent: "#67E8F9",
+        },
+        slate: {
+          secondary: "#94A3B8",
+        },
+        cleared: "#34D399",
+        hold: "#FBBF24",
+        denied: "#F87171",
+        background: "#0B1226",
+        obsidian: "#0B1226",
+        card: "#0A0F1F",
+        elevated: "#111827",
+        inset: "#070B14",
         border: "#1E293B",
         "border-subtle": "rgba(255, 255, 255, 0.08)",
         electric: {

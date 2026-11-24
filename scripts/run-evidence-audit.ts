@@ -106,6 +106,16 @@ async function test2_ExplorerCheck() {
     const receipt = await provider.getTransactionReceipt(baseHash);
     if (tx && receipt) {
       console.log(`  ✓ Base Tx Found! Block: ${receipt.blockNumber}, Status: ${receipt.status === 1 ? 'SUCCESS' : 'FAILED'}`);
+      console.log(`    From: ${tx.from} -> To: ${tx.to}`);
+      for (const log of receipt.logs) {
+        // USDC Transfer event topic: 0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef
+        if (log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
+          const from = ethers.getAddress('0x' + log.topics[1].slice(26));
+          const to = ethers.getAddress('0x' + log.topics[2].slice(26));
+          const amount = Number(BigInt(log.data)) / 1e6;
+          console.log(`    USDC Transfer: ${amount} USDC from ${from} to ${to}`);
+        }
+      }
     } else if (tx) {
       console.log(`  ✓ Base Tx Found in mempool! (Pending receipt)`);
     } else {
@@ -115,15 +125,24 @@ async function test2_ExplorerCheck() {
     console.log(`  ⚠ Base RPC check error: ${e.message}`);
   }
 
-  // 2. Check live Base hash 0xe08fd142...
+  // 2. Check live Base hash 0xe08fd142... (Research probe)
   const baseHash2 = "0xe08fd142ee4e3ad4a353e074615682c3b5c19c71b5d34a301ba81c9e6064d9db";
-  console.log(`\nChecking Base Sepolia probe hash: ${baseHash2}`);
+  console.log(`\nChecking Base Sepolia research probe hash: ${baseHash2}`);
   try {
     const provider = new ethers.JsonRpcProvider("https://sepolia.base.org");
     const tx2 = await provider.getTransaction(baseHash2);
     const receipt2 = await provider.getTransactionReceipt(baseHash2);
     if (tx2 && receipt2) {
-      console.log(`  ✓ Base Probe Tx Found! Block: ${receipt2.blockNumber}, Status: ${receipt2.status === 1 ? 'SUCCESS' : 'FAILED'}`);
+      console.log(`  ✓ Base Research Probe Tx Found! Block: ${receipt2.blockNumber}, Status: ${receipt2.status === 1 ? 'SUCCESS' : 'FAILED'}`);
+      console.log(`    From: ${tx2.from} -> To: ${tx2.to}`);
+      for (const log of receipt2.logs) {
+        if (log.topics[0] === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
+          const from = ethers.getAddress('0x' + log.topics[1].slice(26));
+          const to = ethers.getAddress('0x' + log.topics[2].slice(26));
+          const amount = Number(BigInt(log.data)) / 1e6;
+          console.log(`    USDC Transfer: ${amount} USDC from ${from} to ${to}`);
+        }
+      }
     } else {
       console.log(`  ℹ Status on Base Sepolia: tx=${Boolean(tx2)}, receipt=${Boolean(receipt2)}`);
     }
@@ -149,6 +168,9 @@ async function test2_ExplorerCheck() {
     if (solData.result) {
       console.log(`  ✓ Solana Tx Found on Devnet! Slot: ${solData.result.slot}, Error: ${solData.result.meta?.err || 'None (Success)'}`);
       console.log(`  ✓ Fee Paid: ${solData.result.meta?.fee} lamports`);
+      const postTokenBalances = solData.result.meta?.postTokenBalances || [];
+      const preTokenBalances = solData.result.meta?.preTokenBalances || [];
+      console.log(`  ✓ Token Balances changed: ${preTokenBalances.length} pre, ${postTokenBalances.length} post`);
     } else {
       console.log(`  ℹ Solana Devnet response:`, solData.result ?? solData.error ?? 'Pending or not indexed');
     }

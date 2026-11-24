@@ -133,14 +133,16 @@ export function Header({
           </button>
 
           {/* Telegram Bot Action */}
-          <button
-            onClick={onOpenTelegram}
+          <a
+            href="https://t.me/SkyClaimprobot"
+            target="_blank"
+            rel="noreferrer"
             className="h-8 sm:h-9 flex items-center justify-center gap-1.5 px-2.5 sm:px-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-medium text-slate-200 transition cursor-pointer"
-            title="Open Autonomous Telegram Bot"
+            title="Open Telegram Bot (@SkyClaimprobot)"
           >
-            <Send className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+            <Send className="h-3.5 w-3.5 text-cyan-400 shrink-0" />
             <span className="hidden sm:inline">Bot</span>
-          </button>
+          </a>
 
           {/* API Docs Button (Desktop) */}
           <button

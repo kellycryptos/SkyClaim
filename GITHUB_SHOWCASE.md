@@ -43,8 +43,8 @@ Every scenario is reproducible in 1 click on the Web UI or via `npm run bot:sim`
 
 | Scenario | Route & Operating Metal | Delay | Weather Telemetry | Verdict & Legal Basis | Statutory Compensation | Cost |
 | :--- | :--- | :---: | :--- | :--- | :---: | :---: |
-| **Case 1: Clean Delay** (`BA178`) | JFK → LHR · **British Airways** (UK/EU) | 3h 42m | Clear corridors at JFK & LHR (`FIXTURE`) | **`ELIGIBLE_FOR_CLAIM`**<br>Airline weather excuse unsupported. Draft claim ready. | **€300 – €600**<br>(Art. 7(2)(c) 50% rule) | $0.00 (`FIXTURE`) |
-| **Case 2: Non-EU Metal** (`DL401`) | JFK → CDG · **Delta Air Lines** (Codeshare) | 1h 05m | Corridors checked | **`INELIGIBLE`**<br>Excluded under Art. 3(1)(b) & CJEU Case C-502/18 (*České aerolinie*). | **€0**<br>(Non-EU metal ex-USA) | **$0 spent**<br>(Telemetry bypassed) |
+| **Case 1: Clean Delay** (`BA178`) | JFK → LHR · **British Airways** (UK carrier) | 3h 42m | Clear corridors at JFK & LHR (`FIXTURE`) | **`ELIGIBLE_FOR_CLAIM`**<br>No adverse weather in METAR. Draft claim ready. | **£260 – £520**<br>(UK261 Art. 7(2)(c) rule) | $0.00 (`FIXTURE`) |
+| **Case 2: Non-EU Metal** (`DL401`) | JFK → CDG · **Delta Air Lines** (Codeshare) | 3h 30m | Corridors checked | **`INELIGIBLE`**<br>Excluded under Art. 3(1)(b) & CJEU Case C-502/18 (*České aerolinie*). | **€0**<br>(Non-EU metal ex-USA) | **$0 spent**<br>(Telemetry bypassed) |
 | **Case 3: Blizzard Alert** (`AF112`) | ORD → CDG · **Air France** (EU Metal) | 4h 10m | Severe blizzard at ORD (`FIXTURE`) | **`FAIL_CLOSED_WEATHER`**<br>Airline holds Art. 5(3) defense. Generates *Wallentin-Hermann* contested notice. | **€300 – €600**<br>(Contested Art. 5(3)) | $0.00 (`FIXTURE`) |
 
 ---
