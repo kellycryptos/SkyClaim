@@ -11,6 +11,7 @@
     "test:skyclaim": "npx tsx scripts/test-skyclaim.ts",
     "test:solana": "npx tsx scripts/test-solana-settlement.ts",
     "wallet:check": "npx tsx scripts/check-wallet.ts",
+    "check:wallets": "npx tsx scripts/check-wallet.ts",
     "purchase:live": "npx tsx scripts/verify-live-purchase.ts",
     "purchase:solana": "npx tsx scripts/verify-solana-purchase.ts",
     "purchase:consumer-solana": "npx tsx scripts/verify-consumer-solana.ts",
