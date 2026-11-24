@@ -266,11 +266,14 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
                     Native Solana Devnet x402 payments (CAIP-2: <code className="text-white">solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1</code>) with Circle USDC (<code className="text-white">4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU</code>). Node-delegated fee payer eliminates caller SOL requirements.
                   </p>
                   <p className="mt-1 font-mono text-[11px] text-[#14F195] break-all">
-                    Verification: <code className="text-white">npm run purchase:consumer-solana</code> &middot; Institutional: <code className="text-white">npm run verify:solana</code>
+                    Tx: 5P4mbeGFaggKaFNoz1mbH9XWM9RJ8Yz7exKYg9oTrhi1hKp6VuLdXF3Dk2Eep1UAccyq6UMMx8DX6E84pCWRKyR5 (TxLens ID 9002)
+                  </p>
+                  <p className="mt-0.5 font-mono text-[10px] text-slate-400">
+                    Verification: <code className="text-white">npm run purchase:consumer-solana</code> &middot; Institutional: <code className="text-white">npm run purchase:solana</code>
                   </p>
                 </div>
                 <a
-                  href="https://solscan.io/token/4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU?cluster=devnet"
+                  href="https://solscan.io/tx/5P4mbeGFaggKaFNoz1mbH9XWM9RJ8Yz7exKYg9oTrhi1hKp6VuLdXF3Dk2Eep1UAccyq6UMMx8DX6E84pCWRKyR5?cluster=devnet"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1 text-[#14F195] hover:underline shrink-0 mt-1 font-medium font-mono text-xs"
