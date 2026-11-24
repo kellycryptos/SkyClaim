@@ -1233,7 +1233,7 @@ export default function SkyClaimHome() {
               FAQ
             </button>
             <button onClick={() => setTelegramOpen(true)} className="hover:text-white transition cursor-pointer">
-              @SkyClaimBot
+              @SkyClaimprobot
             </button>
           </div>
         </div>

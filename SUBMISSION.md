@@ -2,13 +2,13 @@
 
 ## 1. Project Information
 - **Project Name:** SkyClaim
-- **Core Positioning:** *“SkyClaim checks the airline's most common excuse. When a transatlantic flight is delayed 3+ hours, it verifies weather alerts for the departure airport through Telegraph Protocol, validates operating carrier metal under UK261 and EU261 rules, and generates statutory claim dossiers with cryptographic settlement receipts. Operates across multiple surfaces via Web Dashboard and Telegram Bot (@SkyClaimBot), with an enterprise pre-settlement compliance assurance engine (SolSettle) for high-value transfers. Gasless settlement on Base Sepolia (`84532`).”*
+- **Core Positioning:** *“SkyClaim checks the airline's most common excuse. When a transatlantic flight is delayed 3+ hours, it verifies weather alerts for the departure airport through Telegraph Protocol, validates operating carrier metal under UK261 and EU261 rules, and generates statutory claim dossiers with cryptographic settlement receipts. Operates across multiple surfaces via Web Dashboard and Telegram Bot (@SkyClaimprobot), with an enterprise pre-settlement compliance assurance engine (SolSettle) for high-value transfers. Gasless settlement on Base Sepolia (`84532`).”*
 - **Competition Track:** Track 03: Apps & Agents
 - **Target Commercial Mission:** Mission 15: Consumer Automation
 - **Repository Link:** `https://github.com/kellycryptos/SkyClaim`
 - **GitHub Username Starring Bounties Repo:** `kellycryptos` (starred `telegraphprotocol/bounties`)
 - **Live Demo Link:** `http://localhost:3000` (Production: `https://skyclaimpro.vercel.app`)
-- **Telegram Bot Access:** `@SkyClaimBot` · Instant Terminal Simulator: `npm run bot:sim`
+- **Telegram Bot Access:** `@SkyClaimprobot` · Instant Terminal Simulator: `npm run bot:sim`
 
 ---
 
@@ -26,7 +26,7 @@
 
 ### Part B: Multi-Surface Telegram Bot Evaluator Flow
 - **EVALUATOR ZERO-CONFIG SIMULATOR (`npm run bot:sim`):**  
-  Evaluators can verify the complete conversational workflow without configuring Telegram API keys. Interactive terminal simulator allows 1-click execution of BA178, DL401, AF112, statutory rights lookups, and real-time corridor telemetry formatting. Live bot runs at `@SkyClaimBot`.
+  Evaluators can verify the complete conversational workflow without configuring Telegram API keys. Interactive terminal simulator allows 1-click execution of BA178, DL401, AF112, statutory rights lookups, and real-time corridor telemetry formatting. Live bot runs at `@SkyClaimprobot`.
 
 ### Part C: Enterprise Feature: Pre-Settlement Assurance (SolSettle)
 - **CASE S1: REGULATED PRIME BROKER SETTLEMENT ($250,000 USDC)**  
@@ -42,7 +42,7 @@
 
 ### Question 1: Who is it for?
 1. **Air Passengers & Corporate Travel Desks:** Travelers facing transatlantic delays on UK/EU carriers, eliminating spurious airline weather excuses with statutory proof.
-2. **Mobile Users:** Frequent fliers accessing instant claim audits directly on Telegram via `@SkyClaimBot`.
+2. **Mobile Users:** Frequent fliers accessing instant claim audits directly on Telegram via `@SkyClaimprobot`.
 3. **Enterprise Desks (Feature):** Asset managers and corporate treasuries requiring pre-authorization entity verification (LEI) before high-value settlements execute.
 
 ### Question 2: What does it improve?
@@ -53,7 +53,7 @@
 ### Question 3: What does it do today?
 1. **Operating Carrier Filtering:** Distinguishes marketing codeshares from operating aircraft under Regulation (EC) No 261/2004 Art. 3(1)(b).
 2. **Departure Weather & Disruption Telemetry:** Queries Telegraph miners with secondary NOAA/FAA METAR cross-checking.
-3. **Multi-Surface Interface:** Full web application plus interactive Telegram bot (`@SkyClaimBot` / `npm run bot:sim`).
+3. **Multi-Surface Interface:** Full web application plus interactive Telegram bot (`@SkyClaimprobot` / `npm run bot:sim`).
 4. **Gasless On-Chain Settlement:** Executes EIP-712 x402 micropayments on Base Sepolia (`84532`) with Circle USDC ($0.01 USDC/call).
 5. **Enterprise Compliance Feature:** Live GLEIF LEI lookup (`api.gleif.org`) and settlement assurance architecture.
 6. **Verifiable Public Ledger:** Features live completed on-chain purchases on BaseScan alongside labeled benchmark fixtures.

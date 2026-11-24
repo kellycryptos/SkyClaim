@@ -27,7 +27,7 @@ SkyClaim bridges consumer flight disruption automation and institutional Solana 
 | **Settlement Rails** | **Dual-Rail Native**: **Base Sepolia (`84532`)** &amp; **Solana Devnet (`solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1`)** | **Solana Devnet / Mainnet** · SVM x402 Micropayments via **Pay.sh** |
 | **Settlement Asset** | Circle USDC on Base (`0x036CbD...`) &amp; Circle USDC on Solana (`4zMMC9...`) | Circle USDC on Solana (SPL Token: `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`) |
 | **Off-Chain Truth** | Multi-corridor METAR ground observations (`ttl-nws` & `aviationweather.gov`) | Live GLEIF LEI Registry (`api.gleif.org`) + OFAC SDN watchlists + Bank Reserve audits |
-| **Surfaces** | Web Terminal (with Base &amp; Solana toggle) + Telegram Bot (`@SkyClaimBot`) | Web Compliance Terminal (`SolanaInstitutionalView`) + Automated API |
+| **Surfaces** | Web Terminal (with Base &amp; Solana toggle) + Telegram Bot (`@SkyClaimprobot`) | Web Compliance Terminal (`SolanaInstitutionalView`) + Automated API |
 | **Production Status** | **Live on-chain x402 Base receipts + Solana Devnet SVM x402 inference** | **Live GLEIF resolution + `@x402/svm` client + 3 deterministic fixtures** |
 | **1-Click Test** | `npm run purchase:live` · `npm run purchase:consumer-solana` · `npm test:skyclaim` | `npm run purchase:solana` · `npm run test:solana` |
 
@@ -171,7 +171,7 @@ SkyClaim operates against live Telegraph Protocol smart contracts, node rails, a
 
 | Phase | Horizon | Focus | Key Deliverables |
 | :--- | :--- | :--- | :--- |
-| **Phase 1** | **Shipped & Live** | Dual-Engine Verification Architecture | Core flight shield (Mission 15) on Base Sepolia + SolSettle pre-settlement assurance on Solana. Web UI + Telegram Bot (`@SkyClaimBot`). 6 deterministic test vectors (`npm test`). Live GLEIF resolution. |
+| **Phase 1** | **Shipped & Live** | Dual-Engine Verification Architecture | Core flight shield (Mission 15) on Base Sepolia + SolSettle pre-settlement assurance on Solana. Web UI + Telegram Bot (`@SkyClaimprobot`). 6 deterministic test vectors (`npm test`). Live GLEIF resolution. |
 | **Phase 2** | **Q1 2027** | Custom Telegraph Miners & Subnets | **`miner-flight-radar`**: Real-time ADS-B transponder telemetry miner. **`miner-solana-sanctions`**: Sub-minute OFAC/FATF graph entity matching miner. **`evaluator-flight-accuracy`**: Evaluator scoring carrier excuse accuracy. |
 | **Phase 3** | **Q2 2027** | B2B Travel Integrations & Smart Contracts | **Corporate Travel API**: Direct Concur / Navan expense webhook integrations. **Automated Escrow Claim Vault**: Smart contract paying instant compensation advances upon Telegraph disruption consensus. |
 

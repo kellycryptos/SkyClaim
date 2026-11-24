@@ -85,7 +85,7 @@ Repo: https://github.com/kellycryptos/SkyClaim
 ### 📅 Public Update 3: Dual-Engine Reveal (Flight Shield on Base + SolSettle on Solana)
 - **Date Published:** November 24, 2026 *(Launch & Architecture Expansion)*
 - **Target Channels:** X / Twitter (Thread), LinkedIn, Discord
-- **Focus:** The Dual-Engine Protocol Architecture: Consumer Flight Shield on Base Sepolia + SolSettle Institutional Settlement Assurance on Solana (Use Cases 1 & 3), live GLEIF resolution, Linear-grade cockpit, and `@SkyClaimBot`.
+- **Focus:** The Dual-Engine Protocol Architecture: Consumer Flight Shield on Base Sepolia + SolSettle Institutional Settlement Assurance on Solana (Use Cases 1 & 3), live GLEIF resolution, Linear-grade cockpit, and `@SkyClaimprobot`.
 
 #### Post Copy (X / Twitter Thread Format):
 ```text
@@ -105,7 +105,7 @@ From consumer flight delays to institutional settlement assurance on Solana, dec
 
 4/7 🖥️ Linear-Grade UI & Multi-Surface Access:
 • Web Cockpit: Minimalist HUD radar, interactive flight visualizer, and 1-click toggle between Consumer Flight Shield & Institutional Solana Shield.
-• Telegram Bot: @SkyClaimBot — run `/claim BA178` on your phone!
+• Telegram Bot: @SkyClaimprobot — run `/claim BA178` on your phone!
 • 90-Second CLI Simulator: `npm test` runs 13/13 acceptance test suites deterministically across BOTH engines!
 
 5/7 🏆 The Receipt Box:

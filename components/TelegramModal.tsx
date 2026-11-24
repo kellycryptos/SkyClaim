@@ -65,7 +65,7 @@ export function TelegramModal({ isOpen, onClose }: TelegramModalProps) {
             {/* Quick Actions & Live Link */}
             <div className="space-y-3">
               <a
-                href="https://t.me/SkyClaim_bot"
+                href="https://t.me/SkyClaimprobot"
                 target="_blank"
                 rel="noreferrer"
                 className="w-full flex items-center justify-between p-3.5 rounded-xl bg-blue-600/15 hover:bg-blue-600/25 border border-blue-500/30 text-white transition group cursor-pointer"
@@ -74,7 +74,7 @@ export function TelegramModal({ isOpen, onClose }: TelegramModalProps) {
                   <Bot className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
                   <div>
                     <div className="text-sm font-semibold flex items-center gap-1.5">
-                      <span>Launch @SkyClaimBot on Telegram</span>
+                      <span>Launch @SkyClaimprobot on Telegram</span>
                       <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
                     </div>
                     <div className="text-[11px] text-slate-400">

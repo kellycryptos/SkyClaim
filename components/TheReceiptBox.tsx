@@ -92,16 +92,16 @@ export function TheReceiptBox({ isOpen, onClose }: TheReceiptBoxProps) {
                     Multi-surface consumer verification bot on Telegram. Instant terminal simulation: <code className="text-blue-300">npm run bot:sim</code>
                   </p>
                   <p className="mt-1 font-mono text-[11px] text-emerald-400">
-                    Handle: @SkyClaimBot · 0-Config Evaluator Simulator ready
+                    Handle: @SkyClaimprobot · 0-Config Evaluator Simulator ready
                   </p>
                 </div>
                 <a
-                  href="https://t.me/SkyClaimBot"
+                  href="https://t.me/SkyClaimprobot"
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center gap-1 text-blue-400 hover:text-blue-300 shrink-0 mt-1 font-medium font-mono text-xs"
                 >
-                  @SkyClaimBot <ExternalLink className="h-3 w-3" />
+                  @SkyClaimprobot <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
               {/* Institutional Pre-Settlement Assurance Feature Row */}

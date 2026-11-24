@@ -258,7 +258,7 @@ export function Header({
                   <span>Telegram Autonomous Bot</span>
                 </div>
                 <span className="text-[10px] text-sky-400 bg-sky-500/10 px-1.5 py-0.5 rounded border border-sky-500/20">
-                  @SkyClaimBot
+                  @SkyClaimprobot
                 </span>
               </button>
 

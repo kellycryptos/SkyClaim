@@ -5,7 +5,7 @@
 
 - **Repository:** https://github.com/kellycryptos/SkyClaim
 - **Live Hosted Web Terminal:** http://localhost:3000 (or deployed endpoint)
-- **Telegram Bot:** `@SkyClaimBot` (or run local simulator `npm run bot:sim`)
+- **Telegram Bot:** `@SkyClaimprobot` (or run local simulator `npm run bot:sim`)
 - **Competition Track:** Track 03: Apps & Agents
 - **Target Commercial Mission:** Mission 15: Consumer Automation
 - **Settlement Layer:** Base Sepolia (Chain ID: 84532) · Circle USDC x402 Micropayments ($0.01 USDC/call)

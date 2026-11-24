@@ -3,6 +3,7 @@ import { webhookCallback } from "grammy";
 import { getTelegramBot } from "@/lib/telegram-bot";
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function POST(req: NextRequest) {
   // 1. Verify webhook secret token if configured
