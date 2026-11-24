@@ -15,6 +15,7 @@
     "purchase:live": "npx tsx scripts/verify-live-purchase.ts",
     "purchase:solana": "npx tsx scripts/verify-solana-purchase.ts",
     "purchase:consumer-solana": "npx tsx scripts/verify-consumer-solana.ts",
+    "test:audit": "npx tsx scripts/run-evidence-audit.ts",
     "test:live": "npx tsx scripts/test-evaluator-steps.ts",
     "bot": "npx tsx scripts/telegram-bot.ts",
     "bot:sim": "npx tsx scripts/telegram-bot.ts",

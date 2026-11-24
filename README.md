@@ -10,8 +10,11 @@
 ### Telegraph Protocol Season II · Track 03: Apps & Agents (Mission 15) & Solana Priority Track (Use Cases 1 & 3)
 
 > **Autonomous Dual-Engine Protocol Verifier powered by Telegraph Protocol.**
-> SkyClaim deploys specialized off-chain intelligence across two complementary commercial surfaces:
-> 1. **Engine 1: Consumer Flight Shield (Mission 15)** — Verifies airline weather defenses at the exact moment of disruption, validates operating carrier metal under UK261/EU261 rules, and generates statutory claim dossiers with cryptographic receipts on **both Base Sepolia and Solana Devnet (x402)**.
+> **SkyClaim captures purchased weather evidence while the delay is happening, then holds it for the claim.**
+> By querying decentralized Telegraph miners at the exact moment an airline claims "bad weather", SkyClaim creates immutable, cryptographically verifiable proof before weather records are lost or altered.
+> 
+> The protocol deploys specialized off-chain intelligence across two complementary commercial surfaces:
+> 1. **Engine 1: Consumer Flight Shield (Mission 15)** — Verifies airline weather defenses at the exact moment of disruption, validates operating carrier metal under UK261/EU261 rules, and generates statutory claim dossiers with cryptographic receipts on **Base Sepolia (primary evidenced weather rail)** and **Solana Devnet (SVM x402 settlement rail)**.
 > 2. **Engine 2: SolSettle / SISA (Solana Use Cases 1 & 3)** — An institutional settlement assurance firewall on **Solana** that pre-screens high-value transfers against live legal entity registries (**GLEIF Open API**), OFAC SDN watchlists, and Living RWA bank reserves using Solana SVM x402 micropayments.
 
 ---
@@ -104,6 +107,13 @@ SkyClaim strictly enforces honest data boundaries across both engines. Every res
 | **`SIMULATED`** | Free-input query when no credentials configured | **None** (No fake hashes) | **$0.00** | Explicit notice: *"Simulated baseline corridor report for zero-config evaluation."* |
 | **`FIXTURE`** | Deterministic acceptance benchmark vectors | **None** (No simulated receipts) | **$0.00** | Pre-configured test vectors for instant zero-config reviewer verification. |
 
+### 🔍 Evidentiary Rail Roles & Fail-Closed Design
+
+- **Base Sepolia (Primary Evidenced Rail):** Live Telegraph Protocol node miners (`TxLens` / `PREFLIGHT`) return verified METAR observations (e.g. `KJFK 240751Z 32016KT 10SM FEW100 VFR`) and corridor flight category data paid via EIP-712 gasless permits.
+- **Solana Devnet (SVM x402 Settlement Rail):** High-speed SVM micropayments via `@x402/svm` settlement ($0.01 Devnet USDC to Telegraph receiver). *Evidentiary note: While the x402 payment settled on Solana Devnet, miner 9002's response served travel transit lock routing without specialized radar ground data.*
+- **Fail-Closed Historical Limit:** Current live Telegraph Protocol weather miners (`ttl-nws`, `ttl-airsigmet`) index active, real-time weather radar. Historical archives cannot be retrieved from live miners. SkyClaim enforces a strict fail-closed evidentiary rule: any past-date flight disruption without pre-captured evidence is marked `INSUFFICIENT_EVIDENCE` (£0/€0 payout) rather than guessing or fabricating historical weather. SkyClaim's core value is capturing immutable, purchased weather proof *while the delay is happening*.
+- **UK261 Statutory Precision:** For long-haul flights (>3,500 km), standard UK261 compensation is **£520**. If the carrier offers alternative routing and arrival delay is between 3 and 4 hours, statutory compensation is reduced by 50% under Article 7(2)(c) to **£260** (represented as the £260 – £520 statutory range).
+
 ---
 
 ## 🎯 Reviewer Acceptance Cases
@@ -156,9 +166,11 @@ SkyClaim operates against live Telegraph Protocol smart contracts, node rails, a
 | **Live Telegraph Node Engine** | HTTP Node Rail | `http://13.237.89.59:7044` | [Healthz Endpoint](http://13.237.89.59:7044/miner-dispatcher/healthz) · [Miners Index](http://13.237.89.59:7044/engine/v1/subnets) |
 | **Live GLEIF Open API** | Global Entity Registry | `https://api.gleif.org/api/v1/lei-records` | Live API queried in `lib/solana-settlement.ts` & `scripts/verify-solana-purchase.ts` |
 | **Solana SVM x402 Client** | Solana Devnet / Mainnet | `@x402/svm` + `@solana/kit` | Source: [`lib/solana-x402.ts`](lib/solana-x402.ts) (Exact SVM scheme client) |
-| **Consumer Solana x402 Rail** | Solana Devnet (`solana:EtWTRABZaYq...`) | `5P4mbeGFaggKaFNoz1mbH9XWM9RJ8Yz7exKYg9oTrhi1hKp6VuLdXF3Dk2Eep1UAccyq6UMMx8DX6E84pCWRKyR5` | [Solscan Tx Link](https://solscan.io/tx/5P4mbeGFaggKaFNoz1mbH9XWM9RJ8Yz7exKYg9oTrhi1hKp6VuLdXF3Dk2Eep1UAccyq6UMMx8DX6E84pCWRKyR5?cluster=devnet) · Miner: TxLens ($0.01 USDC) |
+| **Consumer Solana x402 Rail (Live 1)** | Solana Devnet (`solana:EtWTRABZaYq...`) | `5P4mbeGFaggKaFNoz1mbH9XWM9RJ8Yz7exKYg9oTrhi1hKp6VuLdXF3Dk2Eep1UAccyq6UMMx8DX6E84pCWRKyR5` | [Solscan Tx Link](https://solscan.io/tx/5P4mbeGFaggKaFNoz1mbH9XWM9RJ8Yz7exKYg9oTrhi1hKp6VuLdXF3Dk2Eep1UAccyq6UMMx8DX6E84pCWRKyR5?cluster=devnet) · Fee: 10001 lamports · Miner: TxLens ($0.01 USDC) |
+| **Consumer Solana x402 Rail (Live 2)** | Solana Devnet (`solana:EtWTRABZaYq...`) | `wepS4cfTJaKvpJbC56iHzYjTrHSw53V3u4r2V2TVogYWB4HQ65NZx97Y9Vy1dN834kd937ERMwCRnoY8MTr5BhU` | [Solscan Tx Link](https://solscan.io/tx/wepS4cfTJaKvpJbC56iHzYjTrHSw53V3u4r2V2TVogYWB4HQ65NZx97Y9Vy1dN834kd937ERMwCRnoY8MTr5BhU?cluster=devnet) · Live SVM x402 settlement ($0.01 USDC) |
 | **Institutional Solana Rail** | Solana Devnet (`solana:EtWTRABZaYq...`) | PayTo: `G53EbeTZSNsAn7bj6iMFUQnq3zpDdEbHhKkPRywo8bix` | GLEIF + OFAC assurance · 1-click test: `npm run purchase:solana` |
-| **Live On-Chain Settlement 1 (JFK)** | Base Sepolia (`84532`) | `0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145) · Signal: `0x3599e217...` ($0.01 USDC) |
+| **Live On-Chain Settlement (Today JFK)** | Base Sepolia (`84532`) | `0xae55641f71da3bdb358cf9609462436609e0df067e7ed381cf3ea9cc4a1f9494` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xae55641f71da3bdb358cf9609462436609e0df067e7ed381cf3ea9cc4a1f9494) · Signal: `0x0c25d35d...` ($0.01 USDC) |
+| **Live On-Chain Settlement 1 (JFK)** | Base Sepolia (`84532`) | `0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0x84ab1cc501a8b125202e524ca4cae7dff02b7a112b95a9caf7ff3dda517b8145) · Signal: `0x3599e217...` ($0.01 USDC, Block 62041390) |
 | **Live On-Chain Settlement 2 (ORD)** | Base Sepolia (`84532`) | `0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0x1af69d658b1475570501718972e5787f6d9d930b1600705c1aaee8368ccb2e18) · Signal: `0xba23f2fd...` ($0.01 USDC) |
 | **Live On-Chain Settlement 3 (JFK)** | Base Sepolia (`84532`) | `0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xe7667435800dd7b8ff7aed2f3246a131e1fe98c95cf22f00bc455c1ebb830002) · Signal: `0x0e4caede...` ($0.01 USDC) |
 | **Live On-Chain Settlement 4 (FAA)** | Base Sepolia (`84532`) | `0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45` | [Basescan Tx Link](https://sepolia.basescan.org/tx/0xca110ae911f87e7fce5705b98768bee1d43a18fdff308106e01dfdb21fc55e45) · Signal: `0xc9733ebf...` ($0.01 USDC) |
